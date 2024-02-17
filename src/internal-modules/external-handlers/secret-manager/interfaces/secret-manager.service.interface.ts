@@ -1,4 +1,9 @@
-export interface SecretManager {
-  getSecret(secretName: string): Promise<string>;
-  upsertSecret(secretName: string, secretValue: Buffer): Promise<void>;
+import { ExternalSecretManager } from 'src/external-modules/gcp-secret-manager/interfaces/external-secret-manager.service.interface';
+
+export interface SecretManager extends ExternalSecretManager {
+  getSecretName(
+    accountId: string,
+    accountIntegrationId: string,
+    secretType: string,
+  ): string;
 }

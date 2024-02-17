@@ -13,6 +13,15 @@ export class SecretManagerService implements SecretManager {
   ) {
     this.isLocal = this.customConfigService.getEnvVariable<boolean>('isLocal');
   }
+
+  getSecretName(
+    accountId: string,
+    accountIntegrationId: string,
+    secretType: string,
+  ): string {
+    return `${accountId}_${accountIntegrationId}_${secretType}`;
+  }
+
   async getSecret(secretName: string): Promise<string> {
     if (!this.isLocal) {
       return this.cloudSecretManagerService.getSecret(secretName);
