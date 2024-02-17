@@ -1,11 +1,20 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { Observable } from 'rxjs';
+import { Reflector } from '@nestjs/core';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  canActivate(
-    context: ExecutionContext,
-  ): boolean | Promise<boolean> | Observable<boolean> {
-    return true;
+  constructor(private readonly reflector: Reflector) {}
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    try {
+      const isPublic = this.reflector.getAllAndOverride<boolean>('isPublic', [
+        context.getHandler(),
+        context.getClass(),
+      ]);
+      if (isPublic) return true;
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 }
