@@ -6,14 +6,12 @@ import { CustomConfigService } from 'src/utility/services/custom-config.service'
 @Injectable()
 export class SecretManagerService implements SecretManager {
   private readonly isLocal: boolean;
-  private readonly env: string;
 
   constructor(
     private readonly cloudSecretManagerService: GcpSecretManagerService,
     private readonly customConfigService: CustomConfigService,
   ) {
-    this.isLocal = this.customConfigService.getEnvVariable<boolean>('IS_LOCAL');
-    this.env = this.customConfigService.getEnvVariable<string>('ENV');
+    this.isLocal = this.customConfigService.getEnvVariable<boolean>('isLocal');
   }
   async getSecret(secretName: string): Promise<string> {
     if (!this.isLocal) {

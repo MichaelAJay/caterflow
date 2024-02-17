@@ -7,12 +7,16 @@ import { CustomConfigService } from 'src/utility/services/custom-config.service'
 export class GcpSecretManagerService implements SecretManager {
   private client: SecretManagerServiceClient;
   private secretPrefix: string;
+  private env: string;
+  private product: string;
 
   constructor(private customConfigService: CustomConfigService) {
     this.client = new SecretManagerServiceClient();
     const projectId =
-      this.customConfigService.getEnvVariable<string>('GOOGLE_PROJECT_ID');
+      this.customConfigService.getEnvVariable<string>('googleProjectId');
     this.secretPrefix = `projects/${projectId}/secrets`;
+    this.env = this.customConfigService.getEnvVariable<string>('env');
+    this.product = this.customConfigService.getEnvVariable<string>('product');
   }
 
   async getSecret(secretName: string): Promise<string> {
@@ -46,6 +50,10 @@ export class GcpSecretManagerService implements SecretManager {
               replication: {
                 automatic: {},
               },
+              labels: {
+                product: this.product,
+                env: this.env,
+              },
             },
           });
         } else {
@@ -61,6 +69,17 @@ export class GcpSecretManagerService implements SecretManager {
       });
     } catch (err) {
       console.error('err');
+      throw err;
+    }
+  }
+
+  async deleteSecret(secretName: string): Promise<void> {
+    try {
+      await this.client.deleteSecret({
+        name: `${this.secretPrefix}/${secretName}`,
+      });
+    } catch (err) {
+      console.error(`Failed to delete secret ${secretName}: ${err.message}`);
       throw err;
     }
   }
