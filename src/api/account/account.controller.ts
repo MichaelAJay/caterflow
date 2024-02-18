@@ -22,6 +22,7 @@ export class AccountController implements IAccountController {
     if (!validateCreateAccountRequestBody(body)) {
       throw new Error('ARGH!');
     }
-    return this.accountService.createAccount({ ...body });
+    const { name, owner, email, password } = body;
+    return this.accountService.createAccount(name, owner, email, password);
   }
 }
