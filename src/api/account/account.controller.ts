@@ -24,5 +24,6 @@ export class AccountController implements IAccountController {
     }
     const { name, owner, email, password } = body;
     return this.accountService.createAccount(name, owner, email, password);
+    // Ensure that if a known error has occurred, that it has been logged, and send that information back in the response
   }
 }
