@@ -1,3 +1,3 @@
 export interface IAccountDbHandler {
-  createAccount(name: string, ownerEmail: string): Promise<any>;
+  createAccount(name: string): Promise<any>;
 }

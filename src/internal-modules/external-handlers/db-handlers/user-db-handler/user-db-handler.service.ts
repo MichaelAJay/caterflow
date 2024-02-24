@@ -9,4 +9,8 @@ export class UserDbHandlerService implements IUserDbHandler {
   async createUser(): Promise<any> {
     throw new Error('Method not implemented.');
   }
+
+  async retrieveUserByExternalAuthUID(externalAuthUID: string): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
 }

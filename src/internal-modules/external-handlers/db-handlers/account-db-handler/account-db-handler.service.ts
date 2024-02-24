@@ -10,7 +10,7 @@ export class AccountDbHandlerService implements IAccountDbHandler {
     private readonly prismaClient: PrismaClientService,
   ) {}
 
-  async createAccount(name: string, ownerEmail: string): Promise<any> {
+  async createAccount(name: string): Promise<any> {
     throw new Error('Method not implemented.');
   }
 }

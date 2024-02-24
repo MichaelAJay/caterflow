@@ -10,16 +10,12 @@ export class AccountService implements IAccountService {
     private readonly userDbHandler: UserDbHandlerService,
   ) {}
 
-  async createAccount(
-    name: string,
-    owner: string,
-    email: string,
-    password: string,
-  ): Promise<any> {
+  async createAccount(name: string, externalAuthUID: string): Promise<any> {
+    return { name, externalAuthUID };
     // Create account
-    await this.accountDbHandler.createAccount(name, email);
-    // Create user (owner)
-    await this.userDbHandler.createUser();
+    // await this.accountDbHandler.createAccount(name);
+    // // Create user (owner)
+    // await this.userDbHandler.createUser();
     // Add user to Auth0
 
     // Create accountUser
