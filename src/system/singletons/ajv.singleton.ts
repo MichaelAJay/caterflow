@@ -1,4 +1,12 @@
-import Ajv from 'ajv';
+import Ajv, { FormatDefinition } from 'ajv';
 
-const ajvSingleton = new Ajv();
+const emailFormat: FormatDefinition<string> = {
+  validate: (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  },
+};
+
+const ajvSingleton = new Ajv({ allErrors: true });
+ajvSingleton.addFormat('email', emailFormat);
 export default ajvSingleton;

@@ -11,33 +11,31 @@ datasource db {
 }
 
 model Account {
-  id           String         @id @default(uuid())
-  name         String
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  isActive     Boolean        @default(false)
-  User         User[]
-  AccountOwner AccountOwner[]
+  id        String   @id @default(uuid())
+  name      String
+  isActive  Boolean  @default(false) @map("is_active")
+  ownerId   String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  users     User[]   @relation("AccountUsers")
+  owner     User     @relation("AccountOwner", fields: [ownerId], references: [id])
+
+  @@map("accounts")
 }
 
 model User {
-  id                 String         @id @default(uuid())
-  email              String         @unique
-  hashedPassword     String
-  salt               String
-  hashedRefreshToken String
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt
-  account            Account        @relation(fields: [accountId], references: [id])
-  accountId          String
-  AccountOwner       AccountOwner[]
-}
+  id             String   @id @default(uuid())
+  extAuthUID     String   @unique @map("ext_auth_uid")
+  accountId      String?  @map("account_id")
+  emailEncrypted String   @map("email_encrypted")
+  emailHashed    String   @unique @map("email_hashed")
+  nameEncrypted  String   @map("name_encrypted")
+  createdat      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  account        Account? @relation(name: "AccountUsers", fields: [accountId], references: [id])
+  ownedAccount   Account? @relation("AccountOwner")
 
-model AccountOwner {
-  accountId String
-  userId    String
-  account   Account @relation(fields: [accountId], references: [id])
-  user      User    @relation(fields: [userId], references: [id])
-
-  @@id([accountId, userId])
+  @@index([extAuthUID])
+  @@index([accountId])
+  @@map("users")
 }

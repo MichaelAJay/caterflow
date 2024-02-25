@@ -1,8 +1,7 @@
 export interface IAccountService {
-  createAccount(
-    name: string,
-    owner: string,
-    email: string,
-    password: string,
-  ): Promise<any>;
+  /**
+   * @param name account name
+   * @param ownerId owner internal user.id
+   */
+  createAccount(name: string, ownerId: string): Promise<any>;
 }
