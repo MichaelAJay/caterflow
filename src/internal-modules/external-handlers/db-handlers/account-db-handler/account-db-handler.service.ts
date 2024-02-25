@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { IAccountDbHandler } from './interfaces/account-db-handler.service.interface';
 import { AccountDbQueryBuilderService } from './account-db-query-builder.service';
-import { PrismaClientService } from 'src/external-modules/prisma-client/prisma-client.service';
+import { PrismaClientService } from '../../../../external-modules/prisma-client/prisma-client.service';
 import { Account } from '@prisma/client';
 
 @Injectable()

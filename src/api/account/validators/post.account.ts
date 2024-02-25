@@ -1,5 +1,5 @@
 import { JSONSchemaType } from 'ajv';
-import ajvSingleton from 'src/system/singletons/ajv.singleton';
+import ajvSingleton from '../../../system/singletons/ajv.singleton';
 
 type CreateAccount = {
   name: string;

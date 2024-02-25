@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { GcpSecretManagerService } from 'src/external-modules/gcp-secret-manager/gcp-secret-manager.service';
-import { SecretManager } from './interfaces/secret-manager.service.interface';
-import { CustomConfigService } from 'src/utility/services/custom-config.service';
+import { GcpSecretManagerService } from '../../../external-modules/gcp-secret-manager/gcp-secret-manager.service';
+import { ISecretManager } from './interfaces/secret-manager.service.interface';
+import { CustomConfigService } from '../../../utility/services/custom-config.service';
 
 @Injectable()
-export class SecretManagerService implements SecretManager {
+export class SecretManagerService implements ISecretManager {
   private readonly isLocal: boolean;
 
   constructor(

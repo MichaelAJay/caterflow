@@ -5,7 +5,7 @@ import {
   createHash,
   randomBytes,
 } from 'crypto';
-import { SecretManagerService } from 'src/internal-modules/external-handlers/secret-manager/secret-manager.service';
+import { SecretManagerService } from '../../../internal-modules/external-handlers/secret-manager/secret-manager.service';
 import { ICryptoService } from './interfaces/crypto.service.interface';
 
 @Injectable()
