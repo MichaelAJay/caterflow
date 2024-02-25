@@ -4,6 +4,8 @@ import { validateCreateAccountRequestBody } from './validators/post.account';
 import { IAccountController } from './interfaces/account.controller.interface';
 import { AuthenticatedRequest } from '../interfaces/authenticated-request.interface';
 import { BypassAccountRequirement } from 'src/common/decorators/bypass-account-requirement.decorator';
+import { ERROR_CODE } from 'src/common/codes/error-codes';
+import { SUCCESS_CODE } from 'src/common/codes/success-codes';
 
 @Controller('account')
 export class AccountController implements IAccountController {
@@ -20,11 +22,14 @@ export class AccountController implements IAccountController {
     if (user.accountId !== undefined) {
       throw new ConflictException({
         message: 'This user is already associated with an account',
-        code: 'account_exists',
+        code: ERROR_CODE.AccountExists,
       });
     }
 
-    return this.accountService.createAccount(name, user.external_auth_uid);
-    // Ensure that if a known error has occurred, that it has been logged, and send that information back in the response
+    await this.accountService.createAccount(name, user.external_auth_uid);
+    return {
+      message: 'Your account was successfully created!',
+      code: SUCCESS_CODE.AccountCreated,
+    };
   }
 }

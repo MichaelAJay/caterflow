@@ -11,39 +11,31 @@ datasource db {
 }
 
 model Account {
-  id        String         @id @default(uuid())
+  id        String   @id @default(uuid())
   name      String
-  isActive  Boolean        @default(false) @map("is_active")
-  createdAt DateTime       @default(now()) @map("created_at")
-  updatedAt DateTime       @updatedAt @map("updated_at")
-  users     User[]
-  owner     AccountOwner[]
+  isActive  Boolean  @default(false) @map("is_active")
+  ownerId   String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  users     User[]   @relation("AccountUsers")
+  owner     User     @relation("AccountOwner", fields: [ownerId], references: [id])
 
   @@map("accounts")
 }
 
 model User {
-  id             String         @id @default(uuid())
-  extAuthUID     String         @unique @map("ext_auth_uid")
-  accountId      String?        @map("account_id")
-  emailEncrypted String         @map("email_encrypted")
-  emailHashed    String         @unique @map("email_hashed")
-  nameEncrypted  String         @map("name_encrypted")
-  createdat      DateTime       @default(now()) @map("created_at")
-  updatedAt      DateTime       @updatedAt @map("updated_at")
-  account        Account?       @relation(fields: [accountId], references: [id])
-  AccountOwner   AccountOwner[]
+  id             String   @id @default(uuid())
+  extAuthUID     String   @unique @map("ext_auth_uid")
+  accountId      String?  @map("account_id")
+  emailEncrypted String   @map("email_encrypted")
+  emailHashed    String   @unique @map("email_hashed")
+  nameEncrypted  String   @map("name_encrypted")
+  createdat      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  account        Account? @relation(name: "AccountUsers", fields: [accountId], references: [id])
+  ownedAccount   Account? @relation("AccountOwner")
 
   @@index([extAuthUID])
   @@index([accountId])
   @@map("users")
-}
-
-model AccountOwner {
-  accountId String  @id @map("account_id")
-  userId    String  @map("user_id")
-  account   Account @relation(fields: [accountId], references: [id])
-  user      User    @relation(fields: [userId], references: [id])
-
-  @@map("account_owners")
 }

@@ -1,3 +1,5 @@
+import { Account } from '@prisma/client';
+
 export interface IAccountDbHandler {
-  createAccount(name: string): Promise<any>;
+  createAccount(name: string, ownerId: string): Promise<Account>;
 }

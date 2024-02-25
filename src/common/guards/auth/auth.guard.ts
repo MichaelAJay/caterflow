@@ -6,6 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { ERROR_CODE } from 'src/common/codes/error-codes';
 import { bypassAccountRequirementMetadataName } from 'src/common/decorators/bypass-account-requirement.decorator';
 import { isPublicMetadataName } from 'src/common/decorators/public.decorator';
 import { FirebaseAdminService } from 'src/external-modules/firebase-admin/firebase-admin.service';
@@ -37,33 +38,35 @@ export class AuthGuard implements CanActivate {
         throw new ForbiddenException({
           message:
             'Your email address has not been verified. Please verify your email to continue.',
-          code: 'unverified_email',
+          code: ERROR_CODE.UnverifiedEmail,
         });
       }
-      console.log('Auth guard payload', payload);
 
-      // Confirm user belongs to an account
-      const account = await this.userService.getAccountByExternalUID(
-        payload.uid,
-      );
-      const canSkipAccountCheck = this.reflector.getAllAndOverride<boolean>(
-        bypassAccountRequirementMetadataName,
-        [context.getHandler(), context.getClass()],
-      );
-      if (!canSkipAccountCheck) {
-        if (account === null) {
+      // User exists?
+      const user = await this.userService.getUserByExternalUID(payload.uid);
+      // This actually represents a problem
+      if (user === null) return false;
+
+      // User isn't associated with account
+      if (user.accountId === null) {
+        const canSkipAccountCheck = this.reflector.getAllAndOverride<boolean>(
+          bypassAccountRequirementMetadataName,
+          [context.getHandler(), context.getClass()],
+        );
+        if (!canSkipAccountCheck) {
           throw new ForbiddenException({
             message:
               'This request may only be made by a user associated with an account',
-            code: 'no_account',
+            code: ERROR_CODE.NoAccount,
           });
         }
       }
 
       request.user = {
+        id: user.id,
         external_auth_uid: payload.uid,
         email: payload.email,
-        accountId: account ? account.id : undefined,
+        accountId: user ? user.accountId : undefined,
       };
 
       return true;
@@ -76,7 +79,7 @@ export class AuthGuard implements CanActivate {
       if (error.code && error.code === 'auth/id-token-expired') {
         throw new UnauthorizedException({
           message: 'The access token is expired. Please login again.',
-          code: 'token_expired',
+          code: ERROR_CODE.TokenExpired,
         });
       }
 

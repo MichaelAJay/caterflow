@@ -1,3 +1,5 @@
+import { User } from '@prisma/client';
+
 export interface IUserService {
-  getAccountByExternalUID(externalUID: string): Promise<{ id: string } | null>;
+  getUserByExternalUID(externalUID: string): Promise<User | null>;
 }
