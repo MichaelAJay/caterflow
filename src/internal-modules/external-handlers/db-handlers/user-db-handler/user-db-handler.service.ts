@@ -35,5 +35,6 @@ export class UserDbHandlerService implements IUserDbHandler {
     const result = await this.prismaClient.user.update(
       this.userQueryBuilder.buildUpdateUser(id, updates),
     );
+    return result;
   }
 }
