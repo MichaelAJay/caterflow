@@ -1,6 +1,6 @@
-import { ExternalSecretManager } from 'src/external-modules/gcp-secret-manager/interfaces/external-secret-manager.service.interface';
+import { IExternalSecretManager } from 'src/external-modules/gcp-secret-manager/interfaces/external-secret-manager.service.interface';
 
-export interface SecretManager extends ExternalSecretManager {
+export interface ISecretManager extends IExternalSecretManager {
   getSecretName(
     accountId: string,
     accountIntegrationId: string,

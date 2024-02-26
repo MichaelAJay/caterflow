@@ -6,11 +6,11 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { ERROR_CODE } from 'src/common/codes/error-codes';
-import { bypassAccountRequirementMetadataName } from 'src/common/decorators/bypass-account-requirement.decorator';
-import { isPublicMetadataName } from 'src/common/decorators/public.decorator';
-import { FirebaseAdminService } from 'src/external-modules/firebase-admin/firebase-admin.service';
-import { UserService } from 'src/internal-modules/user/user.service';
+import { ERROR_CODE } from '../../codes/error-codes';
+import { bypassAccountRequirementMetadataName } from '../../decorators/bypass-account-requirement.decorator';
+import { isPublicMetadataName } from '../../decorators/public.decorator';
+import { FirebaseAdminService } from '../../../external-modules/firebase-admin/firebase-admin.service';
+import { UserService } from '../../../internal-modules/user/user.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {

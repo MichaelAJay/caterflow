@@ -1,6 +1,6 @@
 import { Controller, Get, Req } from '@nestjs/common';
 import { IUserController } from './interfaces/user.controller.interface';
-import { BypassAccountRequirement } from 'src/common/decorators/bypass-account-requirement.decorator';
+import { BypassAccountRequirement } from '../../common/decorators/bypass-account-requirement.decorator';
 import { AuthenticatedRequest } from '../interfaces/authenticated-request.interface';
 
 @Controller('user')

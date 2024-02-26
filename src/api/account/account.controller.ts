@@ -1,11 +1,11 @@
 import { Body, ConflictException, Controller, Post, Req } from '@nestjs/common';
-import { AccountService } from 'src/internal-modules/account/account.service';
+import { AccountService } from '../../internal-modules/account/account.service';
 import { validateCreateAccountRequestBody } from './validators/post.account';
 import { IAccountController } from './interfaces/account.controller.interface';
 import { AuthenticatedRequest } from '../interfaces/authenticated-request.interface';
-import { BypassAccountRequirement } from 'src/common/decorators/bypass-account-requirement.decorator';
-import { ERROR_CODE } from 'src/common/codes/error-codes';
-import { SUCCESS_CODE } from 'src/common/codes/success-codes';
+import { BypassAccountRequirement } from '../../common/decorators/bypass-account-requirement.decorator';
+import { ERROR_CODE } from '../../common/codes/error-codes';
+import { SUCCESS_CODE } from '../../common/codes/success-codes';
 
 @Controller('account')
 export class AccountController implements IAccountController {

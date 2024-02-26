@@ -1,10 +1,10 @@
 import { SecretManagerServiceClient } from '@google-cloud/secret-manager';
 import { Injectable } from '@nestjs/common';
-import { CustomConfigService } from 'src/utility/services/custom-config.service';
-import { ExternalSecretManager } from './interfaces/external-secret-manager.service.interface';
+import { CustomConfigService } from '../../utility/services/custom-config.service';
+import { IExternalSecretManager } from './interfaces/external-secret-manager.service.interface';
 
 @Injectable()
-export class GcpSecretManagerService implements ExternalSecretManager {
+export class GcpSecretManagerService implements IExternalSecretManager {
   private client: SecretManagerServiceClient;
   private secretPrefix: string;
   private env: string;

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { IUserDbHandler } from './interfaces/user-db-handler.service.interface';
-import { PrismaClientService } from 'src/external-modules/prisma-client/prisma-client.service';
+import { PrismaClientService } from '../../../../external-modules/prisma-client/prisma-client.service';
 import { UserDbQueryBuilderService } from './user-db-query-builder.service';
 import {
   IBuildCreateUserArgs,
