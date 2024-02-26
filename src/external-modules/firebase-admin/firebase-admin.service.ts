@@ -16,10 +16,8 @@ export class FirebaseAdminService
   async verifyToken(token: string) {
     try {
       const decodedToken = await admin.auth().verifyIdToken(token);
-      console.log('verifyToken', decodedToken);
       return decodedToken;
     } catch (err) {
-      console.error('Verify token failed', err);
       throw err;
     }
   }
