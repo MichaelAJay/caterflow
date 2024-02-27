@@ -28,6 +28,10 @@ describe('AuthGuard', () => {
     userService = module.get<UserService>(UserService);
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('should be defined', () => {
     expect(guard).toBeDefined();
   });

@@ -30,6 +30,10 @@ describe('AccountDbHandlerService', () => {
     prismaClient = module.get<PrismaClientService>(PrismaClientService);
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('should be defined', () => {
     expect(service).toBeDefined();
   });

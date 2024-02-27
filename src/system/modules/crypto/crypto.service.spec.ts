@@ -38,6 +38,10 @@ describe('CryptoService', () => {
     service = module.get<CryptoService>(CryptoService);
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('should be defined', () => {
     expect(service).toBeDefined();
   });

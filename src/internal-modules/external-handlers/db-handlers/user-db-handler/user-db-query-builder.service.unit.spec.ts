@@ -12,6 +12,10 @@ describe('UserDbQueryBuilderService', () => {
     service = module.get<UserDbQueryBuilderService>(UserDbQueryBuilderService);
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('should be defined', () => {
     expect(service).toBeDefined();
   });

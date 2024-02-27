@@ -35,6 +35,10 @@ describe('GcpSecretManagerService', () => {
     service = module.get<GcpSecretManagerService>(GcpSecretManagerService);
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('should be defined', () => {
     expect(service).toBeDefined();
   });

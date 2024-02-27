@@ -18,6 +18,10 @@ describe('CustomConfigService', () => {
     mockConfigService = module.get<{ get: jest.Mock }>(ConfigService);
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('should be defined', () => {
     expect(service).toBeDefined();
   });

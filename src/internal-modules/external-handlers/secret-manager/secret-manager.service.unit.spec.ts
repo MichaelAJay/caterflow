@@ -3,7 +3,6 @@ import { SecretManagerService } from './secret-manager.service';
 import { GcpSecretManagerService } from '../../../external-modules/gcp-secret-manager/gcp-secret-manager.service';
 import { CustomConfigService } from '../../../utility/services/custom-config.service';
 import { mockGcpSecretManagerService } from '../../../../test/mocks/providers/mock_gcp_secret_manager';
-import { mockCustomConfig } from '../../../../test/mocks/providers/mock_custom_config';
 import * as fs from 'fs/promises'; // Mock fs module for local file handling
 jest.mock('fs/promises');
 
@@ -36,9 +35,9 @@ describe('SecretManagerService', () => {
     );
   };
 
-  // beforeEach(async () => {
-  //   mockCustomConfig.getEnvVariable = jest.fn();
-  // });
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
 
   it('should be defined', async () => {
     await setupTestEnvironment(false);

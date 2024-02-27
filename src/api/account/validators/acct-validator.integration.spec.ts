@@ -1,6 +1,10 @@
 import { validateCreateAccountRequestBody } from './post.account';
 
 describe('account validator integration tests', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   describe('post.account schema', () => {
     it('should validate successfully when name is provided and is a string', () => {
       const data = { name: 'test' };

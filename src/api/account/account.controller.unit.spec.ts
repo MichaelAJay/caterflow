@@ -21,6 +21,10 @@ describe('AccountController', () => {
     accountService = module.get<AccountService>(AccountService);
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('should be defined', () => {
     expect(controller).toBeDefined();
   });
