@@ -18,7 +18,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "test:target": "npx jest --testPathPattern=external-modules/firebase-admin/firebase-admin.service.*.spec.ts"
+    "test:target": "npx jest --testPathPattern=system/modules/crypto/crypto.service.*.spec.ts"
   },
   "dependencies": {
     "@google-cloud/secret-manager": "^5.1.0",
@@ -29,6 +29,8 @@
     "@nestjs/platform-fastify": "^10.3.3",
     "@nestjs/swagger": "^7.3.0",
     "@prisma/client": "^5.9.1",
+    "@sentry/node": "^7.102.1",
+    "@sentry/profiling-node": "^7.102.1",
     "ajv": "^8.12.0",
     "firebase-admin": "^12.0.0",
     "graphql": "^16.8.1",
