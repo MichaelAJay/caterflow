@@ -3,4 +3,9 @@ export const mockPrismaClientService = {
   account: {
     create: jest.fn(),
   },
+  user: {
+    create: jest.fn(),
+    findUnique: jest.fn(),
+    update: jest.fn(),
+  },
 };

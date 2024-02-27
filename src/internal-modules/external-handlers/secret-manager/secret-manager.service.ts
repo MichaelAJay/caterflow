@@ -44,10 +44,11 @@ export class SecretManagerService implements ISecretManager {
 
   async upsertSecret(secretName: string, secretValue: Buffer): Promise<void> {
     if (!this.isLocal) {
-      return this.cloudSecretManagerService.upsertSecret(
+      const result = await this.cloudSecretManagerService.upsertSecret(
         secretName,
         secretValue,
       );
+      return result;
     }
     throw new Error('Upserting secrets locally not allowed');
   }
