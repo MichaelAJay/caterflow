@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { GcpSecretManagerService } from '../../../external-modules/gcp-secret-manager/gcp-secret-manager.service';
 import { ISecretManager } from './interfaces/secret-manager.service.interface';
 import { CustomConfigService } from '../../../utility/services/custom-config.service';
+import * as fs from 'fs/promises';
+import * as path from 'path';
 
 @Injectable()
 export class SecretManagerService implements ISecretManager {
@@ -23,18 +25,31 @@ export class SecretManagerService implements ISecretManager {
   }
 
   async getSecret(secretName: string): Promise<string> {
-    if (!this.isLocal) {
-      return this.cloudSecretManagerService.getSecret(secretName);
+    let secret;
+    if (this.isLocal) {
+      const secretPath = `PATH_TO_${secretName}`;
+      secret = await fs.readFile(
+        path.resolve(__dirname, '../../..', secretPath),
+        'utf-8',
+      );
+      console.log('secret', secret);
+    } else {
+      secret = await this.cloudSecretManagerService.getSecret(secretName);
     }
+    return secret;
 
     // Handle local secret retrieval (store in /internal/secrets)
     throw new Error('Not implemented');
   }
 
   async upsertSecret(secretName: string, secretValue: Buffer): Promise<void> {
-    if (this.isLocal) {
-      throw new Error('Upserting secrets locally not allowed');
+    if (!this.isLocal) {
+      const result = await this.cloudSecretManagerService.upsertSecret(
+        secretName,
+        secretValue,
+      );
+      return result;
     }
-    return this.cloudSecretManagerService.upsertSecret(secretName, secretValue);
+    throw new Error('Upserting secrets locally not allowed');
   }
 }

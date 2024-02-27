@@ -2,6 +2,7 @@ import { SecretManagerServiceClient } from '@google-cloud/secret-manager';
 import { Injectable } from '@nestjs/common';
 import { CustomConfigService } from '../../utility/services/custom-config.service';
 import { IExternalSecretManager } from './interfaces/external-secret-manager.service.interface';
+import * as Sentry from '@sentry/node';
 
 @Injectable()
 export class GcpSecretManagerService implements IExternalSecretManager {
@@ -20,67 +21,68 @@ export class GcpSecretManagerService implements IExternalSecretManager {
   }
 
   async getSecret(secretName: string): Promise<string> {
-    try {
-      const [version] = await this.client.accessSecretVersion({
+    const [version] = await this.client
+      .accessSecretVersion({
         name: `${this.secretPrefix}/${secretName}/versions/latest`,
+      })
+      .catch((reason) => {
+        Sentry.captureException(reason);
+        throw reason;
       });
 
-      if (!version.payload?.data) {
-        throw new Error(`Secret ${secretName} not found or has no data.`);
-      }
-
-      return version.payload.data.toString();
-    } catch (err) {
-      console.error(`Failed to access secret ${secretName}: ${err.message}`);
-      throw err;
+    if (!version.payload?.data) {
+      throw new Error(`Secret ${secretName} not found or has no data.`);
     }
+
+    return version.payload.data.toString();
   }
 
   async upsertSecret(secretName: string, secretValue: Buffer): Promise<void> {
+    const secretPath = `${this.secretPrefix}/${secretName}`;
     try {
-      const secretPath = `${this.secretPrefix}/${secretName}`;
-      try {
-        await this.client.getSecret({ name: secretPath });
-      } catch (err) {
-        if (err.code === 5) {
-          await this.client.createSecret({
-            parent: this.secretPrefix,
-            secretId: secretName,
-            secret: {
-              replication: {
-                automatic: {},
-              },
-              labels: {
-                product: this.product,
-                env: this.env,
-              },
+      await this.client.getSecret({ name: secretPath });
+    } catch (err) {
+      if (err.code === 5) {
+        await this.client.createSecret({
+          parent: this.secretPrefix,
+          secretId: secretName,
+          secret: {
+            replication: {
+              automatic: {},
             },
-          });
-        } else {
-          throw err;
-        }
+            labels: {
+              product: this.product,
+              env: this.env,
+            },
+          },
+        });
+      } else {
+        Sentry.captureException(err);
+        throw err;
       }
+    }
 
-      await this.client.addSecretVersion({
+    await this.client
+      .addSecretVersion({
         parent: secretPath,
         payload: {
           data: secretValue,
         },
+      })
+      .catch((reason) => {
+        Sentry.captureException(reason);
+        throw reason;
       });
-    } catch (err) {
-      console.error('err');
-      throw err;
-    }
   }
 
   async deleteSecret(secretName: string): Promise<void> {
-    try {
-      await this.client.deleteSecret({
+    await this.client
+      .deleteSecret({
         name: `${this.secretPrefix}/${secretName}`,
+      })
+      .catch((reason) => {
+        Sentry.captureException(reason);
+        throw reason;
       });
-    } catch (err) {
-      console.error(`Failed to delete secret ${secretName}: ${err.message}`);
-      throw err;
-    }
   }
 }
