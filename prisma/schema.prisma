@@ -30,7 +30,7 @@ model User {
   emailEncrypted String   @map("email_encrypted")
   emailHashed    String   @unique @map("email_hashed")
   nameEncrypted  String   @map("name_encrypted")
-  createdat      DateTime @default(now()) @map("created_at")
+  createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
   account        Account? @relation(name: "AccountUsers", fields: [accountId], references: [id])
   ownedAccount   Account? @relation("AccountOwner")

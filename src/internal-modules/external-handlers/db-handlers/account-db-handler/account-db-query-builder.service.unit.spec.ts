@@ -9,10 +9,25 @@ describe('AccountDbQueryBuilderService', () => {
       providers: [AccountDbQueryBuilderService],
     }).compile();
 
-    service = module.get<AccountDbQueryBuilderService>(AccountDbQueryBuilderService);
+    service = module.get<AccountDbQueryBuilderService>(
+      AccountDbQueryBuilderService,
+    );
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  it('should return an object with data set to the input', () => {
+    const input = { name: 'Test Account', ownerId: 'testOwnerId' };
+    const expectedOutput = { data: input };
+
+    const result = service.buildCreateAccountQuery(input);
+
+    expect(result).toEqual(expectedOutput);
   });
 });

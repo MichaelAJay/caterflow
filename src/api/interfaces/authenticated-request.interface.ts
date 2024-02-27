@@ -4,6 +4,6 @@ export interface AuthenticatedRequest extends FastifyRequest {
     id: string;
     external_auth_uid: string;
     email: string;
-    accountId?: string;
+    accountId: string | null;
   };
 }

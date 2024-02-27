@@ -66,7 +66,7 @@ export class AuthGuard implements CanActivate {
         id: user.id,
         external_auth_uid: payload.uid,
         email: payload.email,
-        accountId: user ? user.accountId : undefined,
+        accountId: user.accountId,
       };
 
       return true;
@@ -83,7 +83,7 @@ export class AuthGuard implements CanActivate {
         });
       }
 
-      console.error('Unhandled auth guard error', error);
+      // console.error('Unhandled auth guard error', error);
       return false;
     }
   }
