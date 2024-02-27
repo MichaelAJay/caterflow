@@ -18,11 +18,20 @@ const validate = ajvSingleton.compile(schema);
 
 type ValidationResult =
   | { valid: true; data: CreateAccount }
-  | { valid: false; errors: any };
+  | {
+      valid: false;
+      errors: Array<{ path: string; message: string | undefined }>;
+    };
 export function validateCreateAccountRequestBody(data: any): ValidationResult {
   const valid = validate(data);
   if (!valid) {
-    return { valid, errors: validate.errors };
+    const errorMsgs = validate.errors
+      ? validate.errors.map((err) => ({
+          path: err.instancePath,
+          message: err.message,
+        }))
+      : [];
+    return { valid, errors: errorMsgs };
   }
   return { valid, data };
 }
