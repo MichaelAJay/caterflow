@@ -83,7 +83,7 @@ export class AuthGuard implements CanActivate {
         });
       }
 
-      console.error('Unhandled auth guard error', error);
+      // console.error('Unhandled auth guard error', error);
       return false;
     }
   }
