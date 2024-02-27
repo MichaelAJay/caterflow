@@ -1,0 +1,1 @@
+System modules have providers which may be used by internal and external modules. They may not have any dependencies that are internal or external modules.

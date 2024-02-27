@@ -1,0 +1,6 @@
+accessSecretVersion
+getSecret
+createSecret
+addSecretVersion
+deleteSecret
+
