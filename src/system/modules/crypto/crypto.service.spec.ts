@@ -9,23 +9,20 @@ jest.mock('crypto', () => {
     ...originalCrypto,
     randomBytes: jest.fn().mockReturnValue(Buffer.alloc(16, 'a')),
     createCipheriv: jest.fn().mockReturnValue({
-      update: jest.fn().mockReturnValue(Buffer.from('encrypted')),
-      final: jest.fn().mockReturnValue(Buffer.from('')),
+      update: jest.fn().mockReturnValue('encrypted'),
+      final: jest.fn().mockReturnValue(''),
+    }),
+    createDecipheriv: jest.fn().mockReturnValue({
+      update: jest.fn().mockReturnValue('decrypted'),
+      final: jest.fn().mockReturnValue(''),
     }),
   };
 });
 
 describe('CryptoService', () => {
   let service: CryptoService;
-  let mockCreateCipheriv: jest.Mock;
 
   beforeEach(async () => {
-    mockCreateCipheriv = jest.fn();
-
-    jest.mock('crypto', () => ({
-      createCipheriv: mockCreateCipheriv,
-    }));
-
     mockSecretManagerService.getSecret = jest
       .fn()
       .mockResolvedValue('MBlW82izU6LiQ1aUWS3ubx+m8UZars3MF2U42OAFfY0=');
@@ -47,18 +44,33 @@ describe('CryptoService', () => {
     it('should encrypt the text', async () => {
       const text = 'test';
       const encryptedText = 'encrypted';
-
-      const mockCipher = {
-        update: jest.fn().mockReturnValue(encryptedText),
-        final: jest.fn().mockReturnValue(Buffer.from('')),
-      };
-
-      mockCreateCipheriv.mockReturnValue(mockCipher);
-
       const result = await service.encrypt(text);
       expect(result).toBe(
         `${Buffer.alloc(16, 'a').toString('hex')}:${encryptedText}`,
       );
+    });
+  });
+
+  describe('decrypt', () => {
+    it('should decrypt the text', async () => {
+      const text = `${Buffer.alloc(16, 'a').toString('hex')}:encrypted`;
+      const decryptedText = 'decrypted';
+      const result = await service.decrypt(text);
+      expect(result).toBe(decryptedText);
+    });
+  });
+
+  describe('hash', () => {
+    it('should hash the text', async () => {
+      const text = 'test';
+      const result = await service.hash(text);
+      expect(result).toBe('hashed');
+    });
+
+    it('should trim and convert the text to lower case before hashing', async () => {
+      const text = ' TeSt ';
+      const result = await service.hash(text);
+      expect(result).toBe('hashed');
     });
   });
 });
