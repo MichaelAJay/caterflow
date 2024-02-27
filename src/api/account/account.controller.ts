@@ -1,4 +1,11 @@
-import { Body, ConflictException, Controller, Post, Req } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  ConflictException,
+  Controller,
+  Post,
+  Req,
+} from '@nestjs/common';
 import { AccountService } from '../../internal-modules/account/account.service';
 import { validateCreateAccountRequestBody } from './validators/post.account';
 import { IAccountController } from './interfaces/account.controller.interface';
@@ -14,10 +21,16 @@ export class AccountController implements IAccountController {
   @BypassAccountRequirement()
   @Post()
   async createAccount(@Body() body: any, @Req() req: AuthenticatedRequest) {
-    if (!validateCreateAccountRequestBody(body)) {
-      throw new Error('ARGH!');
+    const validationResult = validateCreateAccountRequestBody(body);
+    if (!validationResult.valid) {
+      throw new BadRequestException({
+        message: 'Invalid request body',
+        code: ERROR_CODE.InvalidRequestBody,
+        errors: validationResult.errors,
+      });
     }
-    const { name } = body;
+
+    const { name } = validationResult.data;
     const { user } = req;
     if (user.accountId !== undefined) {
       throw new ConflictException({

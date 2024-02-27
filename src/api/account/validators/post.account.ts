@@ -5,7 +5,7 @@ type CreateAccount = {
   name: string;
 };
 
-const schema: JSONSchemaType<CreateAccount> = {
+export const schema: JSONSchemaType<CreateAccount> = {
   type: 'object',
   properties: {
     name: { type: 'string' },
@@ -16,8 +16,13 @@ const schema: JSONSchemaType<CreateAccount> = {
 
 const validate = ajvSingleton.compile(schema);
 
-export function validateCreateAccountRequestBody(
-  data: any,
-): data is CreateAccount {
-  return validate(data);
+type ValidationResult =
+  | { valid: true; data: CreateAccount }
+  | { valid: false; errors: any };
+export function validateCreateAccountRequestBody(data: any): ValidationResult {
+  const valid = validate(data);
+  if (!valid) {
+    return { valid, errors: validate.errors };
+  }
+  return { valid, data };
 }
