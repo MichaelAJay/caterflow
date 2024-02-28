@@ -11,6 +11,7 @@ import { bypassAccountRequirementMetadataName } from '../../decorators/bypass-ac
 import { isPublicMetadataName } from '../../decorators/public.decorator';
 import { FirebaseAdminService } from '../../../external-modules/firebase-admin/firebase-admin.service';
 import { UserService } from '../../../internal-modules/user/user.service';
+import { bypassUserRequirementMetadataName } from '../../decorators/bypass-user-requirement.decorator';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -33,8 +34,8 @@ export class AuthGuard implements CanActivate {
       if (!token) return false;
 
       const payload = await this.firebaseAdminService.verifyToken(token);
+
       if (payload.email_verified !== true) {
-        // Some sort of special error case
         throw new ForbiddenException({
           message:
             'Your email address has not been verified. Please verify your email to continue.',
@@ -45,7 +46,21 @@ export class AuthGuard implements CanActivate {
       // User exists?
       const user = await this.userService.getUserByExternalUID(payload.uid);
       // This actually represents a problem
-      if (user === null) return false;
+      if (user === null) {
+        const canSkipUserCheck = this.reflector.getAllAndOverride<boolean>(
+          bypassUserRequirementMetadataName,
+          [context.getHandler(), context.getClass()],
+        );
+        if (!canSkipUserCheck) {
+          return false;
+        } else {
+          request.user = {
+            external_auth_uid: payload.uid,
+            email: payload.email,
+          };
+          return true;
+        }
+      }
 
       // User isn't associated with account
       if (user.accountId === null) {

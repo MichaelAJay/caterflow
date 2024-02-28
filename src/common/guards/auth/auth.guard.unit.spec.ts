@@ -175,7 +175,29 @@ describe('AuthGuard', () => {
       expect(await guard.canActivate(context as any)).toBe(false);
     });
 
-    it('should return false for an unspecified error thrown by userService.getUserByExternalUID', async () => {
+    it('should return true if the user is not found and bypass user requirement is set to true', async () => {
+      const context = {
+        getHandler: jest.fn(),
+        getClass: jest.fn(),
+        switchToHttp: jest.fn().mockReturnValue({
+          getRequest: jest
+            .fn()
+            .mockReturnValue({ headers: { authorization: 'Bearer token' } }),
+        }),
+      };
+      jest
+        .spyOn(guard['reflector'], 'getAllAndOverride')
+        .mockReturnValueOnce(false)
+        .mockReturnValueOnce(true);
+      jest
+        .spyOn(firebaseAdminService, 'verifyToken')
+        .mockResolvedValue({ email_verified: true } as any);
+      jest.spyOn(userService, 'getUserByExternalUID').mockResolvedValue(null);
+
+      expect(await guard.canActivate(context as any)).toBe(true);
+    });
+
+    it('should return false if the user is not found and bypass user requirement is not set to true', async () => {
       const context = {
         getHandler: jest.fn(),
         getClass: jest.fn(),
