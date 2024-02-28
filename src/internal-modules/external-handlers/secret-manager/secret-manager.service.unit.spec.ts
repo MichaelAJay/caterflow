@@ -15,7 +15,10 @@ describe('SecretManagerService', () => {
     jest.clearAllMocks();
 
     const mockCustomConfig = {
-      getEnvVariable: jest.fn().mockReturnValue(isLocal),
+      getEnvVariable: jest
+        .fn()
+        .mockReturnValueOnce(isLocal)
+        .mockReturnValue('string'),
     };
 
     const module: TestingModule = await Test.createTestingModule({

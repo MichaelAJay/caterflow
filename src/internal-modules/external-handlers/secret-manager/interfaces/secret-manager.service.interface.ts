@@ -6,4 +6,5 @@ export interface ISecretManager extends IExternalSecretManager {
     accountIntegrationId: string,
     secretType: string,
   ): string;
+  getSystemSecretName(secretName: string): string;
 }

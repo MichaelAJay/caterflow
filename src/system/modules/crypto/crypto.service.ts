@@ -19,7 +19,10 @@ export class CryptoService implements ICryptoService {
 
   private async initializeKey(): Promise<void> {
     try {
-      const encryptionKey = await this.secretManager.getSecret('CIPHER_KEY');
+      const systemSecretName =
+        this.secretManager.getSystemSecretName('CIPHER_KEY');
+      const encryptionKey =
+        await this.secretManager.getSecret(systemSecretName);
       this.key = Buffer.from(encryptionKey, 'base64');
     } catch (err) {
       console.error('Failed to load encryption key:', err);
