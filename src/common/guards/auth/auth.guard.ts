@@ -13,6 +13,11 @@ import { FirebaseAdminService } from '../../../external-modules/firebase-admin/f
 import { UserService } from '../../../internal-modules/user/user.service';
 import { bypassUserRequirementMetadataName } from '../../decorators/bypass-user-requirement.decorator';
 import { bypassVerifiedEmailRequirementMetadataName } from '../../decorators/bypass-verified-email-requirement.decorator';
+import {
+  AuthenticatedRequest,
+  AuthenticatedRequestForNewUser,
+} from '../../../api/interfaces/authenticated-request.interface';
+import * as Sentry from '@sentry/node';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -35,6 +40,19 @@ export class AuthGuard implements CanActivate {
       if (!token) return false;
 
       const payload = await this.firebaseAdminService.verifyToken(token);
+      if (!payload.email) {
+        const err = new ForbiddenException({
+          message: 'Malformed token',
+          code: ERROR_CODE.MalformedToken,
+        });
+
+        Sentry.withScope((scope) => {
+          scope.setExtra('missing', 'email');
+          Sentry.captureException(err);
+        });
+
+        throw err;
+      }
 
       if (payload.email_verified !== true) {
         const canSkipVerifiedEmailCheck =
@@ -62,7 +80,22 @@ export class AuthGuard implements CanActivate {
         if (!canSkipUserCheck) {
           return false;
         } else {
-          request.user = {
+          if (!payload.name) {
+            const err = new ForbiddenException({
+              message: 'Malformed token',
+              code: ERROR_CODE.MalformedToken,
+            });
+
+            Sentry.withScope((scope) => {
+              scope.setExtra('missing', 'name');
+              Sentry.captureException(err);
+            });
+
+            throw err;
+          }
+
+          (request as AuthenticatedRequestForNewUser).user = {
+            name: payload.name,
             external_auth_uid: payload.uid,
             email: payload.email,
           };
@@ -85,7 +118,7 @@ export class AuthGuard implements CanActivate {
         }
       }
 
-      request.user = {
+      (request as AuthenticatedRequest).user = {
         id: user.id,
         internalUserEmailVerificationStatus: user.emailVerified,
         external_auth_uid: payload.uid,

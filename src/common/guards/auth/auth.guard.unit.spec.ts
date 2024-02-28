@@ -6,6 +6,7 @@ import { UserService } from '../../../internal-modules/user/user.service';
 import { mockFirebaseAdminService } from '../../../../test/mocks/providers/mock_firebase_admin';
 import { mockUserService } from '../../../../test/mocks/providers/mock_user_service';
 import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
+import { ERROR_CODE } from '../../codes/error-codes';
 
 describe('AuthGuard', () => {
   let guard: AuthGuard;
@@ -61,9 +62,11 @@ describe('AuthGuard', () => {
       jest
         .spyOn(guard['reflector'], 'getAllAndOverride')
         .mockReturnValue(false); // First call to getAllAndOverride
-      jest
-        .spyOn(firebaseAdminService, 'verifyToken')
-        .mockResolvedValue({ email_verified: true, uid: '123' } as any);
+      jest.spyOn(firebaseAdminService, 'verifyToken').mockResolvedValue({
+        email: 'email',
+        email_verified: true,
+        uid: '123',
+      } as any);
       jest
         .spyOn(userService, 'getUserByExternalUID')
         .mockResolvedValue({ accountId: '123' } as any);
@@ -130,6 +133,35 @@ describe('AuthGuard', () => {
       expect(await guard.canActivate(context as any)).toBe(false);
     });
 
+    it('should throw MalformedToken ForbiddenException if the token payload does not include email', async () => {
+      const context = {
+        getHandler: jest.fn(),
+        getClass: jest.fn(),
+        switchToHttp: jest.fn().mockReturnValue({
+          getRequest: jest
+            .fn()
+            .mockReturnValue({ headers: { authorization: 'Bearer token' } }),
+        }),
+      };
+      jest
+        .spyOn(guard['reflector'], 'getAllAndOverride')
+        .mockReturnValue(false);
+      jest.spyOn(firebaseAdminService, 'verifyToken').mockResolvedValue({
+        email_verified: false,
+        email: undefined,
+      } as any);
+
+      await expect(guard.canActivate(context as any)).rejects.toThrow(
+        ForbiddenException,
+      );
+      try {
+        await guard.canActivate(context as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(ForbiddenException);
+        expect(err.response.code).toBe(ERROR_CODE.MalformedToken);
+      }
+    });
+
     it('should throw a ForbiddenException if the email is not verified and email verified check cannot be bypassed', async () => {
       const context = {
         getHandler: jest.fn(),
@@ -145,7 +177,7 @@ describe('AuthGuard', () => {
         .mockReturnValue(false);
       jest
         .spyOn(firebaseAdminService, 'verifyToken')
-        .mockResolvedValue({ email_verified: false } as any);
+        .mockResolvedValue({ email: 'email', email_verified: false } as any);
 
       await expect(guard.canActivate(context as any)).rejects.toThrow(
         ForbiddenException,
@@ -168,7 +200,7 @@ describe('AuthGuard', () => {
         .mockReturnValue(true); // Can skip email verification
       jest
         .spyOn(firebaseAdminService, 'verifyToken')
-        .mockResolvedValue({ email_verified: false } as any);
+        .mockResolvedValue({ email: 'email', email_verified: false } as any);
       const spy = jest.spyOn(userService, 'getUserByExternalUID');
 
       await guard.canActivate(context as any);
@@ -191,7 +223,7 @@ describe('AuthGuard', () => {
         .mockReturnValue(false);
       jest
         .spyOn(firebaseAdminService, 'verifyToken')
-        .mockResolvedValue({ email_verified: true } as any);
+        .mockResolvedValue({ email: 'email', email_verified: true } as any);
       jest
         .spyOn(userService, 'getUserByExternalUID')
         .mockRejectedValue(new Error('Test error'));
@@ -213,12 +245,43 @@ describe('AuthGuard', () => {
         .spyOn(guard['reflector'], 'getAllAndOverride')
         .mockReturnValueOnce(false)
         .mockReturnValueOnce(true);
-      jest
-        .spyOn(firebaseAdminService, 'verifyToken')
-        .mockResolvedValue({ email_verified: true } as any);
+      jest.spyOn(firebaseAdminService, 'verifyToken').mockResolvedValue({
+        email: 'email',
+        email_verified: true,
+        name: 'name',
+      } as any);
       jest.spyOn(userService, 'getUserByExternalUID').mockResolvedValue(null);
 
       expect(await guard.canActivate(context as any)).toBe(true);
+    });
+
+    it('should throw MalformedToken Forbidden error if user is not found, bypass user requirement is set to true, and payload is missing "name"', async () => {
+      const context = {
+        getHandler: jest.fn(),
+        getClass: jest.fn(),
+        switchToHttp: jest.fn().mockReturnValue({
+          getRequest: jest
+            .fn()
+            .mockReturnValue({ headers: { authorization: 'Bearer token' } }),
+        }),
+      };
+      jest
+        .spyOn(guard['reflector'], 'getAllAndOverride')
+        .mockReturnValueOnce(false)
+        .mockReturnValueOnce(true);
+      jest.spyOn(firebaseAdminService, 'verifyToken').mockResolvedValue({
+        email: 'email',
+        email_verified: true,
+        name: 'name',
+      } as any);
+      jest.spyOn(userService, 'getUserByExternalUID').mockResolvedValue(null);
+
+      try {
+        await guard.canActivate(context as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(ForbiddenException);
+        expect(err.response.code).toBe(ERROR_CODE.MalformedToken);
+      }
     });
 
     it('should return false if the user is not found and bypass user requirement is not set to true', async () => {
@@ -236,7 +299,7 @@ describe('AuthGuard', () => {
         .mockReturnValue(false);
       jest
         .spyOn(firebaseAdminService, 'verifyToken')
-        .mockResolvedValue({ email_verified: true } as any);
+        .mockResolvedValue({ email: 'email', email_verified: true } as any);
       jest.spyOn(userService, 'getUserByExternalUID').mockResolvedValue(null);
 
       expect(await guard.canActivate(context as any)).toBe(false);
@@ -256,9 +319,11 @@ describe('AuthGuard', () => {
         .spyOn(guard['reflector'], 'getAllAndOverride')
         .mockImplementationOnce(() => false) // First call to getAllAndOverride
         .mockImplementationOnce(() => false); // Second call to getAllAndOverride
-      jest
-        .spyOn(firebaseAdminService, 'verifyToken')
-        .mockResolvedValue({ email_verified: true, uid: '123' } as any);
+      jest.spyOn(firebaseAdminService, 'verifyToken').mockResolvedValue({
+        email: 'email',
+        email_verified: true,
+        uid: '123',
+      } as any);
       jest
         .spyOn(userService, 'getUserByExternalUID')
         .mockResolvedValue({ accountId: null } as any);
@@ -282,9 +347,11 @@ describe('AuthGuard', () => {
         .spyOn(guard['reflector'], 'getAllAndOverride')
         .mockImplementationOnce(() => false) // First call to getAllAndOverride
         .mockImplementationOnce(() => true); // Second call to getAllAndOverride
-      jest
-        .spyOn(firebaseAdminService, 'verifyToken')
-        .mockResolvedValue({ email_verified: true, uid: '123' } as any);
+      jest.spyOn(firebaseAdminService, 'verifyToken').mockResolvedValue({
+        email_verified: true,
+        uid: '123',
+        email: 'email',
+      } as any);
       jest
         .spyOn(userService, 'getUserByExternalUID')
         .mockResolvedValue({} as any);
