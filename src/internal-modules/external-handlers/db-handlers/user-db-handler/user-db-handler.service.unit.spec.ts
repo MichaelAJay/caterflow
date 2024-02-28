@@ -62,6 +62,7 @@ describe('UserDbHandlerService', () => {
       const expectedResult = {
         id: 'uuid',
         ...createUserInput,
+        emailVerified: false,
         createdAt: now,
         updatedAt: now,
         accountId: null,
@@ -88,6 +89,7 @@ describe('UserDbHandlerService', () => {
       const expectedResult = {
         id: 'uuid',
         ...createUserInput,
+        emailVerified: false,
         createdAt: now,
         updatedAt: now,
         accountId,
@@ -153,6 +155,7 @@ describe('UserDbHandlerService', () => {
       accountId: null,
       emailEncrypted: '',
       emailHashed: '',
+      emailVerified: false,
       createdAt: date,
       updatedAt: date,
     };
@@ -209,6 +212,7 @@ describe('UserDbHandlerService', () => {
       emailEncrypted: '',
       emailHashed: '',
       nameEncrypted: '',
+      emailVerified: false,
       createdAt: date,
       updatedAt: date,
     };
