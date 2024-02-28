@@ -11,5 +11,5 @@ export type IBuildCreateUserArgs = Pick<
 
 export type IBuildUpdateUserArgs = Pick<
   Prisma.UserUncheckedUpdateInput,
-  'accountId'
+  'accountId' | 'emailVerified'
 >;

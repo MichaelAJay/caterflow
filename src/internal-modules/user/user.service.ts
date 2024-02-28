@@ -3,6 +3,7 @@ import { IUserService } from './interfaces/user.service.interface';
 import { User } from '@prisma/client';
 import { UserDbHandlerService } from '../external-handlers/db-handlers/user-db-handler/user-db-handler.service';
 import { CryptoService } from '../../system/modules/crypto/crypto.service';
+import { IBuildUpdateUserArgs } from '../external-handlers/db-handlers/user-db-handler/interfaces/query-builder-args.interfaces';
 
 @Injectable()
 export class UserService implements IUserService {
@@ -30,6 +31,11 @@ export class UserService implements IUserService {
       emailHashed,
       nameEncrypted,
     });
+  }
+
+  async updateUser(id: string, updates: IBuildUpdateUserArgs) {
+    await this.userDbHandler.updateUser(id, updates);
+    return;
   }
 
   async getUserByExternalUID(externalUID: string): Promise<User | null> {

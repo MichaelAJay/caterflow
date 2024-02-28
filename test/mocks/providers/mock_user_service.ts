@@ -2,5 +2,6 @@ import { IUserService } from 'src/internal-modules/user/interfaces/user.service.
 
 export const mockUserService: IUserService = {
   createUser: jest.fn(),
+  updateUser: jest.fn(),
   getUserByExternalUID: jest.fn(),
 };

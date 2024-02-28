@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Req } from '@nestjs/common';
+import { Controller, Get, Patch, Post, Req } from '@nestjs/common';
 import { IUserController } from './interfaces/user.controller.interface';
 import { BypassAccountRequirement } from '../../common/decorators/bypass-account-requirement.decorator';
 import {
@@ -16,7 +16,7 @@ export class UserController implements IUserController {
   @BypassAccountRequirement()
   @BypassUserRequirement()
   @Post()
-  async createUser(req: AuthenticatedRequestForNewUser): Promise<any> {
+  async createUser(@Req() req: AuthenticatedRequestForNewUser): Promise<any> {
     const { user } = req;
     const { name, email, external_auth_uid: externalAuthUID } = user;
     await this.userService.createUser(name, email, externalAuthUID);
@@ -30,5 +30,16 @@ export class UserController implements IUserController {
   @Get('account-status')
   async getUserAccountStatus(@Req() req: AuthenticatedRequest) {
     return { hasAccount: !!(req.user && req.user.accountId) };
+  }
+
+  @BypassAccountRequirement()
+  @Patch('verify-email')
+  async verifyEmail(@Req() req: AuthenticatedRequest) {
+    const { user } = req;
+    await this.userService.updateUser(user.id, { emailVerified: true });
+    return {
+      message: '',
+      code: SUCCESS_CODE.EmailVerified,
+    };
   }
 }
