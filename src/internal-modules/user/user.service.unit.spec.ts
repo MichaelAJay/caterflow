@@ -101,8 +101,25 @@ describe('UserService', () => {
   });
 
   describe('updateUser', () => {
-    it('should call userDbHandler.updateUser with the correct arguments and return void on success', async () => {});
-    it('should propagate any error thrown by userDbhandler.updateUser', async () => {});
+    const id = '123';
+    const updates = { emailVerified: true };
+    it('should call userDbHandler.updateUser with the correct arguments and return void on success', async () => {
+      const spy = jest
+        .spyOn(userDbHandler, 'updateUser')
+        .mockResolvedValue({} as User);
+      const result = await service.updateUser(id, updates);
+      expect(spy).toHaveBeenCalledWith(id, updates);
+      expect(result).toBe(undefined);
+    });
+    it('should propagate any error thrown by userDbhandler.updateUser', async () => {
+      jest
+        .spyOn(userDbHandler, 'updateUser')
+        .mockRejectedValue(new Error('Test error'));
+
+      await expect(service.updateUser(id, updates)).rejects.toThrow(
+        'Test error',
+      );
+    });
   });
 
   describe('getUserByExternalUID', () => {
