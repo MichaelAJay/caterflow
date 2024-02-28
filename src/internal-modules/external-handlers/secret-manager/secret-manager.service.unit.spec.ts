@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { SecretManagerService } from './secret-manager.service';
 import { GcpSecretManagerService } from '../../../external-modules/gcp-secret-manager/gcp-secret-manager.service';
-import { CustomConfigService } from '../../../utility/services/custom-config.service';
+import { CustomConfigService } from '../../../utility/services/custom-config/custom-config.service';
 import { mockGcpSecretManagerService } from '../../../../test/mocks/providers/mock_gcp_secret_manager';
 import * as fs from 'fs/promises'; // Mock fs module for local file handling
 jest.mock('fs/promises');

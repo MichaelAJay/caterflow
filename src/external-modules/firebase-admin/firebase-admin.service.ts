@@ -14,14 +14,12 @@ export class FirebaseAdminService
   }
 
   async verifyToken(token: string) {
-    const decodedToken = await admin
-      .auth()
-      .verifyIdToken(token)
-      .catch((reason) => {
-        // Need to figure out how to exclude expected errors
-        // Sentry.captureException(reason);
-        throw reason;
-      });
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    // .catch((reason) => {
+    //   // Need to figure out how to exclude expected errors
+    //   // Sentry.captureException(reason);
+    //   throw reason;
+    // });
     return decodedToken;
   }
 }

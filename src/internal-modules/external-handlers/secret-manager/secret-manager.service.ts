@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { GcpSecretManagerService } from '../../../external-modules/gcp-secret-manager/gcp-secret-manager.service';
 import { ISecretManager } from './interfaces/secret-manager.service.interface';
-import { CustomConfigService } from '../../../utility/services/custom-config.service';
+import { CustomConfigService } from '../../../utility/services/custom-config/custom-config.service';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
