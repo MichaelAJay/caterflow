@@ -100,6 +100,11 @@ describe('UserService', () => {
     });
   });
 
+  describe('updateUser', () => {
+    it('should call userDbHandler.updateUser with the correct arguments and return void on success', async () => {});
+    it('should propagate any error thrown by userDbhandler.updateUser', async () => {});
+  });
+
   describe('getUserByExternalUID', () => {
     it('should return a user for a valid external UID', async () => {
       const externalUID = 'valid-external-uid';

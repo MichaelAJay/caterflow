@@ -78,4 +78,24 @@ describe('UserController', () => {
       expect(result).toEqual({ hasAccount: false });
     });
   });
+
+  describe('verifyEmail', () => {
+    const userId = '123';
+    it('should call userService.updateUser wht the correct args and return a success response', async () => {
+      const req = { user: { id: userId } } as AuthenticatedRequest;
+      const spy = jest
+        .spyOn(userService, 'updateUser')
+        .mockResolvedValue(undefined);
+      const result = await controller.verifyEmail(req);
+      expect(result).toEqual({ message: '', code: SUCCESS_CODE.EmailVerified });
+      expect(spy).toHaveBeenCalledWith(userId, { emailVerified: true });
+    });
+    it('should propagate any error thrown by userService.updateUser', async () => {
+      const req = { user: { id: userId } } as AuthenticatedRequest;
+      jest
+        .spyOn(userService, 'updateUser')
+        .mockRejectedValue(new Error('Test error'));
+      await expect(controller.verifyEmail(req)).rejects.toThrow('Test error');
+    });
+  });
 });
