@@ -12,6 +12,7 @@ import { isPublicMetadataName } from '../../decorators/public.decorator';
 import { FirebaseAdminService } from '../../../external-modules/firebase-admin/firebase-admin.service';
 import { UserService } from '../../../internal-modules/user/user.service';
 import { bypassUserRequirementMetadataName } from '../../decorators/bypass-user-requirement.decorator';
+import { bypassVerifiedEmailRequirementMetadataName } from '../../decorators/bypass-verified-email-requirement.decorator';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -36,11 +37,18 @@ export class AuthGuard implements CanActivate {
       const payload = await this.firebaseAdminService.verifyToken(token);
 
       if (payload.email_verified !== true) {
-        throw new ForbiddenException({
-          message:
-            'Your email address has not been verified. Please verify your email to continue.',
-          code: ERROR_CODE.UnverifiedEmail,
-        });
+        const canSkipVerifiedEmailCheck =
+          this.reflector.getAllAndOverride<boolean>(
+            bypassVerifiedEmailRequirementMetadataName,
+            [context.getHandler(), context.getClass()],
+          );
+        if (!canSkipVerifiedEmailCheck) {
+          throw new ForbiddenException({
+            message:
+              'Your email address has not been verified. Please verify your email to continue.',
+            code: ERROR_CODE.UnverifiedEmail,
+          });
+        }
       }
 
       // User exists?

@@ -6,6 +6,7 @@ import {
   AuthenticatedRequestForNewUser,
 } from '../interfaces/authenticated-request.interface';
 import { BypassUserRequirement } from '../../common/decorators/bypass-user-requirement.decorator';
+import { BypassVerifiedEmailRequirement } from '../../common/decorators/bypass-verified-email-requirement.decorator';
 import { UserService } from '../../internal-modules/user/user.service';
 import { SUCCESS_CODE } from '../../common/codes/success-codes';
 
@@ -14,6 +15,7 @@ export class UserController implements IUserController {
   constructor(private readonly userService: UserService) {}
 
   @BypassAccountRequirement()
+  @BypassVerifiedEmailRequirement()
   @BypassUserRequirement()
   @Post()
   async createUser(@Req() req: AuthenticatedRequestForNewUser): Promise<any> {

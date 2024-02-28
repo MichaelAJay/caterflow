@@ -130,7 +130,7 @@ describe('AuthGuard', () => {
       expect(await guard.canActivate(context as any)).toBe(false);
     });
 
-    it('should throw a ForbiddenException if the email is not verified', async () => {
+    it('should throw a ForbiddenException if the email is not verified and email verified check cannot be bypassed', async () => {
       const context = {
         getHandler: jest.fn(),
         getClass: jest.fn(),
@@ -150,6 +150,30 @@ describe('AuthGuard', () => {
       await expect(guard.canActivate(context as any)).rejects.toThrow(
         ForbiddenException,
       );
+    });
+
+    it('should not throw the UnverifiedEmail ForbiddenException if email is not verified but email verified check can be bypasses', async () => {
+      const context = {
+        getHandler: jest.fn(),
+        getClass: jest.fn(),
+        switchToHttp: jest.fn().mockReturnValue({
+          getRequest: jest
+            .fn()
+            .mockReturnValue({ headers: { authorization: 'Bearer token' } }),
+        }),
+      };
+      jest
+        .spyOn(guard['reflector'], 'getAllAndOverride')
+        .mockReturnValueOnce(false) // Is not public
+        .mockReturnValue(true); // Can skip email verification
+      jest
+        .spyOn(firebaseAdminService, 'verifyToken')
+        .mockResolvedValue({ email_verified: false } as any);
+      const spy = jest.spyOn(userService, 'getUserByExternalUID');
+
+      await guard.canActivate(context as any);
+      // If spy is called, then UnverifiedEmail ForbiddenException was not thrown
+      expect(spy).toHaveBeenCalled();
     });
 
     it('should return false for an unspecified error thrown by userService.getUserByExternalUID', async () => {
