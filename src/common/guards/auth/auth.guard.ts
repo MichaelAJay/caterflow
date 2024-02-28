@@ -79,6 +79,7 @@ export class AuthGuard implements CanActivate {
 
       request.user = {
         id: user.id,
+        internalUserEmailVerificationStatus: user.emailVerified,
         external_auth_uid: payload.uid,
         email: payload.email,
         accountId: user.accountId,

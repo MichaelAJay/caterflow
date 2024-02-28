@@ -36,7 +36,10 @@ export class UserController implements IUserController {
   @Patch('verify-email')
   async verifyEmail(@Req() req: AuthenticatedRequest) {
     const { user } = req;
-    await this.userService.updateUser(user.id, { emailVerified: true });
+    // Short circuit if internal user record already has verified email true
+    if (!user.internalUserEmailVerificationStatus) {
+      await this.userService.updateUser(user.id, { emailVerified: true });
+    }
     return {
       message: '',
       code: SUCCESS_CODE.EmailVerified,

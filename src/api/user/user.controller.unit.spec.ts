@@ -81,14 +81,25 @@ describe('UserController', () => {
 
   describe('verifyEmail', () => {
     const userId = '123';
-    it('should call userService.updateUser wht the correct args and return a success response', async () => {
-      const req = { user: { id: userId } } as AuthenticatedRequest;
+    it('should call userService.updateUser with the correct args and return a success response', async () => {
+      const req = {
+        user: { id: userId, internalUserEmailVerificationStatus: false },
+      } as AuthenticatedRequest;
       const spy = jest
         .spyOn(userService, 'updateUser')
         .mockResolvedValue(undefined);
       const result = await controller.verifyEmail(req);
       expect(result).toEqual({ message: '', code: SUCCESS_CODE.EmailVerified });
       expect(spy).toHaveBeenCalledWith(userId, { emailVerified: true });
+    });
+    it('should not call userService.updateUser if internal email already verified and should return a success response', async () => {
+      const req = {
+        user: { id: userId, internalUserEmailVerificationStatus: true },
+      } as AuthenticatedRequest;
+      const spy = jest.spyOn(userService, 'updateUser');
+      const result = await controller.verifyEmail(req);
+      expect(result).toEqual({ message: '', code: SUCCESS_CODE.EmailVerified });
+      expect(spy).not.toHaveBeenCalled();
     });
     it('should propagate any error thrown by userService.updateUser', async () => {
       const req = { user: { id: userId } } as AuthenticatedRequest;

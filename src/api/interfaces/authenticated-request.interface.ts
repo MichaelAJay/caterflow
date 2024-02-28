@@ -11,6 +11,7 @@ export interface AuthenticatedRequestForNewUser extends FastifyRequest {
 export interface AuthenticatedRequest extends FastifyRequest {
   user: {
     id: string;
+    internalUserEmailVerificationStatus: boolean;
     external_auth_uid: string;
     email: string;
     accountId: string | null;
