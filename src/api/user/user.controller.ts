@@ -17,8 +17,8 @@ export class UserController implements IUserController {
   @Post()
   async createUser(req: AuthenticatedRequestForNewUser): Promise<any> {
     const { user } = req;
-    const { email, external_auth_uid: externalAuthUID } = user;
-    return this.userService.createUser(email, externalAuthUID);
+    const { name, email, external_auth_uid: externalAuthUID } = user;
+    return this.userService.createUser(name, email, externalAuthUID);
   }
 
   @BypassAccountRequirement()
