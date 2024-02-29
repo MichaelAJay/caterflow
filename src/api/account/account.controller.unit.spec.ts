@@ -45,7 +45,7 @@ describe('AccountController', () => {
 
     it('should return a success message when the account is successfully created', async () => {
       const body = { name: 'test' };
-      const req = { user: { accountId: undefined, external_auth_uid: 'abc' } };
+      const req = { user: { accountId: null, external_auth_uid: 'abc' } };
       jest.spyOn(accountService, 'createAccount').mockResolvedValue(undefined);
       mockValidateCreateAccountRequestBody.mockReturnValue({
         valid: true,
@@ -61,7 +61,7 @@ describe('AccountController', () => {
 
     it('should call accountService.createAccount with the correct arguments', async () => {
       const body = { name: 'tests' };
-      const req = { user: { accountId: undefined, external_auth_uid: 'abc' } };
+      const req = { user: { accountId: null, id: 'abc' } };
       const createAccountSpy = jest
         .spyOn(accountService, 'createAccount')
         .mockResolvedValue(undefined);
@@ -71,10 +71,7 @@ describe('AccountController', () => {
       });
       await controller.createAccount(body, req as any);
 
-      expect(createAccountSpy).toHaveBeenCalledWith(
-        body.name,
-        req.user.external_auth_uid,
-      );
+      expect(createAccountSpy).toHaveBeenCalledWith(body.name, req.user.id);
     });
 
     it('should throw a ConflictException when the user already has an account', async () => {
