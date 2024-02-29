@@ -4,6 +4,8 @@ import { AccountService } from '../../internal-modules/account/account.service';
 import { mockAccountService } from '../../../test/mocks/providers/mock_account_service';
 import { SUCCESS_CODE } from '../../common/codes/success-codes';
 import { BadRequestException, ConflictException } from '@nestjs/common';
+import { FirebaseAdminService } from '../../external-modules/firebase-admin/firebase-admin.service';
+import { mockFirebaseAdminService } from '../../../test/mocks/providers/mock_firebase_admin';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { validateCreateAccountRequestBody } from './validators/post.account';
 
@@ -14,7 +16,10 @@ describe('AccountController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AccountController],
-      providers: [{ provide: AccountService, useValue: mockAccountService }],
+      providers: [
+        { provide: AccountService, useValue: mockAccountService },
+        { provide: FirebaseAdminService, useValue: mockFirebaseAdminService },
+      ],
     }).compile();
 
     controller = module.get<AccountController>(AccountController);

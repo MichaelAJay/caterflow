@@ -7,6 +7,12 @@ import {
 import { UserService } from '../../internal-modules/user/user.service';
 import { mockUserService } from '../../../test/mocks/providers/mock_user_service';
 import { SUCCESS_CODE } from '../../common/codes/success-codes';
+import { FirebaseAdminService } from '../../external-modules/firebase-admin/firebase-admin.service';
+import { mockFirebaseAdminService } from '../../../test/mocks/providers/mock_firebase_admin';
+import {
+  UserFoundLoginRequest,
+  UserNotFoundLoginRequest,
+} from '../interfaces/login-request.interface';
 
 describe('UserController', () => {
   let controller: UserController;
@@ -15,7 +21,10 @@ describe('UserController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [UserController],
-      providers: [{ provide: UserService, useValue: mockUserService }],
+      providers: [
+        { provide: UserService, useValue: mockUserService },
+        { provide: FirebaseAdminService, useValue: mockFirebaseAdminService },
+      ],
     }).compile();
 
     controller = module.get<UserController>(UserController);
@@ -107,6 +116,48 @@ describe('UserController', () => {
         .spyOn(userService, 'updateUser')
         .mockRejectedValue(new Error('Test error'));
       await expect(controller.verifyEmail(req)).rejects.toThrow('Test error');
+    });
+  });
+
+  describe('login', () => {
+    it('should return an object with hasAccount property and not call createUser if req.userFound is true', async () => {
+      const req = {
+        userFound: true,
+        userHasAccount: true,
+      } as UserFoundLoginRequest;
+      const result = await controller.login(req);
+      expect(result).toEqual({ hasAccount: req.userHasAccount });
+      expect(userService.createUser).not.toHaveBeenCalled();
+    });
+    it('should call userService.createUser with the correct args if req.userFound is false', async () => {
+      const user = {
+        name: 'John Doe',
+        email: 'john@example.com',
+        external_auth_uid: '123',
+      };
+      const req = { userFound: false, user } as UserNotFoundLoginRequest;
+      const spy = jest
+        .spyOn(userService, 'createUser')
+        .mockResolvedValue(undefined);
+      const result = await controller.login(req);
+      expect(result).toEqual({ hasAccount: false });
+      expect(spy).toHaveBeenCalledWith(
+        user.name,
+        user.email,
+        user.external_auth_uid,
+      );
+    });
+    it('should propagate any error thrown by userService.createUser', async () => {
+      const user = {
+        name: 'John Doe',
+        email: 'john@example.com',
+        external_auth_uid: '123',
+      };
+      const req = { userFound: false, user } as UserNotFoundLoginRequest;
+      jest
+        .spyOn(userService, 'createUser')
+        .mockRejectedValue(new Error('Test error'));
+      await expect(controller.login(req)).rejects.toThrow('Test error');
     });
   });
 });
