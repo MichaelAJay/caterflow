@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Post, Req } from '@nestjs/common';
+import { Controller, Get, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { IUserController } from './interfaces/user.controller.interface';
 import { BypassAccountRequirement } from '../../common/decorators/bypass-account-requirement.decorator';
 import {
@@ -9,6 +9,9 @@ import { BypassUserRequirement } from '../../common/decorators/bypass-user-requi
 import { BypassVerifiedEmailRequirement } from '../../common/decorators/bypass-verified-email-requirement.decorator';
 import { UserService } from '../../internal-modules/user/user.service';
 import { SUCCESS_CODE } from '../../common/codes/success-codes';
+import { NewUser } from '../../common/decorators/new-user.decorator';
+import { LoginRequest } from '../interfaces/login-request.interface';
+import { LoginGuard } from '../../common/guards/login/login.guard';
 
 @Controller('user')
 export class UserController implements IUserController {
@@ -46,5 +49,18 @@ export class UserController implements IUserController {
       message: '',
       code: SUCCESS_CODE.EmailVerified,
     };
+  }
+
+  @NewUser()
+  @UseGuards(LoginGuard)
+  @Post('login')
+  async login(@Req() req: LoginRequest): Promise<{ hasAccount: boolean }> {
+    if (req.userFound) {
+      return { hasAccount: req.userHasAccount };
+    } else {
+      const { name, email, external_auth_uid: externalAuthUID } = req.user;
+      await this.userService.createUser(name, email, externalAuthUID);
+      return { hasAccount: false };
+    }
   }
 }

@@ -2,6 +2,7 @@ import {
   AuthenticatedRequest,
   AuthenticatedRequestForNewUser,
 } from 'src/api/interfaces/authenticated-request.interface';
+import { LoginRequest } from 'src/api/interfaces/login-request.interface';
 
 export interface IUserController {
   createUser(
@@ -13,4 +14,8 @@ export interface IUserController {
   verifyEmail(
     req: AuthenticatedRequest,
   ): Promise<{ message: string; code: string }>;
+  /**
+   * Ensures user exists in system or creaets if not
+   */
+  login(req: LoginRequest): Promise<any>;
 }

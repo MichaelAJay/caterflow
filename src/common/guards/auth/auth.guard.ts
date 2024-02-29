@@ -80,7 +80,7 @@ export class AuthGuard implements CanActivate {
         if (!canSkipUserCheck) {
           return false;
         } else {
-          if (!payload.name) {
+          if (typeof payload.name !== 'string') {
             const err = new ForbiddenException({
               message: 'Malformed token',
               code: ERROR_CODE.MalformedToken,
