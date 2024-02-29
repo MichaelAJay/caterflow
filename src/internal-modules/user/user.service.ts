@@ -16,6 +16,7 @@ export class UserService implements IUserService {
     name: string,
     email: string,
     extAuthUID: string,
+    emailVerified = false,
   ): Promise<void> {
     const encryptedNamePromise = this.cryptoService.encrypt(name);
     const encryptedEmailPromise = this.cryptoService.encrypt(email);
@@ -30,6 +31,7 @@ export class UserService implements IUserService {
       emailEncrypted,
       emailHashed,
       nameEncrypted,
+      emailVerified,
     });
   }
 

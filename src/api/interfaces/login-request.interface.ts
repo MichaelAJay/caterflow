@@ -5,6 +5,7 @@ export type LoginRequest = UserFoundLoginRequest | UserNotFoundLoginRequest;
 export interface UserFoundLoginRequest extends FastifyRequest {
   userFound: true;
   userHasAccount: boolean;
+  requiresEmailVerificationSync: boolean;
 }
 
 export interface UserNotFoundLoginRequest extends FastifyRequest {
@@ -13,5 +14,6 @@ export interface UserNotFoundLoginRequest extends FastifyRequest {
     name: string;
     email: string;
     external_auth_uid: string;
+    emailVerified: boolean;
   };
 }

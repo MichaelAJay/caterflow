@@ -33,6 +33,8 @@ export class LoginGuard implements CanActivate {
       if (user) {
         (request as UserFoundLoginRequest).userFound = true;
         (request as UserFoundLoginRequest).userHasAccount = !!user.accountId;
+        (request as UserFoundLoginRequest).requiresEmailVerificationSync =
+          !!payload.email_verified && !user.emailVerified;
       } else {
         const { name, email, uid } = payload;
         if (!(typeof name === 'string' && email)) {
@@ -54,6 +56,7 @@ export class LoginGuard implements CanActivate {
           name,
           email,
           external_auth_uid: uid,
+          emailVerified: !!payload.email_verified,
         };
       }
       return true;

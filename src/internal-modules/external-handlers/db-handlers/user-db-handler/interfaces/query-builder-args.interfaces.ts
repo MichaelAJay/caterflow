@@ -7,6 +7,7 @@ export type IBuildCreateUserArgs = Pick<
   | 'emailEncrypted'
   | 'emailHashed'
   | 'nameEncrypted'
+  | 'emailVerified'
 >;
 
 export type IBuildUpdateUserArgs = Pick<

@@ -9,7 +9,7 @@ import { BypassUserRequirement } from '../../common/decorators/bypass-user-requi
 import { BypassVerifiedEmailRequirement } from '../../common/decorators/bypass-verified-email-requirement.decorator';
 import { UserService } from '../../internal-modules/user/user.service';
 import { SUCCESS_CODE } from '../../common/codes/success-codes';
-import { NewUser } from '../../common/decorators/new-user.decorator';
+import { LogIn } from '../../common/decorators/login.decorator';
 import { LoginRequest } from '../interfaces/login-request.interface';
 import { LoginGuard } from '../../common/guards/login/login.guard';
 
@@ -17,25 +17,23 @@ import { LoginGuard } from '../../common/guards/login/login.guard';
 export class UserController implements IUserController {
   constructor(private readonly userService: UserService) {}
 
-  @BypassAccountRequirement()
-  @BypassVerifiedEmailRequirement()
-  @BypassUserRequirement()
-  @Post()
-  async createUser(@Req() req: AuthenticatedRequestForNewUser): Promise<any> {
-    const { user } = req;
-    const { name, email, external_auth_uid: externalAuthUID } = user;
-    await this.userService.createUser(name, email, externalAuthUID);
-    return {
-      message: '', // This should succeed silently (from user perspective)
-      code: SUCCESS_CODE.UserCreated,
-    };
-  }
+  // @NewUser()
+  // @Post()
+  // async createUser(@Req() req: AuthenticatedRequestForNewUser): Promise<any> {
+  //   const { user } = req;
+  //   const { name, email, external_auth_uid: externalAuthUID } = user;
+  //   await this.userService.createUser(name, email, externalAuthUID);
+  //   return {
+  //     message: '', // This should succeed silently (from user perspective)
+  //     code: SUCCESS_CODE.UserCreated,
+  //   };
+  // }
 
-  @BypassAccountRequirement()
-  @Get('account-status')
-  async getUserAccountStatus(@Req() req: AuthenticatedRequest) {
-    return { hasAccount: !!(req.user && req.user.accountId) };
-  }
+  // @BypassAccountRequirement()
+  // @Get('account-status')
+  // async getUserAccountStatus(@Req() req: AuthenticatedRequest) {
+  //   return { hasAccount: !!(req.user && req.user.accountId) };
+  // }
 
   @BypassAccountRequirement()
   @Patch('verify-email')
@@ -51,15 +49,31 @@ export class UserController implements IUserController {
     };
   }
 
-  @NewUser()
+  @LogIn()
   @UseGuards(LoginGuard)
   @Post('login')
   async login(@Req() req: LoginRequest): Promise<{ hasAccount: boolean }> {
     if (req.userFound) {
+      console.log('regular login');
+      if (req.requiresEmailVerificationSync) {
+        // Sync email verification status
+      }
+
       return { hasAccount: req.userHasAccount };
     } else {
-      const { name, email, external_auth_uid: externalAuthUID } = req.user;
-      await this.userService.createUser(name, email, externalAuthUID);
+      console.log('create user');
+      const {
+        name,
+        email,
+        external_auth_uid: externalAuthUID,
+        emailVerified,
+      } = req.user;
+      await this.userService.createUser(
+        name,
+        email,
+        externalAuthUID,
+        emailVerified,
+      );
       return { hasAccount: false };
     }
   }
