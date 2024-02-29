@@ -12,6 +12,7 @@ export class AccountDbHandlerService implements IAccountDbHandler {
   ) {}
 
   async createAccount(name: string, ownerId: string): Promise<Account> {
+    // Take care of known errors here
     const account = await this.prismaClient.account.create(
       this.accountDbQueryBuilder.buildCreateAccountQuery({ name, ownerId }),
     );

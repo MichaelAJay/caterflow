@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { IUserDbHandler } from './interfaces/user-db-handler.service.interface';
 import { PrismaClientService } from '../../../../external-modules/prisma-client/prisma-client.service';
 import { UserDbQueryBuilderService } from './user-db-query-builder.service.unit';
@@ -7,6 +7,8 @@ import {
   IBuildUpdateUserArgs,
 } from './interfaces/query-builder-args.interfaces';
 import { User } from '@prisma/client';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { ERROR_CODE } from '../../../../common/codes/error-codes';
 
 @Injectable()
 export class UserDbHandlerService implements IUserDbHandler {
@@ -16,10 +18,24 @@ export class UserDbHandlerService implements IUserDbHandler {
   ) {}
 
   async createUser(input: IBuildCreateUserArgs): Promise<User> {
-    const result = await this.prismaClient.user.create(
-      this.userQueryBuilder.buildCreateUserQuery(input),
-    );
-    return result;
+    try {
+      const result = await this.prismaClient.user.create(
+        this.userQueryBuilder.buildCreateUserQuery(input),
+      );
+      return result;
+    } catch (err) {
+      if (err instanceof PrismaClientKnownRequestError) {
+        if ((err.code = 'P2002')) {
+          throw new ConflictException({
+            message:
+              'Your request could not be completed at this time. If you believe something is wrong on our end, please contact support for assistance.',
+            code: ERROR_CODE.Conflict,
+          });
+        }
+      }
+      console.error(err);
+      throw err;
+    }
   }
 
   async retrieveUserByExternalAuthUID(externalAuthUID: string): Promise<any> {

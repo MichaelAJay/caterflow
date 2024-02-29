@@ -32,14 +32,14 @@ export class AccountController implements IAccountController {
 
     const { name } = validationResult.data;
     const { user } = req;
-    if (user.accountId !== undefined) {
+    if (user.accountId !== null) {
       throw new ConflictException({
         message: 'This user is already associated with an account',
         code: ERROR_CODE.AccountExists,
       });
     }
 
-    await this.accountService.createAccount(name, user.external_auth_uid);
+    await this.accountService.createAccount(name, user.id);
     return {
       message: 'Your account was successfully created!',
       code: SUCCESS_CODE.AccountCreated,

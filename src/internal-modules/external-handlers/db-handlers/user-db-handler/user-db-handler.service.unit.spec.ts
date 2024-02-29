@@ -9,6 +9,8 @@ import {
   PrismaClientUnknownRequestError,
 } from '@prisma/client/runtime/library';
 import { User } from '@prisma/client';
+import { ConflictException } from '@nestjs/common';
+import { ERROR_CODE } from '../../../../common/codes/error-codes';
 
 describe('UserDbHandlerService', () => {
   let service: UserDbHandlerService;
@@ -123,8 +125,8 @@ describe('UserDbHandlerService', () => {
       try {
         await service.createUser(createUserInput);
       } catch (error) {
-        expect(error).toBeInstanceOf(PrismaClientKnownRequestError);
-        expect(error.code).toBe('P2002');
+        expect(error).toBeInstanceOf(ConflictException);
+        expect(error.response.code).toBe(ERROR_CODE.Conflict);
       }
     });
     it('should propagate any unspecified error thrown by the db client', async () => {
