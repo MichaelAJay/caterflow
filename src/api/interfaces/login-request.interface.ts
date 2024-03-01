@@ -4,6 +4,7 @@ export type LoginRequest = UserFoundLoginRequest | UserNotFoundLoginRequest;
 
 export interface UserFoundLoginRequest extends FastifyRequest {
   userFound: true;
+  userId: string;
   userHasAccount: boolean;
   requiresEmailVerificationSync: boolean;
 }

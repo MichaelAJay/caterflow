@@ -129,6 +129,32 @@ describe('UserController', () => {
       expect(result).toEqual({ hasAccount: req.userHasAccount });
       expect(userService.createUser).not.toHaveBeenCalled();
     });
+    it('should call userService.updateUser to update emailVerified if user found and requires sync', async () => {
+      const req = {
+        userId: '123',
+        userFound: true,
+        userHasAccount: true,
+        requiresEmailVerificationSync: true,
+      } as UserFoundLoginRequest;
+      const spy = jest
+        .spyOn(userService, 'updateUser')
+        .mockResolvedValue(undefined);
+
+      await controller.login(req);
+      expect(spy).toHaveBeenCalledWith(req.userId, { emailVerified: true });
+    });
+    it('should not call userService.updateUser if user found and not requires sync', async () => {
+      const req = {
+        userId: '123',
+        userFound: true,
+        userHasAccount: true,
+        requiresEmailVerificationSync: false,
+      } as UserFoundLoginRequest;
+      const spy = jest.spyOn(userService, 'updateUser');
+
+      await controller.login(req);
+      expect(spy).not.toHaveBeenCalled();
+    });
     it('should call userService.createUser with the correct args if req.userFound is false and email not verified', async () => {
       const user = {
         name: 'John Doe',

@@ -55,7 +55,7 @@ export class UserController implements IUserController {
   async login(@Req() req: LoginRequest): Promise<{ hasAccount: boolean }> {
     if (req.userFound) {
       if (req.requiresEmailVerificationSync) {
-        // Sync email verification status
+        await this.userService.updateUser(req.userId, { emailVerified: true });
       }
 
       return { hasAccount: req.userHasAccount };
