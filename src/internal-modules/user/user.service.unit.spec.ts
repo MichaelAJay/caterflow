@@ -59,6 +59,39 @@ describe('UserService', () => {
         nameEncrypted: 'encrypted',
         emailEncrypted: 'encrypted',
         emailHashed: 'hashedEmail',
+        emailVerified: false,
+      });
+    });
+    it('should call userDbHandler.createUser with emailVerified: false (default) if arg not included', async () => {
+      jest.spyOn(cryptoService, 'encrypt').mockResolvedValue('encrypted');
+      jest.spyOn(cryptoService, 'hash').mockResolvedValue('hashedEmail');
+      const createUserSpy = jest
+        .spyOn(userDbHandler, 'createUser')
+        .mockResolvedValue({} as User);
+
+      await service.createUser(name, email, extAuthUID);
+      expect(createUserSpy).toHaveBeenCalledWith({
+        extAuthUID,
+        nameEncrypted: 'encrypted',
+        emailEncrypted: 'encrypted',
+        emailHashed: 'hashedEmail',
+        emailVerified: false,
+      });
+    });
+    it('should call userDbHandler.createUser with emailVerified: true if arg included', async () => {
+      jest.spyOn(cryptoService, 'encrypt').mockResolvedValue('encrypted');
+      jest.spyOn(cryptoService, 'hash').mockResolvedValue('hashedEmail');
+      const createUserSpy = jest
+        .spyOn(userDbHandler, 'createUser')
+        .mockResolvedValue({} as User);
+
+      await service.createUser(name, email, extAuthUID, true);
+      expect(createUserSpy).toHaveBeenCalledWith({
+        extAuthUID,
+        nameEncrypted: 'encrypted',
+        emailEncrypted: 'encrypted',
+        emailHashed: 'hashedEmail',
+        emailVerified: true,
       });
     });
     it('should propagate an error if hash fails', async () => {

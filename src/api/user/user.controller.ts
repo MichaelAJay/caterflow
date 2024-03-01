@@ -54,14 +54,12 @@ export class UserController implements IUserController {
   @Post('login')
   async login(@Req() req: LoginRequest): Promise<{ hasAccount: boolean }> {
     if (req.userFound) {
-      console.log('regular login');
       if (req.requiresEmailVerificationSync) {
         // Sync email verification status
       }
 
       return { hasAccount: req.userHasAccount };
     } else {
-      console.log('create user');
       const {
         name,
         email,

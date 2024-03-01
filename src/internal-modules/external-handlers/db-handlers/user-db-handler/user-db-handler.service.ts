@@ -33,7 +33,6 @@ export class UserDbHandlerService implements IUserDbHandler {
           });
         }
       }
-      console.error(err);
       throw err;
     }
   }

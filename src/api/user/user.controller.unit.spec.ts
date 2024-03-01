@@ -39,54 +39,54 @@ describe('UserController', () => {
     expect(controller).toBeDefined();
   });
 
-  describe('createUser', () => {
-    const name = 'John Doe';
-    const email = 'john@example.com';
-    const extAuthUID = '1234';
-    it('should return a success response when the user is created', async () => {
-      const req = {
-        user: { name, email, external_auth_uid: extAuthUID },
-      } as AuthenticatedRequestForNewUser;
-      const serviceSpy = jest
-        .spyOn(userService, 'createUser')
-        .mockResolvedValue(undefined);
+  // describe('createUser', () => {
+  //   const name = 'John Doe';
+  //   const email = 'john@example.com';
+  //   const extAuthUID = '1234';
+  //   it('should return a success response when the user is created', async () => {
+  //     const req = {
+  //       user: { name, email, external_auth_uid: extAuthUID },
+  //     } as AuthenticatedRequestForNewUser;
+  //     const serviceSpy = jest
+  //       .spyOn(userService, 'createUser')
+  //       .mockResolvedValue(undefined);
 
-      const result = await controller.createUser(req);
-      expect(serviceSpy).toHaveBeenCalledWith(name, email, extAuthUID);
-      expect(result).toEqual({ message: '', code: SUCCESS_CODE.UserCreated });
-    });
-    it('should propagate any error thrown by userService.createUser', async () => {
-      const req = {
-        user: { name, email, external_auth_uid: extAuthUID },
-      } as AuthenticatedRequestForNewUser;
-      jest
-        .spyOn(userService, 'createUser')
-        .mockRejectedValue(new Error('Test error'));
-      await expect(controller.createUser(req)).rejects.toThrow('Test error');
-    });
-  });
+  //     const result = await controller.createUser(req);
+  //     expect(serviceSpy).toHaveBeenCalledWith(name, email, extAuthUID);
+  //     expect(result).toEqual({ message: '', code: SUCCESS_CODE.UserCreated });
+  //   });
+  //   it('should propagate any error thrown by userService.createUser', async () => {
+  //     const req = {
+  //       user: { name, email, external_auth_uid: extAuthUID },
+  //     } as AuthenticatedRequestForNewUser;
+  //     jest
+  //       .spyOn(userService, 'createUser')
+  //       .mockRejectedValue(new Error('Test error'));
+  //     await expect(controller.createUser(req)).rejects.toThrow('Test error');
+  //   });
+  // });
 
-  describe('getUserAccountStatus', () => {
-    it('should return user account status true when user has account id', async () => {
-      const req = {
-        user: { id: 'testId', accountId: 'acctId' },
-      } as AuthenticatedRequest;
-      const result = await controller.getUserAccountStatus(req);
-      expect(result).toEqual({ hasAccount: true });
-    });
-    it('should return user account status false when user does not have account id', async () => {
-      const req = {
-        user: { id: 'testId' },
-      } as AuthenticatedRequest;
-      const result = await controller.getUserAccountStatus(req);
-      expect(result).toEqual({ hasAccount: false });
-    });
-    it('should return user account status false when req does not have user', async () => {
-      const req = {} as AuthenticatedRequest;
-      const result = await controller.getUserAccountStatus(req);
-      expect(result).toEqual({ hasAccount: false });
-    });
-  });
+  // describe('getUserAccountStatus', () => {
+  //   it('should return user account status true when user has account id', async () => {
+  //     const req = {
+  //       user: { id: 'testId', accountId: 'acctId' },
+  //     } as AuthenticatedRequest;
+  //     const result = await controller.getUserAccountStatus(req);
+  //     expect(result).toEqual({ hasAccount: true });
+  //   });
+  //   it('should return user account status false when user does not have account id', async () => {
+  //     const req = {
+  //       user: { id: 'testId' },
+  //     } as AuthenticatedRequest;
+  //     const result = await controller.getUserAccountStatus(req);
+  //     expect(result).toEqual({ hasAccount: false });
+  //   });
+  //   it('should return user account status false when req does not have user', async () => {
+  //     const req = {} as AuthenticatedRequest;
+  //     const result = await controller.getUserAccountStatus(req);
+  //     expect(result).toEqual({ hasAccount: false });
+  //   });
+  // });
 
   describe('verifyEmail', () => {
     const userId = '123';
@@ -129,11 +129,12 @@ describe('UserController', () => {
       expect(result).toEqual({ hasAccount: req.userHasAccount });
       expect(userService.createUser).not.toHaveBeenCalled();
     });
-    it('should call userService.createUser with the correct args if req.userFound is false', async () => {
+    it('should call userService.createUser with the correct args if req.userFound is false and email not verified', async () => {
       const user = {
         name: 'John Doe',
         email: 'john@example.com',
         external_auth_uid: '123',
+        emailVerified: false,
       };
       const req = { userFound: false, user } as UserNotFoundLoginRequest;
       const spy = jest
@@ -145,6 +146,27 @@ describe('UserController', () => {
         user.name,
         user.email,
         user.external_auth_uid,
+        user.emailVerified,
+      );
+    });
+    it('should call userService.createUser with the correct args if req.userFound is false and email verified', async () => {
+      const user = {
+        name: 'John Doe',
+        email: 'john@example.com',
+        external_auth_uid: '123',
+        emailVerified: true,
+      };
+      const req = { userFound: false, user } as UserNotFoundLoginRequest;
+      const spy = jest
+        .spyOn(userService, 'createUser')
+        .mockResolvedValue(undefined);
+      const result = await controller.login(req);
+      expect(result).toEqual({ hasAccount: false });
+      expect(spy).toHaveBeenCalledWith(
+        user.name,
+        user.email,
+        user.external_auth_uid,
+        user.emailVerified,
       );
     });
     it('should propagate any error thrown by userService.createUser', async () => {

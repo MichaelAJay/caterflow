@@ -18,7 +18,7 @@ import {
   AuthenticatedRequestForNewUser,
 } from '../../../api/interfaces/authenticated-request.interface';
 import * as Sentry from '@sentry/node';
-import { isLogInMetadataName } from 'src/common/decorators/login.decorator';
+import { isLogInMetadataName } from '../../../common/decorators/login.decorator';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -41,7 +41,6 @@ export class AuthGuard implements CanActivate {
       if (!token) return false;
 
       const payload = await this.firebaseAdminService.verifyToken(token);
-      console.log('payload', payload);
       if (!payload.email) {
         const err = new ForbiddenException({
           message: 'Malformed token',
@@ -61,7 +60,6 @@ export class AuthGuard implements CanActivate {
         [context.getHandler(), context.getClass()],
       );
       if (isLogIn) {
-        console.log('*** isLogin ***');
         return true;
       }
 
@@ -150,8 +148,6 @@ export class AuthGuard implements CanActivate {
           code: ERROR_CODE.TokenExpired,
         });
       }
-
-      console.error('Unhandled auth guard error', error);
       return false;
     }
   }

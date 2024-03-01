@@ -197,6 +197,7 @@ describe('AuthGuard', () => {
       jest
         .spyOn(guard['reflector'], 'getAllAndOverride')
         .mockReturnValueOnce(false) // Is not public
+        .mockReturnValueOnce(false) // Is not login
         .mockReturnValue(true); // Can skip email verification
       jest
         .spyOn(firebaseAdminService, 'verifyToken')
