@@ -1,18 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserController } from './user.controller';
-import {
-  AuthenticatedRequest,
-  AuthenticatedRequestForNewUser,
-} from '../interfaces/authenticated-request.interface';
+import { AuthenticatedRequest } from '../interfaces/authenticated-request.interface';
 import { UserService } from '../../internal-modules/user/user.service';
 import { mockUserService } from '../../../test/mocks/providers/mock_user_service';
 import { SUCCESS_CODE } from '../../common/codes/success-codes';
-import { FirebaseAdminService } from '../../external-modules/firebase-admin/firebase-admin.service';
-import { mockFirebaseAdminService } from '../../../test/mocks/providers/mock_firebase_admin';
 import {
   UserFoundLoginRequest,
   UserNotFoundLoginRequest,
 } from '../interfaces/login-request.interface';
+import { mockGuardService } from '../../../test/mocks/providers/mock_guard_service';
+import { GuardService } from '../../common/guards/guard/guard.service';
 
 describe('UserController', () => {
   let controller: UserController;
@@ -23,7 +20,7 @@ describe('UserController', () => {
       controllers: [UserController],
       providers: [
         { provide: UserService, useValue: mockUserService },
-        { provide: FirebaseAdminService, useValue: mockFirebaseAdminService },
+        { provide: GuardService, useValue: mockGuardService },
       ],
     }).compile();
 

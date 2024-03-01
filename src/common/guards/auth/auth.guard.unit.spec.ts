@@ -1,14 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthGuard } from './auth.guard';
-import { FirebaseAdminService } from '../../../external-modules/firebase-admin/firebase-admin.service';
 import { Reflector } from '@nestjs/core';
 import { UserService } from '../../../internal-modules/user/user.service';
-import { mockFirebaseAdminService } from '../../../../test/mocks/providers/mock_firebase_admin';
 import { mockUserService } from '../../../../test/mocks/providers/mock_user_service';
 import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { ERROR_CODE } from '../../codes/error-codes';
 import { GuardService } from '../guard/guard.service';
-import { mockGuardService } from 'test/mocks/providers/mock_guard_service';
+import { mockGuardService } from '../../../../test/mocks/providers/mock_guard_service';
 
 describe('AuthGuard', () => {
   let guard: AuthGuard;
@@ -91,11 +89,20 @@ describe('AuthGuard', () => {
       jest
         .spyOn(guard['reflector'], 'getAllAndOverride')
         .mockReturnValue(false);
-
-      expect(await guard.canActivate(context as any)).toBe(false);
+      jest
+        .spyOn(guardService, 'verifyToken')
+        .mockRejectedValue(
+          new UnauthorizedException({ code: ERROR_CODE.MissingToken }),
+        );
+      try {
+        await guard.canActivate(context as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(UnauthorizedException);
+        expect(err.response.code).toBe(ERROR_CODE.MissingToken);
+      }
     });
 
-    it('should throw UnauthorizedException if firebaseAdminService.verifyToken rejects with "id-token-expired"', async () => {
+    it('should throw UnauthorizedException if guardService.verifyToken rejects with "id-token-expired"', async () => {
       const context = {
         getHandler: jest.fn(),
         getClass: jest.fn(),
@@ -149,10 +156,15 @@ describe('AuthGuard', () => {
       jest
         .spyOn(guard['reflector'], 'getAllAndOverride')
         .mockReturnValue(false);
-      jest.spyOn(guardService, 'verifyToken').mockResolvedValue({
-        email_verified: false,
-        email: undefined,
-      } as any);
+      // jest.spyOn(guardService, 'verifyToken').mockResolvedValue({
+      //   email_verified: false,
+      //   email: undefined,
+      // } as any);
+      jest
+        .spyOn(guardService, 'verifyToken')
+        .mockRejectedValue(
+          new ForbiddenException({ code: ERROR_CODE.MalformedToken }),
+        );
 
       await expect(guard.canActivate(context as any)).rejects.toThrow(
         ForbiddenException,

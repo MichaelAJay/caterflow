@@ -136,7 +136,7 @@ describe('LoginGuard', () => {
 
       const result = await guard.canActivate(context as any);
       expect(result).toBe(false);
-      expect(firebaseAdminService.verifyToken).toHaveBeenCalled();
+      expect(guardService.verifyToken).toHaveBeenCalled();
     });
     it('should throw ForbiddenException "MalformedToken" error if user not found and payload does not include email', async () => {
       const context = {
