@@ -7,25 +7,30 @@ import { mockFirebaseAdminService } from '../../../../test/mocks/providers/mock_
 import { mockUserService } from '../../../../test/mocks/providers/mock_user_service';
 import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { ERROR_CODE } from '../../codes/error-codes';
+import { GuardService } from '../guard/guard.service';
+import { mockGuardService } from 'test/mocks/providers/mock_guard_service';
 
 describe('AuthGuard', () => {
   let guard: AuthGuard;
-  let firebaseAdminService: FirebaseAdminService;
+  // let firebaseAdminService: FirebaseAdminService;
+  let guardService: GuardService;
   let userService: UserService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthGuard,
-        { provide: FirebaseAdminService, useValue: mockFirebaseAdminService },
+        // { provide: FirebaseAdminService, useValue: mockFirebaseAdminService },
+        { provide: GuardService, useValue: mockGuardService },
         { provide: Reflector, useValue: { getAllAndOverride: jest.fn() } },
         { provide: UserService, useValue: mockUserService },
       ],
     }).compile();
 
     guard = module.get<AuthGuard>(AuthGuard);
-    firebaseAdminService =
-      module.get<FirebaseAdminService>(FirebaseAdminService);
+    // firebaseAdminService =
+    //   module.get<FirebaseAdminService>(FirebaseAdminService);
+    guardService = module.get<GuardService>(GuardService);
     userService = module.get<UserService>(UserService);
   });
 
