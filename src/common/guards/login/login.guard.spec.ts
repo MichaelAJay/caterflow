@@ -64,7 +64,7 @@ describe('LoginGuard', () => {
             .mockReturnValue({ headers: { authorization: 'Bearer token' } }),
         }),
       };
-      jest.spyOn(firebaseAdminService, 'verifyToken').mockResolvedValue({
+      jest.spyOn(guardService, 'verifyToken').mockResolvedValue({
         email: 'email',
         email_verified: true,
         uid: '123',
@@ -86,7 +86,7 @@ describe('LoginGuard', () => {
             .mockReturnValue({ headers: { authorization: 'Bearer token' } }),
         }),
       };
-      jest.spyOn(firebaseAdminService, 'verifyToken').mockResolvedValue({
+      jest.spyOn(guardService, 'verifyToken').mockResolvedValue({
         name: 'John Doe',
         email: 'email',
         email_verified: true,
@@ -108,7 +108,7 @@ describe('LoginGuard', () => {
         }),
       };
       jest
-        .spyOn(firebaseAdminService, 'verifyToken')
+        .spyOn(guardService, 'verifyToken')
         .mockRejectedValue(new Error('Test error'));
 
       const result = await guard.canActivate(context as any);
@@ -125,7 +125,7 @@ describe('LoginGuard', () => {
             .mockReturnValue({ headers: { authorization: 'Bearer token' } }),
         }),
       };
-      jest.spyOn(firebaseAdminService, 'verifyToken').mockResolvedValue({
+      jest.spyOn(guardService, 'verifyToken').mockResolvedValue({
         email: 'email',
         email_verified: true,
         uid: '123',
@@ -148,7 +148,7 @@ describe('LoginGuard', () => {
             .mockReturnValue({ headers: { authorization: 'Bearer token' } }),
         }),
       };
-      jest.spyOn(firebaseAdminService, 'verifyToken').mockResolvedValue({
+      jest.spyOn(guardService, 'verifyToken').mockResolvedValue({
         email_verified: true,
         uid: '123',
       } as any);
@@ -171,7 +171,7 @@ describe('LoginGuard', () => {
             .mockReturnValue({ headers: { authorization: 'Bearer token' } }),
         }),
       };
-      jest.spyOn(firebaseAdminService, 'verifyToken').mockResolvedValue({
+      jest.spyOn(guardService, 'verifyToken').mockResolvedValue({
         name: 123,
         email: 'email',
         email_verified: true,

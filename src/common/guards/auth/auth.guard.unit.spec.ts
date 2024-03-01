@@ -67,7 +67,7 @@ describe('AuthGuard', () => {
       jest
         .spyOn(guard['reflector'], 'getAllAndOverride')
         .mockReturnValue(false); // First call to getAllAndOverride
-      jest.spyOn(firebaseAdminService, 'verifyToken').mockResolvedValue({
+      jest.spyOn(guardService, 'verifyToken').mockResolvedValue({
         email: 'email',
         email_verified: true,
         uid: '123',
@@ -108,7 +108,7 @@ describe('AuthGuard', () => {
       jest
         .spyOn(guard['reflector'], 'getAllAndOverride')
         .mockReturnValue(false);
-      jest.spyOn(firebaseAdminService, 'verifyToken').mockImplementation(() => {
+      jest.spyOn(guardService, 'verifyToken').mockImplementation(() => {
         const error: Error & { code?: string } = new Error('Token expired');
         error['code'] = 'auth/id-token-expired';
         throw error;
@@ -132,9 +132,7 @@ describe('AuthGuard', () => {
       jest
         .spyOn(guard['reflector'], 'getAllAndOverride')
         .mockReturnValue(false);
-      jest
-        .spyOn(firebaseAdminService, 'verifyToken')
-        .mockRejectedValue(new Error());
+      jest.spyOn(guardService, 'verifyToken').mockRejectedValue(new Error());
       expect(await guard.canActivate(context as any)).toBe(false);
     });
 
@@ -151,7 +149,7 @@ describe('AuthGuard', () => {
       jest
         .spyOn(guard['reflector'], 'getAllAndOverride')
         .mockReturnValue(false);
-      jest.spyOn(firebaseAdminService, 'verifyToken').mockResolvedValue({
+      jest.spyOn(guardService, 'verifyToken').mockResolvedValue({
         email_verified: false,
         email: undefined,
       } as any);
@@ -181,7 +179,7 @@ describe('AuthGuard', () => {
         .spyOn(guard['reflector'], 'getAllAndOverride')
         .mockReturnValue(false);
       jest
-        .spyOn(firebaseAdminService, 'verifyToken')
+        .spyOn(guardService, 'verifyToken')
         .mockResolvedValue({ email: 'email', email_verified: false } as any);
 
       await expect(guard.canActivate(context as any)).rejects.toThrow(
@@ -205,7 +203,7 @@ describe('AuthGuard', () => {
         .mockReturnValueOnce(false) // Is not login
         .mockReturnValue(true); // Can skip email verification
       jest
-        .spyOn(firebaseAdminService, 'verifyToken')
+        .spyOn(guardService, 'verifyToken')
         .mockResolvedValue({ email: 'email', email_verified: false } as any);
       const spy = jest.spyOn(userService, 'getUserByExternalUID');
 
@@ -228,7 +226,7 @@ describe('AuthGuard', () => {
         .spyOn(guard['reflector'], 'getAllAndOverride')
         .mockReturnValue(false);
       jest
-        .spyOn(firebaseAdminService, 'verifyToken')
+        .spyOn(guardService, 'verifyToken')
         .mockResolvedValue({ email: 'email', email_verified: true } as any);
       jest
         .spyOn(userService, 'getUserByExternalUID')
@@ -251,7 +249,7 @@ describe('AuthGuard', () => {
         .spyOn(guard['reflector'], 'getAllAndOverride')
         .mockReturnValueOnce(false)
         .mockReturnValueOnce(true);
-      jest.spyOn(firebaseAdminService, 'verifyToken').mockResolvedValue({
+      jest.spyOn(guardService, 'verifyToken').mockResolvedValue({
         email: 'email',
         email_verified: true,
         name: 'name',
@@ -275,7 +273,7 @@ describe('AuthGuard', () => {
         .spyOn(guard['reflector'], 'getAllAndOverride')
         .mockReturnValueOnce(false)
         .mockReturnValueOnce(true);
-      jest.spyOn(firebaseAdminService, 'verifyToken').mockResolvedValue({
+      jest.spyOn(guardService, 'verifyToken').mockResolvedValue({
         email: 'email',
         email_verified: true,
         name: 'name',
@@ -304,7 +302,7 @@ describe('AuthGuard', () => {
         .spyOn(guard['reflector'], 'getAllAndOverride')
         .mockReturnValue(false);
       jest
-        .spyOn(firebaseAdminService, 'verifyToken')
+        .spyOn(guardService, 'verifyToken')
         .mockResolvedValue({ email: 'email', email_verified: true } as any);
       jest.spyOn(userService, 'getUserByExternalUID').mockResolvedValue(null);
 
@@ -325,7 +323,7 @@ describe('AuthGuard', () => {
         .spyOn(guard['reflector'], 'getAllAndOverride')
         .mockImplementationOnce(() => false) // First call to getAllAndOverride
         .mockImplementationOnce(() => false); // Second call to getAllAndOverride
-      jest.spyOn(firebaseAdminService, 'verifyToken').mockResolvedValue({
+      jest.spyOn(guardService, 'verifyToken').mockResolvedValue({
         email: 'email',
         email_verified: true,
         uid: '123',
@@ -353,7 +351,7 @@ describe('AuthGuard', () => {
         .spyOn(guard['reflector'], 'getAllAndOverride')
         .mockImplementationOnce(() => false) // First call to getAllAndOverride
         .mockImplementationOnce(() => true); // Second call to getAllAndOverride
-      jest.spyOn(firebaseAdminService, 'verifyToken').mockResolvedValue({
+      jest.spyOn(guardService, 'verifyToken').mockResolvedValue({
         email_verified: true,
         uid: '123',
         email: 'email',
