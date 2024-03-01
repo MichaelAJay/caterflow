@@ -1,32 +1,29 @@
 import {
   CanActivate,
   ExecutionContext,
-  ForbiddenException,
   Injectable,
+  UnauthorizedException,
 } from '@nestjs/common';
-import { FirebaseAdminService } from '../../../external-modules/firebase-admin/firebase-admin.service';
 import { UserService } from '../../../internal-modules/user/user.service';
 import {
   UserFoundLoginRequest,
   UserNotFoundLoginRequest,
 } from '../../../api/interfaces/login-request.interface';
-import * as Sentry from '@sentry/node';
 import { ERROR_CODE } from '../../../common/codes/error-codes';
+import { GuardService } from '../guard/guard.service';
 
 @Injectable()
 export class LoginGuard implements CanActivate {
   constructor(
-    private readonly firebaseAdminService: FirebaseAdminService,
+    private readonly guardService: GuardService,
     private readonly userService: UserService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     try {
+      console.log('In login guard');
       const request = context.switchToHttp().getRequest();
-      const token = request.headers.authorization?.split(' ')[1];
-      if (!token) return false;
-
-      const payload = await this.firebaseAdminService.verifyToken(token);
+      const payload = await this.guardService.verifyToken(request);
 
       const user = await this.userService.getUserByExternalUID(payload.uid);
 
@@ -38,20 +35,6 @@ export class LoginGuard implements CanActivate {
           !!payload.email_verified && !user.emailVerified;
       } else {
         const { name, email, uid } = payload;
-        if (!(typeof name === 'string' && email)) {
-          const err = new ForbiddenException({
-            message: 'Malformed token',
-            code: ERROR_CODE.MalformedToken,
-          });
-
-          Sentry.withScope((scope) => {
-            scope.setExtra('missing', 'name');
-            Sentry.captureException(err);
-          });
-
-          throw err;
-        }
-
         (request as UserNotFoundLoginRequest).userFound = false;
         (request as UserNotFoundLoginRequest).user = {
           name,
@@ -62,6 +45,19 @@ export class LoginGuard implements CanActivate {
       }
       return true;
     } catch (err) {
+      console.error(err);
+      if (err instanceof UnauthorizedException) {
+        const response = err.getResponse();
+        if (
+          typeof response === 'object' &&
+          response !== null &&
+          'code' in response
+        ) {
+          if (response.code === ERROR_CODE.MissingToken) {
+            throw err;
+          }
+        }
+      }
       return false;
     }
   }

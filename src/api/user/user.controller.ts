@@ -1,12 +1,7 @@
-import { Controller, Get, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { Controller, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { IUserController } from './interfaces/user.controller.interface';
 import { BypassAccountRequirement } from '../../common/decorators/bypass-account-requirement.decorator';
-import {
-  AuthenticatedRequest,
-  AuthenticatedRequestForNewUser,
-} from '../interfaces/authenticated-request.interface';
-import { BypassUserRequirement } from '../../common/decorators/bypass-user-requirement.decorator';
-import { BypassVerifiedEmailRequirement } from '../../common/decorators/bypass-verified-email-requirement.decorator';
+import { AuthenticatedRequest } from '../interfaces/authenticated-request.interface';
 import { UserService } from '../../internal-modules/user/user.service';
 import { SUCCESS_CODE } from '../../common/codes/success-codes';
 import { LogIn } from '../../common/decorators/login.decorator';
@@ -55,22 +50,18 @@ export class UserController implements IUserController {
   async login(@Req() req: LoginRequest): Promise<{ hasAccount: boolean }> {
     if (req.userFound) {
       if (req.requiresEmailVerificationSync) {
+        console.log('requires sync');
         await this.userService.updateUser(req.userId, { emailVerified: true });
       }
 
       return { hasAccount: req.userHasAccount };
     } else {
-      const {
-        name,
-        email,
-        external_auth_uid: externalAuthUID,
-        emailVerified,
-      } = req.user;
+      const { user } = req;
       await this.userService.createUser(
-        name,
-        email,
-        externalAuthUID,
-        emailVerified,
+        user.name,
+        user.email,
+        user.external_auth_uid,
+        user.emailVerified,
       );
       return { hasAccount: false };
     }
