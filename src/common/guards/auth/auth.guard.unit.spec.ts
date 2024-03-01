@@ -10,7 +10,6 @@ import { mockGuardService } from '../../../../test/mocks/providers/mock_guard_se
 
 describe('AuthGuard', () => {
   let guard: AuthGuard;
-  // let firebaseAdminService: FirebaseAdminService;
   let guardService: GuardService;
   let userService: UserService;
 
@@ -18,7 +17,6 @@ describe('AuthGuard', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthGuard,
-        // { provide: FirebaseAdminService, useValue: mockFirebaseAdminService },
         { provide: GuardService, useValue: mockGuardService },
         { provide: Reflector, useValue: { getAllAndOverride: jest.fn() } },
         { provide: UserService, useValue: mockUserService },
@@ -79,6 +77,8 @@ describe('AuthGuard', () => {
     });
 
     it('should return false if no token is provided', async () => {
+      expect.assertions(2);
+
       const context = {
         getHandler: jest.fn(),
         getClass: jest.fn(),
@@ -144,6 +144,8 @@ describe('AuthGuard', () => {
     });
 
     it('should throw MalformedToken ForbiddenException if the token payload does not include email', async () => {
+      expect.assertions(2);
+
       const context = {
         getHandler: jest.fn(),
         getClass: jest.fn(),
@@ -166,9 +168,6 @@ describe('AuthGuard', () => {
           new ForbiddenException({ code: ERROR_CODE.MalformedToken }),
         );
 
-      await expect(guard.canActivate(context as any)).rejects.toThrow(
-        ForbiddenException,
-      );
       try {
         await guard.canActivate(context as any);
       } catch (err) {
@@ -272,6 +271,8 @@ describe('AuthGuard', () => {
     });
 
     it('should throw MalformedToken Forbidden error if user is not found, bypass user requirement is set to true, and payload is missing "name"', async () => {
+      expect.assertions(2);
+
       const context = {
         getHandler: jest.fn(),
         getClass: jest.fn(),
@@ -285,12 +286,11 @@ describe('AuthGuard', () => {
         .spyOn(guard['reflector'], 'getAllAndOverride')
         .mockReturnValueOnce(false)
         .mockReturnValueOnce(true);
-      jest.spyOn(guardService, 'verifyToken').mockResolvedValue({
-        email: 'email',
-        email_verified: true,
-        name: 'name',
-      } as any);
-      jest.spyOn(userService, 'getUserByExternalUID').mockResolvedValue(null);
+      jest
+        .spyOn(guardService, 'verifyToken')
+        .mockRejectedValue(
+          new ForbiddenException({ code: ERROR_CODE.MalformedToken }),
+        );
 
       try {
         await guard.canActivate(context as any);

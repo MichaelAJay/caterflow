@@ -73,6 +73,8 @@ describe('AccountDbHandlerService', () => {
     });
 
     it('should throw an error if the ownerId unique constraint is violated', async () => {
+      expect.assertions(2);
+
       jest
         .spyOn(accountDbQueryBuilder, 'buildCreateAccountQuery')
         .mockReturnValue({ data: accountData });
@@ -91,6 +93,8 @@ describe('AccountDbHandlerService', () => {
     });
 
     it('should throw an error if the ownerId existence constraint is violated', async () => {
+      expect.assertions(2);
+
       jest
         .spyOn(accountDbQueryBuilder, 'buildCreateAccountQuery')
         .mockReturnValue({ data: accountData });

@@ -56,6 +56,8 @@ describe('GuardService', () => {
       expect(verifyPayloadSpy).toHaveBeenCalledWith(validPayload);
     });
     it('should throw "MissingToken" forbidden exception if request doesn\'t include a valid bearer token', async () => {
+      expect.assertions(2);
+
       const req = { headers: {} };
       try {
         await service.verifyToken(req);
@@ -73,6 +75,8 @@ describe('GuardService', () => {
       await expect(service.verifyToken(req)).rejects.toThrow('Test error');
     });
     it('should throw "MalformedToken" ForbiddenException if "isVerifiedPayload" returns false', async () => {
+      expect.assertions(2);
+
       const token = 'token';
       const req = { headers: { authorization: `Bearer ${token}` } };
       jest

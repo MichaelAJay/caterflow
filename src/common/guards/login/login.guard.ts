@@ -1,6 +1,7 @@
 import {
   CanActivate,
   ExecutionContext,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -21,7 +22,6 @@ export class LoginGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     try {
-      console.log('In login guard');
       const request = context.switchToHttp().getRequest();
       const payload = await this.guardService.verifyToken(request);
 
@@ -45,7 +45,6 @@ export class LoginGuard implements CanActivate {
       }
       return true;
     } catch (err) {
-      console.error(err);
       if (err instanceof UnauthorizedException) {
         const response = err.getResponse();
         if (
@@ -54,6 +53,18 @@ export class LoginGuard implements CanActivate {
           'code' in response
         ) {
           if (response.code === ERROR_CODE.MissingToken) {
+            throw err;
+          }
+        }
+      }
+      if (err instanceof ForbiddenException) {
+        const response = err.getResponse();
+        if (
+          typeof response === 'object' &&
+          response !== null &&
+          'code' in response
+        ) {
+          if (response.code === ERROR_CODE.MalformedToken) {
             throw err;
           }
         }

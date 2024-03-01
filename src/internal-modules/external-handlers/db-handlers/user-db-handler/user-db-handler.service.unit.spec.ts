@@ -112,6 +112,8 @@ describe('UserDbHandlerService', () => {
       });
     });
     it('should throw a unique constraint violation error if emailHashed is not unique', async () => {
+      expect.assertions(2);
+
       jest
         .spyOn(userQueryBuilder, 'buildCreateUserQuery')
         .mockReturnValue({ data: createUserInput });
@@ -130,6 +132,8 @@ describe('UserDbHandlerService', () => {
       }
     });
     it('should propagate any unspecified error thrown by the db client', async () => {
+      expect.assertions(1);
+
       jest
         .spyOn(userQueryBuilder, 'buildCreateUserQuery')
         .mockReturnValue({ data: createUserInput });
@@ -237,6 +241,8 @@ describe('UserDbHandlerService', () => {
       expect(spy).toHaveBeenCalledWith(userUpdateArgs);
     });
     it('should throw a foreign key constraint error if updated accountId does not reference an existing account', async () => {
+      expect.assertions(2);
+
       const userUpdateArgs = {
         where: { id: userId },
         data: { ...updatedUser },

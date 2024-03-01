@@ -1,10 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { FirebaseAdminService } from '../../../external-modules/firebase-admin/firebase-admin.service';
 import { Reflector } from '@nestjs/core';
 import { UserService } from '../../../internal-modules/user/user.service';
-import { mockFirebaseAdminService } from '../../../../test/mocks/providers/mock_firebase_admin';
 import { mockUserService } from '../../../../test/mocks/providers/mock_user_service';
-import { ForbiddenException } from '@nestjs/common';
+import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { ERROR_CODE } from '../../codes/error-codes';
 import { LoginGuard } from './login.guard';
 import { GuardService } from '../guard/guard.service';
@@ -12,7 +10,6 @@ import { mockGuardService } from '../../../../test/mocks/providers/mock_guard_se
 
 describe('LoginGuard', () => {
   let guard: LoginGuard;
-  // let firebaseAdminService: FirebaseAdminService;
   let guardService: GuardService;
   let userService: UserService;
 
@@ -20,7 +17,6 @@ describe('LoginGuard', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         LoginGuard,
-        // { provide: FirebaseAdminService, useValue: mockFirebaseAdminService },
         { provide: GuardService, useValue: mockGuardService },
         { provide: Reflector, useValue: { getAllAndOverride: jest.fn() } },
         { provide: UserService, useValue: mockUserService },
@@ -28,8 +24,6 @@ describe('LoginGuard', () => {
     }).compile();
 
     guard = module.get<LoginGuard>(LoginGuard);
-    // firebaseAdminService =
-    //   module.get<FirebaseAdminService>(FirebaseAdminService);
     guardService = module.get<GuardService>(GuardService);
     userService = module.get<UserService>(UserService);
   });
@@ -43,7 +37,9 @@ describe('LoginGuard', () => {
   });
 
   describe('canActivate', () => {
-    it('should return false if no token is provided', async () => {
+    it('should throw Unauthorized "MissingToken" error if authorization header is not correct', async () => {
+      expect.assertions(2);
+
       const context = {
         getHandler: jest.fn(),
         getClass: jest.fn(),
@@ -52,7 +48,18 @@ describe('LoginGuard', () => {
         }),
       };
 
-      expect(await guard.canActivate(context as any)).toBe(false);
+      jest
+        .spyOn(guardService, 'verifyToken')
+        .mockRejectedValue(
+          new UnauthorizedException({ code: ERROR_CODE.MissingToken }),
+        );
+
+      try {
+        await guard.canActivate(context as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(UnauthorizedException);
+        expect(err.response.code).toBe(ERROR_CODE.MissingToken);
+      }
     });
     it('should return true if user found', async () => {
       const context = {
@@ -97,7 +104,7 @@ describe('LoginGuard', () => {
       const result = await guard.canActivate(context as any);
       expect(result).toBe(true);
     });
-    it('should return false if firebaseAdminService errors', async () => {
+    it('should return false if guardService throws unspecified error', async () => {
       const context = {
         getHandler: jest.fn(),
         getClass: jest.fn(),
@@ -138,30 +145,9 @@ describe('LoginGuard', () => {
       expect(result).toBe(false);
       expect(guardService.verifyToken).toHaveBeenCalled();
     });
-    it('should throw ForbiddenException "MalformedToken" error if user not found and payload does not include email', async () => {
-      const context = {
-        getHandler: jest.fn(),
-        getClass: jest.fn(),
-        switchToHttp: jest.fn().mockReturnValue({
-          getRequest: jest
-            .fn()
-            .mockReturnValue({ headers: { authorization: 'Bearer token' } }),
-        }),
-      };
-      jest.spyOn(guardService, 'verifyToken').mockResolvedValue({
-        email_verified: true,
-        uid: '123',
-      } as any);
-      jest.spyOn(userService, 'getUserByExternalUID').mockResolvedValue(null);
+    it('should propagate ForbiddenException "MalformedToken" error from guardService.verifyToken', async () => {
+      expect.assertions(2);
 
-      try {
-        await guard.canActivate(context as any);
-      } catch (err) {
-        expect(err).toBeInstanceOf(ForbiddenException);
-        expect(err.response.code).toBe(ERROR_CODE.MalformedToken);
-      }
-    });
-    it('should throw ForbiddenException "MalformedToken" error if user not found and payload includes non-string "name" property', async () => {
       const context = {
         getHandler: jest.fn(),
         getClass: jest.fn(),
@@ -171,13 +157,11 @@ describe('LoginGuard', () => {
             .mockReturnValue({ headers: { authorization: 'Bearer token' } }),
         }),
       };
-      jest.spyOn(guardService, 'verifyToken').mockResolvedValue({
-        name: 123,
-        email: 'email',
-        email_verified: true,
-        uid: '123',
-      } as any);
-      jest.spyOn(userService, 'getUserByExternalUID').mockResolvedValue(null);
+      jest
+        .spyOn(guardService, 'verifyToken')
+        .mockRejectedValue(
+          new ForbiddenException({ code: ERROR_CODE.MalformedToken }),
+        );
 
       try {
         await guard.canActivate(context as any);
