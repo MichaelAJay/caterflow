@@ -7,6 +7,7 @@ export interface UserFoundLoginRequest extends FastifyRequest {
   userId: string;
   userHasAccount: boolean;
   requiresEmailVerificationSync: boolean;
+  externalEmailVerificationStatus: boolean;
 }
 
 export interface UserNotFoundLoginRequest extends FastifyRequest {

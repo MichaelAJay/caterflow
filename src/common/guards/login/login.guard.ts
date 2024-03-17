@@ -32,7 +32,9 @@ export class LoginGuard implements CanActivate {
         (request as UserFoundLoginRequest).userId = user.id;
         (request as UserFoundLoginRequest).userHasAccount = !!user.accountId;
         (request as UserFoundLoginRequest).requiresEmailVerificationSync =
-          !!payload.email_verified && !user.emailVerified;
+          payload.email_verified !== user.emailVerified;
+        (request as UserFoundLoginRequest).externalEmailVerificationStatus =
+          payload.email_verified;
       } else {
         const { name, email, uid } = payload;
         (request as UserNotFoundLoginRequest).userFound = false;

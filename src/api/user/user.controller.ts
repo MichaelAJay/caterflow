@@ -51,7 +51,9 @@ export class UserController implements IUserController {
     if (req.userFound) {
       if (req.requiresEmailVerificationSync) {
         console.log('requires sync');
-        await this.userService.updateUser(req.userId, { emailVerified: true });
+        await this.userService.updateUser(req.userId, {
+          emailVerified: req.externalEmailVerificationStatus,
+        });
       }
 
       return { hasAccount: req.userHasAccount };

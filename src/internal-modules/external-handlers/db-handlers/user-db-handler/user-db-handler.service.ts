@@ -26,6 +26,8 @@ export class UserDbHandlerService implements IUserDbHandler {
     } catch (err) {
       if (err instanceof PrismaClientKnownRequestError) {
         if ((err.code = 'P2002')) {
+          // Unique constraint violation
+          // This should be logged, including the incoming encrypted email
           throw new ConflictException({
             message:
               'Your request could not be completed at this time. If you believe something is wrong on our end, please contact support for assistance.',
