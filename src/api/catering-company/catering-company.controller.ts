@@ -46,7 +46,7 @@ export class CateringCompanyController implements ICateringCompanyController {
 
     await this.cateringCompanyService.createCateringCompany(name, user.id);
     return {
-      message: 'Your company was successfully created!',
+      message: 'Your company details were successfully added!',
       code: SUCCESS_CODE.CompanyCreated,
     };
   }

@@ -132,13 +132,16 @@ describe('UserController', () => {
         userFound: true,
         userHasCompany: true,
         requiresEmailVerificationSync: true,
+        externalEmailVerificationStatus: true,
       } as UserFoundLoginRequest;
       const spy = jest
         .spyOn(userService, 'updateUser')
         .mockResolvedValue(undefined);
 
       await controller.login(req);
-      expect(spy).toHaveBeenCalledWith(req.userId, { emailVerified: true });
+      expect(spy).toHaveBeenCalledWith(req.userId, {
+        emailVerified: req.externalEmailVerificationStatus,
+      });
     });
     it('should not call userService.updateUser if user found and not requires sync', async () => {
       const req = {

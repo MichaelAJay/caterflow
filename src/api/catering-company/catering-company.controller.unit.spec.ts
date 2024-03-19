@@ -64,7 +64,7 @@ describe('CateringCompanyController', () => {
       const result = await controller.createCateringCompany(body, req as any);
       expect(result).toEqual({
         message: 'Your company details were successfully added!',
-        code: SUCCESS_CODE.CateringCompanyCreated,
+        code: SUCCESS_CODE.CompanyCreated,
       });
     });
 

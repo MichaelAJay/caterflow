@@ -1,6 +1,6 @@
 export const mockPrismaClientService = {
   onModuleInit: jest.fn(),
-  company: {
+  cateringCompany: {
     create: jest.fn(),
   },
   user: {
