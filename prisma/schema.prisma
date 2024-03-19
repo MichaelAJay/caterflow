@@ -10,62 +10,33 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Account {
+model CateringCompany {
   id        String   @id @default(uuid())
   name      String
   isActive  Boolean  @default(false) @map("is_active")
   ownerId   String   @unique
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
-  users     User[]   @relation("AccountUsers")
-  owner     User     @relation("AccountOwner", fields: [ownerId], references: [id])
+  users     User[]   @relation("company_users")
+  owner     User     @relation("owner", fields: [ownerId], references: [id])
 
-  @@map("accounts")
+  @@map("catering_companies")
 }
 
 model User {
-  id             String   @id @default(uuid())
-  extAuthUID     String   @unique @map("ext_auth_uid")
-  accountId      String?  @map("account_id")
-  emailEncrypted String   @map("email_encrypted")
-  emailHashed    String   @unique @map("email_hashed")
-  nameEncrypted  String   @map("name_encrypted")
-  emailVerified  Boolean  @default(false) @map("email_verified")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
-  account        Account? @relation(name: "AccountUsers", fields: [accountId], references: [id], onDelete: Cascade)
-  ownedAccount   Account? @relation("AccountOwner")
+  id             String           @id @default(uuid())
+  extAuthUID     String           @unique @map("ext_auth_uid")
+  companyId      String?          @map("company_id")
+  emailEncrypted String           @map("email_encrypted")
+  emailHashed    String           @unique @map("email_hashed")
+  nameEncrypted  String           @map("name_encrypted")
+  emailVerified  Boolean          @default(false) @map("email_verified")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+  company        CateringCompany? @relation(name: "company_users", fields: [companyId], references: [id], onDelete: Cascade)
+  ownedCompany   CateringCompany? @relation("owner")
 
   @@index([extAuthUID])
-  @@index([accountId])
+  @@index([companyId])
   @@map("users")
-}
-
-model SystemIntegration {
-  id                     String                                    @id @default(uuid())
-  srcName                SystemConnection                          @map("src_name")
-  srcAsset               SystemIntegrationSourceAsset              @map("src_asset")
-  targetName             SystemConnection                          @map("target_name")
-  targetAsset            SystemIntegrationTargetAsset              @map("target_asset")
-  connections            SystemConnection[]
-  additionalRequirements AdditionalSystemIntegrationRequirements[] @map("additional_requirements")
-
-  @@map("system_integrations")
-}
-
-enum SystemConnection {
-  ezCater
-  Nutshell
-}
-
-enum SystemIntegrationSourceAsset {
-  Order
-}
-
-enum SystemIntegrationTargetAsset {
-  Lead
-}
-
-enum AdditionalSystemIntegrationRequirements {
-  MenuSync
 }

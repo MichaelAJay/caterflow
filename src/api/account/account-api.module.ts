@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { AccountModule } from 'src/internal-modules/account/account.module';
-import { AccountController } from './account.controller';
+import { CateringCompanyModule } from 'src/internal-modules/account/account.module';
+import { CateringCompanyController } from './account.controller';
 
 @Module({
-  imports: [AccountModule],
-  controllers: [AccountController],
+  imports: [CateringCompanyModule],
+  controllers: [CateringCompanyController],
 })
-export class AccountApiModule {}
+export class CateringCompanyApiModule {}
