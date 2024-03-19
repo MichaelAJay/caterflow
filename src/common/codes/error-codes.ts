@@ -1,10 +1,10 @@
 export const ERROR_CODE = {
-  AccountExists: 'account_exists',
+  CompanyExists: 'company_exists',
   Conflict: 'conflict',
   InvalidRequestBody: 'invalid_request_body',
   MalformedToken: 'malformed_token',
   MissingToken: 'missing_token',
-  NoAccount: 'no_account',
+  NoCompany: 'no_company',
   TokenExpired: 'token_expired',
   UnverifiedEmail: 'unverified_email',
 };

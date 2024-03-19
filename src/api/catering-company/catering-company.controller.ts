@@ -6,17 +6,19 @@ import {
   Post,
   Req,
 } from '@nestjs/common';
-import { CateringCompanyService } from '../../internal-modules/account/account.service';
-import { validateCreateCateringCompanyRequestBody } from './validators/post.account';
-import { ICateringCompanyController } from './interfaces/account.controller.interface';
+import { CateringCompanyService } from '../../internal-modules/catering-company/catering-company.service';
+import { validateCreateCateringCompanyRequestBody } from './validators/post.caterer';
+import { ICateringCompanyController } from './interfaces/catering-company.controller.interface';
 import { AuthenticatedRequest } from '../interfaces/authenticated-request.interface';
-import { BypassCateringCompanyRequirement } from '../../common/decorators/bypass-account-requirement.decorator';
+import { BypassCateringCompanyRequirement } from '../../common/decorators/bypass-company-requirement.decorator';
 import { ERROR_CODE } from '../../common/codes/error-codes';
 import { SUCCESS_CODE } from '../../common/codes/success-codes';
 
 @Controller('caterer')
 export class CateringCompanyController implements ICateringCompanyController {
-  constructor(private readonly accountService: CateringCompanyService) {}
+  constructor(
+    private readonly cateringCompanyService: CateringCompanyService,
+  ) {}
 
   @BypassCateringCompanyRequirement()
   @Post()
@@ -35,17 +37,17 @@ export class CateringCompanyController implements ICateringCompanyController {
 
     const { name } = validationResult.data;
     const { user } = req;
-    if (user.accountId !== null) {
+    if (user.companyId !== null) {
       throw new ConflictException({
-        message: 'This user is already associated with an account',
-        code: ERROR_CODE.CateringCompanyExists,
+        message: 'This user is already associated with a company',
+        code: ERROR_CODE.CompanyExists,
       });
     }
 
-    await this.accountService.createCateringCompany(name, user.id);
+    await this.cateringCompanyService.createCateringCompany(name, user.id);
     return {
-      message: 'Your account was successfully created!',
-      code: SUCCESS_CODE.CateringCompanyCreated,
+      message: 'Your company was successfully created!',
+      code: SUCCESS_CODE.CompanyCreated,
     };
   }
 }

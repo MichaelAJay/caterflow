@@ -2,8 +2,8 @@ import { IExternalSecretManager } from 'src/external-modules/gcp-secret-manager/
 
 export interface ISecretManager extends IExternalSecretManager {
   getSecretName(
-    accountId: string,
-    accountIntegrationId: string,
+    companyId: string,
+    companyIntegrationId: string,
     secretType: string,
   ): string;
   getSystemSecretName(secretName: string): string;

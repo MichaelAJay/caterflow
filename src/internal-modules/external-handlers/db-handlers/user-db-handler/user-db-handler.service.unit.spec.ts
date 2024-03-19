@@ -50,7 +50,7 @@ describe('UserDbHandlerService', () => {
       emailHashed: string;
       nameEncrypted: string;
       extAuthUID: string;
-      accountId?: string;
+      companyId?: string;
     } = {
       emailEncrypted: 'encryptedEmail',
       emailHashed: 'hashedEmail',
@@ -60,14 +60,14 @@ describe('UserDbHandlerService', () => {
 
     const now = new Date();
 
-    it('should create a user and return it with null accountId if accountId not provided', async () => {
+    it('should create a user and return it with null companyId if companyId not provided', async () => {
       const expectedResult = {
         id: 'uuid',
         ...createUserInput,
         emailVerified: false,
         createdAt: now,
         updatedAt: now,
-        accountId: null,
+        companyId: null,
       };
 
       jest
@@ -84,9 +84,9 @@ describe('UserDbHandlerService', () => {
         data: createUserInput,
       });
     });
-    it('should create a user and return it with accountId if provided', async () => {
-      const accountId = 'accountId';
-      createUserInput.accountId = accountId;
+    it('should create a user and return it with companyId if provided', async () => {
+      const companyId = 'companyId';
+      createUserInput.companyId = companyId;
 
       const expectedResult = {
         id: 'uuid',
@@ -94,7 +94,7 @@ describe('UserDbHandlerService', () => {
         emailVerified: false,
         createdAt: now,
         updatedAt: now,
-        accountId,
+        companyId,
       };
 
       jest
@@ -158,7 +158,7 @@ describe('UserDbHandlerService', () => {
       id: 'uuid',
       extAuthUID: externalAuthUID,
       nameEncrypted: 'encryptedName',
-      accountId: null,
+      companyId: null,
       emailEncrypted: '',
       emailHashed: '',
       emailVerified: false,
@@ -210,7 +210,7 @@ describe('UserDbHandlerService', () => {
   describe('updateUser', () => {
     const date = new Date();
     const userId = 'uuid';
-    const updateUserInput = { accountId: 'accountId' };
+    const updateUserInput = { companyId: 'companyId' };
     const updatedUser: User = {
       id: userId,
       ...updateUserInput,
@@ -240,7 +240,7 @@ describe('UserDbHandlerService', () => {
       expect(result).toEqual(updatedUser);
       expect(spy).toHaveBeenCalledWith(userUpdateArgs);
     });
-    it('should throw a foreign key constraint error if updated accountId does not reference an existing account', async () => {
+    it('should throw a foreign key constraint error if updated companyId does not reference an existing company', async () => {
       expect.assertions(2);
 
       const userUpdateArgs = {

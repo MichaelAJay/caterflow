@@ -14,6 +14,6 @@ export interface AuthenticatedRequest extends FastifyRequest {
     internalUserEmailVerificationStatus: boolean;
     external_auth_uid: string;
     email: string;
-    accountId: string | null;
+    companyId: string | null;
   };
 }

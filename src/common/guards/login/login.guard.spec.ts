@@ -78,7 +78,7 @@ describe('LoginGuard', () => {
       } as any);
       jest
         .spyOn(userService, 'getUserByExternalUID')
-        .mockResolvedValue({ accountId: '123' } as any);
+        .mockResolvedValue({ companyId: '123' } as any);
 
       const result = await guard.canActivate(context as any);
       expect(result).toBe(true);

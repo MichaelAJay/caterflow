@@ -34,7 +34,7 @@ describe('UserDbQueryBuilderService', () => {
   describe('buildUpdateUser', () => {
     it('should return an object with where.id set to the id and data set to the updates', () => {
       const id = '1';
-      const updates = { accountId: 'accountId' };
+      const updates = { companyId: 'companyId' };
       const expectedOutput = { where: { id }, data: updates };
 
       const result = service.buildUpdateUser(id, updates);

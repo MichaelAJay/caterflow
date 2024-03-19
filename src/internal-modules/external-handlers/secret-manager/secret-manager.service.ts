@@ -21,11 +21,11 @@ export class SecretManagerService implements ISecretManager {
   }
 
   getSecretName(
-    accountId: string,
-    accountIntegrationId: string,
+    companyId: string,
+    companyIntegrationId: string,
     secretType: string,
   ): string {
-    return `${accountId}_${accountIntegrationId}_${secretType}`;
+    return `${companyId}_${companyIntegrationId}_${secretType}`;
   }
 
   getSystemSecretName(secretName: string): string {

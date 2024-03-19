@@ -6,7 +6,7 @@ import {
 
 export interface IUserDbHandler {
   /**
-   * This method may only omit accountId when used in the 'Create User' API route
+   * This method may only omit companyId when used in the 'Create User' API route
    */
   createUser(input: IBuildCreateUserArgs): Promise<User>;
   retrieveUserByExternalAuthUID(externalAuthUID: string): Promise<User>;

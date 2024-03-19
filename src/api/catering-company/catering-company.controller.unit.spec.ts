@@ -1,13 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { CateringCompanyController } from './account.controller';
-import { CateringCompanyService } from '../../internal-modules/account/account.service';
-import { mockCateringCompanyService } from '../../../test/mocks/providers/mock_account_service';
+import { CateringCompanyController } from './catering-company.controller';
+import { CateringCompanyService } from '../../internal-modules/catering-company/catering-company.service';
+import { mockCateringCompanyService } from '../../../test/mocks/providers/mock_catering_company_service';
 import { SUCCESS_CODE } from '../../common/codes/success-codes';
 import { BadRequestException, ConflictException } from '@nestjs/common';
 import { FirebaseAdminService } from '../../external-modules/firebase-admin/firebase-admin.service';
 import { mockFirebaseAdminService } from '../../../test/mocks/providers/mock_firebase_admin';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { validateCreateCateringCompanyRequestBody } from './validators/post.account';
+import { validateCreateCateringCompanyRequestBody } from './validators/post.caterer';
 
 describe('CateringCompanyController', () => {
   let controller: CateringCompanyController;
@@ -52,7 +52,7 @@ describe('CateringCompanyController', () => {
 
     it('should return a success message when the catering company is successfully created', async () => {
       const body = { name: 'test' };
-      const req = { user: { accountId: null, external_auth_uid: 'abc' } };
+      const req = { user: { companyId: null, external_auth_uid: 'abc' } };
       jest
         .spyOn(cateringCompanyService, 'createCateringCompany')
         .mockResolvedValue(undefined);
@@ -70,7 +70,7 @@ describe('CateringCompanyController', () => {
 
     it('should call cateringCompanyService.createCateringCompany with the correct arguments', async () => {
       const body = { name: 'tests' };
-      const req = { user: { accountId: null, id: 'abc' } };
+      const req = { user: { companyId: null, id: 'abc' } };
       const createCateringCompanySpy = jest
         .spyOn(cateringCompanyService, 'createCateringCompany')
         .mockResolvedValue(undefined);
@@ -88,7 +88,7 @@ describe('CateringCompanyController', () => {
 
     it('should throw a ConflictException when the user already has an associated catering company', async () => {
       const body = { name: 'test' };
-      const req = { user: { accountId: '123', external_auth_uid: 'abc' } };
+      const req = { user: { companyId: '123', external_auth_uid: 'abc' } };
       mockValidateCreateCateringCompanyRequestBody.mockReturnValue({
         valid: true,
         data: body,
@@ -100,7 +100,7 @@ describe('CateringCompanyController', () => {
 
     it('should throw an error when the request body is invalid', async () => {
       const invalidBody = { invalid: 'body' };
-      const req = { user: { accountId: undefined, external_auth_uid: 'abc' } };
+      const req = { user: { companyId: undefined, external_auth_uid: 'abc' } };
       mockValidateCreateCateringCompanyRequestBody.mockReturnValue({
         valid: false,
         errors: {},
