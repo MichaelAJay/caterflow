@@ -51,7 +51,7 @@ describe('FirebaseAdminService', () => {
       expect(mockAuth.verifyIdToken).toHaveBeenCalledWith(token);
     });
 
-    it('should throw an error if token verificaiton fails', async () => {
+    it('should throw an error if token verification fails', async () => {
       mockAuth.verifyIdToken.mockRejectedValue(new Error('Invalid token'));
       const token = 'invalid token';
       await expect(service.verifyToken(token)).rejects.toThrow('Invalid token');

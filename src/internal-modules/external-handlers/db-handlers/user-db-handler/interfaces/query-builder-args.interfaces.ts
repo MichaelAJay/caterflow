@@ -3,7 +3,7 @@ import { Prisma } from '@prisma/client';
 export type IBuildCreateUserArgs = Pick<
   Prisma.UserUncheckedCreateInput,
   | 'extAuthUID'
-  | 'accountId'
+  | 'companyId'
   | 'emailEncrypted'
   | 'emailHashed'
   | 'nameEncrypted'
@@ -12,5 +12,5 @@ export type IBuildCreateUserArgs = Pick<
 
 export type IBuildUpdateUserArgs = Pick<
   Prisma.UserUncheckedUpdateInput,
-  'accountId' | 'emailVerified'
+  'companyId' | 'emailVerified'
 >;

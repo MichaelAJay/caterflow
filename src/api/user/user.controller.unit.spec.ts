@@ -63,25 +63,25 @@ describe('UserController', () => {
   //   });
   // });
 
-  // describe('getUserAccountStatus', () => {
-  //   it('should return user account status true when user has account id', async () => {
+  // describe('getUserCompanyStatus', () => {
+  //   it('should return user company status true when user has company id', async () => {
   //     const req = {
-  //       user: { id: 'testId', accountId: 'acctId' },
+  //       user: { id: 'testId', companyId: 'acctId' },
   //     } as AuthenticatedRequest;
-  //     const result = await controller.getUserAccountStatus(req);
-  //     expect(result).toEqual({ hasAccount: true });
+  //     const result = await controller.getUserCompanyStatus(req);
+  //     expect(result).toEqual({ hasCompany: true });
   //   });
-  //   it('should return user account status false when user does not have account id', async () => {
+  //   it('should return user company status false when user does not have company id', async () => {
   //     const req = {
   //       user: { id: 'testId' },
   //     } as AuthenticatedRequest;
-  //     const result = await controller.getUserAccountStatus(req);
-  //     expect(result).toEqual({ hasAccount: false });
+  //     const result = await controller.getUserCompanyStatus(req);
+  //     expect(result).toEqual({ hasCompany: false });
   //   });
-  //   it('should return user account status false when req does not have user', async () => {
+  //   it('should return user company status false when req does not have user', async () => {
   //     const req = {} as AuthenticatedRequest;
-  //     const result = await controller.getUserAccountStatus(req);
-  //     expect(result).toEqual({ hasAccount: false });
+  //     const result = await controller.getUserCompanyStatus(req);
+  //     expect(result).toEqual({ hasCompany: false });
   //   });
   // });
 
@@ -117,34 +117,37 @@ describe('UserController', () => {
   });
 
   describe('login', () => {
-    it('should return an object with hasAccount property and not call createUser if req.userFound is true', async () => {
+    it('should return an object with hasCompany property and not call createUser if req.userFound is true', async () => {
       const req = {
         userFound: true,
-        userHasAccount: true,
+        userHasCompany: true,
       } as UserFoundLoginRequest;
       const result = await controller.login(req);
-      expect(result).toEqual({ hasAccount: req.userHasAccount });
+      expect(result).toEqual({ hasCompany: req.userHasCompany });
       expect(userService.createUser).not.toHaveBeenCalled();
     });
     it('should call userService.updateUser to update emailVerified if user found and requires sync', async () => {
       const req = {
         userId: '123',
         userFound: true,
-        userHasAccount: true,
+        userHasCompany: true,
         requiresEmailVerificationSync: true,
+        externalEmailVerificationStatus: true,
       } as UserFoundLoginRequest;
       const spy = jest
         .spyOn(userService, 'updateUser')
         .mockResolvedValue(undefined);
 
       await controller.login(req);
-      expect(spy).toHaveBeenCalledWith(req.userId, { emailVerified: true });
+      expect(spy).toHaveBeenCalledWith(req.userId, {
+        emailVerified: req.externalEmailVerificationStatus,
+      });
     });
     it('should not call userService.updateUser if user found and not requires sync', async () => {
       const req = {
         userId: '123',
         userFound: true,
-        userHasAccount: true,
+        userHasCompany: true,
         requiresEmailVerificationSync: false,
       } as UserFoundLoginRequest;
       const spy = jest.spyOn(userService, 'updateUser');
@@ -164,7 +167,7 @@ describe('UserController', () => {
         .spyOn(userService, 'createUser')
         .mockResolvedValue(undefined);
       const result = await controller.login(req);
-      expect(result).toEqual({ hasAccount: false });
+      expect(result).toEqual({ hasCompany: false });
       expect(spy).toHaveBeenCalledWith(
         user.name,
         user.email,
@@ -184,7 +187,7 @@ describe('UserController', () => {
         .spyOn(userService, 'createUser')
         .mockResolvedValue(undefined);
       const result = await controller.login(req);
-      expect(result).toEqual({ hasAccount: false });
+      expect(result).toEqual({ hasCompany: false });
       expect(spy).toHaveBeenCalledWith(
         user.name,
         user.email,

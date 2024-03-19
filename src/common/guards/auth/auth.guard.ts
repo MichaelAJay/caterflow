@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ERROR_CODE } from '../../codes/error-codes';
-import { bypassAccountRequirementMetadataName } from '../../decorators/bypass-account-requirement.decorator';
+import { bypassCateringCompanyRequirementMetadataName } from '../../decorators/bypass-company-requirement.decorator';
 import { isPublicMetadataName } from '../../decorators/public.decorator';
 import { UserService } from '../../../internal-modules/user/user.service';
 import { bypassUserRequirementMetadataName } from '../../decorators/bypass-user-requirement.decorator';
@@ -83,17 +83,17 @@ export class AuthGuard implements CanActivate {
         }
       }
 
-      // User isn't associated with account
-      if (user.accountId === null) {
-        const canSkipAccountCheck = this.reflector.getAllAndOverride<boolean>(
-          bypassAccountRequirementMetadataName,
+      // User isn't associated with company
+      if (user.companyId === null) {
+        const canSkipCompanyCheck = this.reflector.getAllAndOverride<boolean>(
+          bypassCateringCompanyRequirementMetadataName,
           [context.getHandler(), context.getClass()],
         );
-        if (!canSkipAccountCheck) {
+        if (!canSkipCompanyCheck) {
           throw new ForbiddenException({
             message:
-              'This request may only be made by a user associated with an account',
-            code: ERROR_CODE.NoAccount,
+              'This request may only be made by a user associated with a company',
+            code: ERROR_CODE.NoCompany,
           });
         }
       }
@@ -103,7 +103,7 @@ export class AuthGuard implements CanActivate {
         internalUserEmailVerificationStatus: user.emailVerified,
         external_auth_uid: payload.uid,
         email: payload.email,
-        accountId: user.accountId,
+        companyId: user.companyId,
       };
 
       return true;

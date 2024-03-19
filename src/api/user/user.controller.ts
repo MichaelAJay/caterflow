@@ -1,6 +1,6 @@
 import { Controller, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { IUserController } from './interfaces/user.controller.interface';
-import { BypassAccountRequirement } from '../../common/decorators/bypass-account-requirement.decorator';
+import { BypassCateringCompanyRequirement } from '../../common/decorators/bypass-company-requirement.decorator';
 import { AuthenticatedRequest } from '../interfaces/authenticated-request.interface';
 import { UserService } from '../../internal-modules/user/user.service';
 import { SUCCESS_CODE } from '../../common/codes/success-codes';
@@ -24,13 +24,13 @@ export class UserController implements IUserController {
   //   };
   // }
 
-  // @BypassAccountRequirement()
-  // @Get('account-status')
-  // async getUserAccountStatus(@Req() req: AuthenticatedRequest) {
-  //   return { hasAccount: !!(req.user && req.user.accountId) };
+  // @BypassCateringCompanyRequirement()
+  // @Get('company-status')
+  // async getUserCateringCompanyStatus(@Req() req: AuthenticatedRequest) {
+  //   return { hasCateringCompany: !!(req.user && req.user.companyId) };
   // }
 
-  @BypassAccountRequirement()
+  @BypassCateringCompanyRequirement()
   @Patch('verify-email')
   async verifyEmail(@Req() req: AuthenticatedRequest) {
     const { user } = req;
@@ -47,7 +47,7 @@ export class UserController implements IUserController {
   @LogIn()
   @UseGuards(LoginGuard)
   @Post('login')
-  async login(@Req() req: LoginRequest): Promise<{ hasAccount: boolean }> {
+  async login(@Req() req: LoginRequest): Promise<{ hasCompany: boolean }> {
     if (req.userFound) {
       if (req.requiresEmailVerificationSync) {
         console.log('requires sync');
@@ -56,7 +56,7 @@ export class UserController implements IUserController {
         });
       }
 
-      return { hasAccount: req.userHasAccount };
+      return { hasCompany: req.userHasCompany };
     } else {
       const { user } = req;
       await this.userService.createUser(
@@ -65,7 +65,7 @@ export class UserController implements IUserController {
         user.external_auth_uid,
         user.emailVerified,
       );
-      return { hasAccount: false };
+      return { hasCompany: false };
     }
   }
 }

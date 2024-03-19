@@ -50,7 +50,7 @@ describe('AuthGuard', () => {
       expect(await guard.canActivate(context as any)).toBe(true);
     });
 
-    it('should return true when token is valid, user is found and has an associated account', async () => {
+    it('should return true when token is valid, user is found and has an associated company', async () => {
       const context = {
         getHandler: jest.fn(),
         getClass: jest.fn(),
@@ -70,7 +70,7 @@ describe('AuthGuard', () => {
       } as any);
       jest
         .spyOn(userService, 'getUserByExternalUID')
-        .mockResolvedValue({ accountId: '123' } as any);
+        .mockResolvedValue({ companyId: '123' } as any);
 
       const result = await guard.canActivate(context as any);
       expect(result).toBe(true);
@@ -321,7 +321,7 @@ describe('AuthGuard', () => {
       expect(await guard.canActivate(context as any)).toBe(false);
     });
 
-    it('should throw a ForbiddenException if the user has no account and cannot skip the account check', async () => {
+    it('should throw a ForbiddenException if the user has no company and cannot skip the company check', async () => {
       const context = {
         getHandler: jest.fn(),
         getClass: jest.fn(),
@@ -342,14 +342,14 @@ describe('AuthGuard', () => {
       } as any);
       jest
         .spyOn(userService, 'getUserByExternalUID')
-        .mockResolvedValue({ accountId: null } as any);
+        .mockResolvedValue({ companyId: null } as any);
 
       await expect(guard.canActivate(context as any)).rejects.toThrow(
         ForbiddenException,
       );
     });
 
-    it('should return true when the user has no account but can skip the account check', async () => {
+    it('should return true when the user has no company but can skip the company check', async () => {
       const context = {
         getHandler: jest.fn(),
         getClass: jest.fn(),

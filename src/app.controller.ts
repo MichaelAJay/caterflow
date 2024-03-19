@@ -1,6 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import { Public } from './common/decorators/public.decorator';
-import { BypassAccountRequirement } from './common/decorators/bypass-account-requirement.decorator';
+import { BypassCateringCompanyRequirement } from './common/decorators/bypass-company-requirement.decorator';
 
 @Controller('app')
 export class AppController {
@@ -10,7 +10,7 @@ export class AppController {
     return this.getHealth();
   }
 
-  @BypassAccountRequirement()
+  @BypassCateringCompanyRequirement()
   @Get('health')
   async getHealth() {
     return {

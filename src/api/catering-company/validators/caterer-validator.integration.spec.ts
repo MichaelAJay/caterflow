@@ -1,20 +1,20 @@
-import { validateCreateAccountRequestBody } from './post.account';
+import { validateCreateCateringCompanyRequestBody } from './post.caterer';
 
-describe('account validator integration tests', () => {
+describe('catering company validator integration tests', () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
 
-  describe('post.account schema', () => {
+  describe('post.caterer schema', () => {
     it('should validate successfully when name is provided and is a string', () => {
       const data = { name: 'test' };
-      const result = validateCreateAccountRequestBody(data);
+      const result = validateCreateCateringCompanyRequestBody(data);
       expect(result).toEqual({ valid: true, data });
     });
 
     it('should fail validation when name is not provided', () => {
       const data = {};
-      const result = validateCreateAccountRequestBody(data) as {
+      const result = validateCreateCateringCompanyRequestBody(data) as {
         valid: false;
         errors: Array<{ path: string; message: string | undefined }>;
       };
@@ -26,7 +26,7 @@ describe('account validator integration tests', () => {
 
     it('should fail validation when name is not a string', () => {
       const data = { name: 123 };
-      const result = validateCreateAccountRequestBody(data) as {
+      const result = validateCreateCateringCompanyRequestBody(data) as {
         valid: false;
         errors: Array<{ path: string; message: string | undefined }>;
       };
@@ -38,7 +38,7 @@ describe('account validator integration tests', () => {
 
     it('should fail validation when additional properties are provided', () => {
       const data = { name: 'test', extra: 'property' };
-      const result = validateCreateAccountRequestBody(data) as {
+      const result = validateCreateCateringCompanyRequestBody(data) as {
         valid: false;
         errors: Array<{ path: string; message: string | undefined }>;
       };

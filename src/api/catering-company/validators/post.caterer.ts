@@ -1,11 +1,11 @@
 import { JSONSchemaType } from 'ajv';
 import ajvSingleton from '../../../system/singletons/ajv.singleton';
 
-type CreateAccount = {
+type CreateCateringCompany = {
   name: string;
 };
 
-export const schema: JSONSchemaType<CreateAccount> = {
+export const schema: JSONSchemaType<CreateCateringCompany> = {
   type: 'object',
   properties: {
     name: { type: 'string' },
@@ -17,12 +17,14 @@ export const schema: JSONSchemaType<CreateAccount> = {
 const validate = ajvSingleton.compile(schema);
 
 type ValidationResult =
-  | { valid: true; data: CreateAccount }
+  | { valid: true; data: CreateCateringCompany }
   | {
       valid: false;
       errors: Array<{ path: string; message: string | undefined }>;
     };
-export function validateCreateAccountRequestBody(data: any): ValidationResult {
+export function validateCreateCateringCompanyRequestBody(
+  data: any,
+): ValidationResult {
   const valid = validate(data);
   if (!valid) {
     const errorMsgs = validate.errors
