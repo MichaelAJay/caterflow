@@ -1,7 +1,21 @@
-import { AuthenticatedRequest } from 'src/api/interfaces/authenticated-request.interface';
+import {
+  AuthenticatedRequest,
+  AuthenticatedRequestForNewUser,
+} from 'src/api/interfaces/authenticated-request.interface';
+import { LoginRequest } from 'src/api/interfaces/login-request.interface';
 
 export interface IUserController {
-  getUserAccountStatus(
+  // createUser(
+  //   req: AuthenticatedRequestForNewUser,
+  // ): Promise<{ message: string; code: string }>;
+  // getUserAccountStatus(
+  //   req: AuthenticatedRequest,
+  // ): Promise<{ hasAccount: boolean }>;
+  verifyEmail(
     req: AuthenticatedRequest,
-  ): Promise<{ hasAccount: boolean }>;
+  ): Promise<{ message: string; code: string }>;
+  /**
+   * Ensures user exists in system or creaets if not
+   */
+  login(req: LoginRequest): Promise<{ hasAccount: boolean }>;
 }

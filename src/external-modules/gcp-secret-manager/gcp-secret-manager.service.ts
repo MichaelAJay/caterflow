@@ -1,6 +1,6 @@
 import { SecretManagerServiceClient } from '@google-cloud/secret-manager';
 import { Injectable } from '@nestjs/common';
-import { CustomConfigService } from '../../utility/services/custom-config.service';
+import { CustomConfigService } from '../../utility/services/custom-config/custom-config.service';
 import { IExternalSecretManager } from './interfaces/external-secret-manager.service.interface';
 import * as Sentry from '@sentry/node';
 

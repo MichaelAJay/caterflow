@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { GcpSecretManagerService } from './gcp-secret-manager.service';
-import { CustomConfigService } from '../../utility/services/custom-config.service';
+import { CustomConfigService } from '../../utility/services/custom-config/custom-config.service';
 import { mockCustomConfig } from '../../../test/mocks/providers/mock_custom_config';
 
 const MOCK_PROJECT_ID = 'mockProjectId';

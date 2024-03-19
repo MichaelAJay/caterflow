@@ -9,6 +9,8 @@ import {
   PrismaClientUnknownRequestError,
 } from '@prisma/client/runtime/library';
 import { User } from '@prisma/client';
+import { ConflictException } from '@nestjs/common';
+import { ERROR_CODE } from '../../../../common/codes/error-codes';
 
 describe('UserDbHandlerService', () => {
   let service: UserDbHandlerService;
@@ -62,6 +64,7 @@ describe('UserDbHandlerService', () => {
       const expectedResult = {
         id: 'uuid',
         ...createUserInput,
+        emailVerified: false,
         createdAt: now,
         updatedAt: now,
         accountId: null,
@@ -88,6 +91,7 @@ describe('UserDbHandlerService', () => {
       const expectedResult = {
         id: 'uuid',
         ...createUserInput,
+        emailVerified: false,
         createdAt: now,
         updatedAt: now,
         accountId,
@@ -108,6 +112,8 @@ describe('UserDbHandlerService', () => {
       });
     });
     it('should throw a unique constraint violation error if emailHashed is not unique', async () => {
+      expect.assertions(2);
+
       jest
         .spyOn(userQueryBuilder, 'buildCreateUserQuery')
         .mockReturnValue({ data: createUserInput });
@@ -121,11 +127,13 @@ describe('UserDbHandlerService', () => {
       try {
         await service.createUser(createUserInput);
       } catch (error) {
-        expect(error).toBeInstanceOf(PrismaClientKnownRequestError);
-        expect(error.code).toBe('P2002');
+        expect(error).toBeInstanceOf(ConflictException);
+        expect(error.response.code).toBe(ERROR_CODE.Conflict);
       }
     });
     it('should propagate any unspecified error thrown by the db client', async () => {
+      expect.assertions(1);
+
       jest
         .spyOn(userQueryBuilder, 'buildCreateUserQuery')
         .mockReturnValue({ data: createUserInput });
@@ -153,6 +161,7 @@ describe('UserDbHandlerService', () => {
       accountId: null,
       emailEncrypted: '',
       emailHashed: '',
+      emailVerified: false,
       createdAt: date,
       updatedAt: date,
     };
@@ -209,6 +218,7 @@ describe('UserDbHandlerService', () => {
       emailEncrypted: '',
       emailHashed: '',
       nameEncrypted: '',
+      emailVerified: false,
       createdAt: date,
       updatedAt: date,
     };
@@ -231,6 +241,8 @@ describe('UserDbHandlerService', () => {
       expect(spy).toHaveBeenCalledWith(userUpdateArgs);
     });
     it('should throw a foreign key constraint error if updated accountId does not reference an existing account', async () => {
+      expect.assertions(2);
+
       const userUpdateArgs = {
         where: { id: userId },
         data: { ...updatedUser },

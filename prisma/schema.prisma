@@ -30,12 +30,42 @@ model User {
   emailEncrypted String   @map("email_encrypted")
   emailHashed    String   @unique @map("email_hashed")
   nameEncrypted  String   @map("name_encrypted")
+  emailVerified  Boolean  @default(false) @map("email_verified")
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
-  account        Account? @relation(name: "AccountUsers", fields: [accountId], references: [id])
+  account        Account? @relation(name: "AccountUsers", fields: [accountId], references: [id], onDelete: Cascade)
   ownedAccount   Account? @relation("AccountOwner")
 
   @@index([extAuthUID])
   @@index([accountId])
   @@map("users")
+}
+
+model SystemIntegration {
+  id                     String                                    @id @default(uuid())
+  srcName                SystemConnection                          @map("src_name")
+  srcAsset               SystemIntegrationSourceAsset              @map("src_asset")
+  targetName             SystemConnection                          @map("target_name")
+  targetAsset            SystemIntegrationTargetAsset              @map("target_asset")
+  connections            SystemConnection[]
+  additionalRequirements AdditionalSystemIntegrationRequirements[] @map("additional_requirements")
+
+  @@map("system_integrations")
+}
+
+enum SystemConnection {
+  ezCater
+  Nutshell
+}
+
+enum SystemIntegrationSourceAsset {
+  Order
+}
+
+enum SystemIntegrationTargetAsset {
+  Lead
+}
+
+enum AdditionalSystemIntegrationRequirements {
+  MenuSync
 }

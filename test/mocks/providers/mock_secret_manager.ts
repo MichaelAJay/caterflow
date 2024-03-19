@@ -2,6 +2,7 @@ import { ISecretManager } from 'src/internal-modules/external-handlers/secret-ma
 
 export const mockSecretManagerService: ISecretManager = {
   getSecretName: jest.fn(),
+  getSystemSecretName: jest.fn(),
   getSecret: jest.fn(),
   upsertSecret: jest.fn(),
 };

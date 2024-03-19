@@ -4,4 +4,8 @@ export default () => ({
   env: process.env.ENV || 'development',
   googleProjectId: process.env.GOOGLE_PROJECT,
   product: process.env.PROJECT || 'caterflow',
+  localPathToSecret: {
+    // These must follow the naming convention of the system secrets in the cloud-based secret manager
+    CATERFLOW_DEV_CIPHER_KEY: process.env.PATH_TO_CIPHER_KEY,
+  },
 });

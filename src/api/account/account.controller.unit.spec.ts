@@ -4,6 +4,8 @@ import { AccountService } from '../../internal-modules/account/account.service';
 import { mockAccountService } from '../../../test/mocks/providers/mock_account_service';
 import { SUCCESS_CODE } from '../../common/codes/success-codes';
 import { BadRequestException, ConflictException } from '@nestjs/common';
+import { FirebaseAdminService } from '../../external-modules/firebase-admin/firebase-admin.service';
+import { mockFirebaseAdminService } from '../../../test/mocks/providers/mock_firebase_admin';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { validateCreateAccountRequestBody } from './validators/post.account';
 
@@ -14,7 +16,10 @@ describe('AccountController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AccountController],
-      providers: [{ provide: AccountService, useValue: mockAccountService }],
+      providers: [
+        { provide: AccountService, useValue: mockAccountService },
+        { provide: FirebaseAdminService, useValue: mockFirebaseAdminService },
+      ],
     }).compile();
 
     controller = module.get<AccountController>(AccountController);
@@ -40,7 +45,7 @@ describe('AccountController', () => {
 
     it('should return a success message when the account is successfully created', async () => {
       const body = { name: 'test' };
-      const req = { user: { accountId: undefined, external_auth_uid: 'abc' } };
+      const req = { user: { accountId: null, external_auth_uid: 'abc' } };
       jest.spyOn(accountService, 'createAccount').mockResolvedValue(undefined);
       mockValidateCreateAccountRequestBody.mockReturnValue({
         valid: true,
@@ -56,7 +61,7 @@ describe('AccountController', () => {
 
     it('should call accountService.createAccount with the correct arguments', async () => {
       const body = { name: 'tests' };
-      const req = { user: { accountId: undefined, external_auth_uid: 'abc' } };
+      const req = { user: { accountId: null, id: 'abc' } };
       const createAccountSpy = jest
         .spyOn(accountService, 'createAccount')
         .mockResolvedValue(undefined);
@@ -66,10 +71,7 @@ describe('AccountController', () => {
       });
       await controller.createAccount(body, req as any);
 
-      expect(createAccountSpy).toHaveBeenCalledWith(
-        body.name,
-        req.user.external_auth_uid,
-      );
+      expect(createAccountSpy).toHaveBeenCalledWith(body.name, req.user.id);
     });
 
     it('should throw a ConflictException when the user already has an account', async () => {
