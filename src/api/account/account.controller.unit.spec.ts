@@ -1,29 +1,36 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AccountController } from './account.controller';
-import { AccountService } from '../../internal-modules/account/account.service';
-import { mockAccountService } from '../../../test/mocks/providers/mock_account_service';
+import { CateringCompanyController } from './account.controller';
+import { CateringCompanyService } from '../../internal-modules/account/account.service';
+import { mockCateringCompanyService } from '../../../test/mocks/providers/mock_account_service';
 import { SUCCESS_CODE } from '../../common/codes/success-codes';
 import { BadRequestException, ConflictException } from '@nestjs/common';
 import { FirebaseAdminService } from '../../external-modules/firebase-admin/firebase-admin.service';
 import { mockFirebaseAdminService } from '../../../test/mocks/providers/mock_firebase_admin';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { validateCreateAccountRequestBody } from './validators/post.account';
+import { validateCreateCateringCompanyRequestBody } from './validators/post.account';
 
-describe('AccountController', () => {
-  let controller: AccountController;
-  let accountService: AccountService;
+describe('CateringCompanyController', () => {
+  let controller: CateringCompanyController;
+  let cateringCompanyService: CateringCompanyService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [AccountController],
+      controllers: [CateringCompanyController],
       providers: [
-        { provide: AccountService, useValue: mockAccountService },
+        {
+          provide: CateringCompanyService,
+          useValue: mockCateringCompanyService,
+        },
         { provide: FirebaseAdminService, useValue: mockFirebaseAdminService },
       ],
     }).compile();
 
-    controller = module.get<AccountController>(AccountController);
-    accountService = module.get<AccountService>(AccountService);
+    controller = module.get<CateringCompanyController>(
+      CateringCompanyController,
+    );
+    cateringCompanyService = module.get<CateringCompanyService>(
+      CateringCompanyService,
+    );
   });
 
   afterEach(() => {
@@ -34,68 +41,73 @@ describe('AccountController', () => {
     expect(controller).toBeDefined();
   });
 
-  describe('createAccount', () => {
-    let mockValidateCreateAccountRequestBody: jest.Mock;
+  describe('createCateringCompany', () => {
+    let mockValidateCreateCateringCompanyRequestBody: jest.Mock;
 
     beforeEach(() => {
-      mockValidateCreateAccountRequestBody = jest.fn();
-      (validateCreateAccountRequestBody as jest.Mock) =
-        mockValidateCreateAccountRequestBody;
+      mockValidateCreateCateringCompanyRequestBody = jest.fn();
+      (validateCreateCateringCompanyRequestBody as jest.Mock) =
+        mockValidateCreateCateringCompanyRequestBody;
     });
 
-    it('should return a success message when the account is successfully created', async () => {
+    it('should return a success message when the catering company is successfully created', async () => {
       const body = { name: 'test' };
       const req = { user: { accountId: null, external_auth_uid: 'abc' } };
-      jest.spyOn(accountService, 'createAccount').mockResolvedValue(undefined);
-      mockValidateCreateAccountRequestBody.mockReturnValue({
+      jest
+        .spyOn(cateringCompanyService, 'createCateringCompany')
+        .mockResolvedValue(undefined);
+      mockValidateCreateCateringCompanyRequestBody.mockReturnValue({
         valid: true,
         data: body,
       });
 
-      const result = await controller.createAccount(body, req as any);
+      const result = await controller.createCateringCompany(body, req as any);
       expect(result).toEqual({
-        message: 'Your account was successfully created!',
-        code: SUCCESS_CODE.AccountCreated,
+        message: 'Your company details were successfully added!',
+        code: SUCCESS_CODE.CateringCompanyCreated,
       });
     });
 
-    it('should call accountService.createAccount with the correct arguments', async () => {
+    it('should call cateringCompanyService.createCateringCompany with the correct arguments', async () => {
       const body = { name: 'tests' };
       const req = { user: { accountId: null, id: 'abc' } };
-      const createAccountSpy = jest
-        .spyOn(accountService, 'createAccount')
+      const createCateringCompanySpy = jest
+        .spyOn(cateringCompanyService, 'createCateringCompany')
         .mockResolvedValue(undefined);
-      mockValidateCreateAccountRequestBody.mockReturnValue({
+      mockValidateCreateCateringCompanyRequestBody.mockReturnValue({
         valid: true,
         data: body,
       });
-      await controller.createAccount(body, req as any);
+      await controller.createCateringCompany(body, req as any);
 
-      expect(createAccountSpy).toHaveBeenCalledWith(body.name, req.user.id);
+      expect(createCateringCompanySpy).toHaveBeenCalledWith(
+        body.name,
+        req.user.id,
+      );
     });
 
-    it('should throw a ConflictException when the user already has an account', async () => {
+    it('should throw a ConflictException when the user already has an associated catering company', async () => {
       const body = { name: 'test' };
       const req = { user: { accountId: '123', external_auth_uid: 'abc' } };
-      mockValidateCreateAccountRequestBody.mockReturnValue({
+      mockValidateCreateCateringCompanyRequestBody.mockReturnValue({
         valid: true,
         data: body,
       });
-      await expect(controller.createAccount(body, req as any)).rejects.toThrow(
-        ConflictException,
-      );
+      await expect(
+        controller.createCateringCompany(body, req as any),
+      ).rejects.toThrow(ConflictException);
     });
 
     it('should throw an error when the request body is invalid', async () => {
       const invalidBody = { invalid: 'body' };
       const req = { user: { accountId: undefined, external_auth_uid: 'abc' } };
-      mockValidateCreateAccountRequestBody.mockReturnValue({
+      mockValidateCreateCateringCompanyRequestBody.mockReturnValue({
         valid: false,
         errors: {},
       });
 
       await expect(
-        controller.createAccount(invalidBody, req as any),
+        controller.createCateringCompany(invalidBody, req as any),
       ).rejects.toThrow(BadRequestException);
     });
   });

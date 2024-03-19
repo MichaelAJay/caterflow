@@ -6,22 +6,25 @@ import {
   Post,
   Req,
 } from '@nestjs/common';
-import { AccountService } from '../../internal-modules/account/account.service';
-import { validateCreateAccountRequestBody } from './validators/post.account';
-import { IAccountController } from './interfaces/account.controller.interface';
+import { CateringCompanyService } from '../../internal-modules/account/account.service';
+import { validateCreateCateringCompanyRequestBody } from './validators/post.account';
+import { ICateringCompanyController } from './interfaces/account.controller.interface';
 import { AuthenticatedRequest } from '../interfaces/authenticated-request.interface';
-import { BypassAccountRequirement } from '../../common/decorators/bypass-account-requirement.decorator';
+import { BypassCateringCompanyRequirement } from '../../common/decorators/bypass-account-requirement.decorator';
 import { ERROR_CODE } from '../../common/codes/error-codes';
 import { SUCCESS_CODE } from '../../common/codes/success-codes';
 
-@Controller('account')
-export class AccountController implements IAccountController {
-  constructor(private readonly accountService: AccountService) {}
+@Controller('caterer')
+export class CateringCompanyController implements ICateringCompanyController {
+  constructor(private readonly accountService: CateringCompanyService) {}
 
-  @BypassAccountRequirement()
+  @BypassCateringCompanyRequirement()
   @Post()
-  async createAccount(@Body() body: any, @Req() req: AuthenticatedRequest) {
-    const validationResult = validateCreateAccountRequestBody(body);
+  async createCateringCompany(
+    @Body() body: any,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const validationResult = validateCreateCateringCompanyRequestBody(body);
     if (!validationResult.valid) {
       throw new BadRequestException({
         message: 'Invalid request body',
@@ -35,14 +38,14 @@ export class AccountController implements IAccountController {
     if (user.accountId !== null) {
       throw new ConflictException({
         message: 'This user is already associated with an account',
-        code: ERROR_CODE.AccountExists,
+        code: ERROR_CODE.CateringCompanyExists,
       });
     }
 
-    await this.accountService.createAccount(name, user.id);
+    await this.accountService.createCateringCompany(name, user.id);
     return {
       message: 'Your account was successfully created!',
-      code: SUCCESS_CODE.AccountCreated,
+      code: SUCCESS_CODE.CateringCompanyCreated,
     };
   }
 }
