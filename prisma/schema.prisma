@@ -40,3 +40,58 @@ model User {
   @@index([companyId])
   @@map("users")
 }
+
+model CompanyIntegration {
+  id        String                    @id @default(uuid())
+  companyId String
+  assets    CompanyIntegrationAsset[]
+
+  @@index([companyId])
+  @@map("company_integrations")
+}
+
+model CompanyIntegrationAsset {
+  id                  String               @id @default(uuid())
+  companyId           String
+  type                IntegrationAssetType
+  companyIntegrations CompanyIntegration[]
+
+  @@index([companyId])
+  @@map("company_integration_assets")
+}
+
+enum IntegrationAssetType {
+  apiConfiguration
+  dataMap
+}
+
+model IntegrationTemplateRequirement {
+  id        String                @id @default(uuid())
+  type      IntegrationAssetType
+  system    ExternalSystem?
+  data      Json
+  templates IntegrationTemplate[]
+
+  @@map("integration_template_requirements")
+}
+
+model IntegrationTemplate {
+  id           String                           @id @default(uuid())
+  srcSystem    ExternalSystem
+  srcEntity    ExternalEntity
+  targetSystem ExternalSystem
+  targetEntity ExternalEntity
+  fulfills     IntegrationTemplateRequirement[]
+
+  @@map("integration_templates")
+}
+
+enum ExternalSystem {
+  ezCater
+  Nutshell
+}
+
+enum ExternalEntity {
+  Order
+  Lead
+}
