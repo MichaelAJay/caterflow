@@ -15,7 +15,7 @@ model CateringCompany {
   id                String                    @id @default(uuid())
   name              String
   isActive          Boolean                   @default(false) @map("is_active")
-  ownerId           String                    @unique
+  ownerId           String                    @unique @map("owner_id")
   createdAt         DateTime                  @default(now()) @map("created_at")
   updatedAt         DateTime                  @updatedAt @map("updated_at")
   users             User[]                    @relation("company_users")
@@ -23,7 +23,7 @@ model CateringCompany {
   integrations      CompanyIntegration[]
   integrationAssets CompanyIntegrationAsset[]
   roles             Role[]
-  userRoles         UserRole[]
+  userCompanyRoles  UserCompanyRole[]
 
   @@map("catering_companies")
 }
@@ -36,12 +36,15 @@ model CompanyIntegration {
   isConfigured Boolean          @default(false) @map("is_configured")
   isTested     Boolean          @default(false) @map("is_tested")
   isActive     Boolean          @default(false) @map("is_active")
+  creatorId    String           @map("creator_id")
+  createdAt    DateTime         @default(now()) @map("created_at")
 
+  company  CateringCompany           @relation(fields: [companyId], references: [id], onDelete: Cascade)
   template IntegrationTemplate       @relation(fields: [templateId], references: [id])
-  company  CateringCompany           @relation(fields: [companyId], references: [id])
   assets   CompanyIntegrationAsset[]
+  creator  User                      @relation(fields: [creatorId], references: [id])
 
-  @@unique([companyId, event], name: "companyEventUnique", map: "company_event_unique")
+  @@unique([companyId, templateId], name: "company_integration_unique", map: "company_integration_unique")
   @@index([companyId])
   @@map("company_integrations")
 }
@@ -52,10 +55,12 @@ model CompanyIntegrationAsset {
   integrationRequirementId String               @map("integration_requirement_id")
   type                     IntegrationAssetType
   system                   ExternalSystem?
+  creatorId                String               @map("creator_id")
 
-  company                CateringCompany        @relation(fields: [companyId], references: [id])
+  company                CateringCompany        @relation(fields: [companyId], references: [id], onDelete: Cascade)
   integrationRequirement IntegrationRequirement @relation(fields: [integrationRequirementId], references: [id])
   integrations           CompanyIntegration[]
+  creator                User                   @relation("creator", fields: [creatorId], references: [id])
 
   @@unique([companyId, integrationRequirementId], name: "assetRequirementUnique", map: "asset_requirement_unique")
   @@index([companyId])
@@ -63,27 +68,27 @@ model CompanyIntegrationAsset {
 }
 
 model IntegrationRequirement {
-  id        String                @id @default(uuid())
-  type      IntegrationAssetType
-  system    ExternalSystem?
-  data      Json
-  templates IntegrationTemplate[]
+  id     String               @id @default(uuid())
+  type   IntegrationAssetType
+  system ExternalSystem?
+  data   Json
 
-  assets CompanyIntegrationAsset[]
+  templates IntegrationTemplate[]
+  assets    CompanyIntegrationAsset[]
 
   @@map("integration_template_requirements")
 }
 
 model IntegrationTemplate {
-  id           String                   @id @default(uuid())
-  event        IntegrationEvent         @unique
-  srcSystem    ExternalSystem           @map("src_system")
-  srcEntity    ExternalEntity           @map("src_entity")
-  targetSystem ExternalSystem           @map("target_system")
-  targetEntity ExternalEntity           @map("target_entity")
+  id           String           @id @default(uuid())
+  event        IntegrationEvent
+  targetSystem ExternalSystem   @map("target_system")
+  targetEntity ExternalEntity   @map("target_entity")
+
   requirements IntegrationRequirement[]
   integrations CompanyIntegration[]
 
+  @@unique([event, targetSystem, targetEntity])
   @@map("integration_templates")
 }
 
@@ -92,55 +97,64 @@ model Permission {
   name PermissionName @unique
 
   roles Role[]
+
+  @@map("permissions")
 }
 
 model Role {
-  id        String           @id @default(uuid())
-  name      String
-  companyId String?
-  company   CateringCompany? @relation(fields: [companyId], references: [id])
-  updaterId String?
-  updatedAt DateTime         @updatedAt @map("updated_at")
+  id          String  @id @default(uuid())
+  name        String
+  description String  @default("")
+  companyId   String? @map("company_id")
+  creatorId   String  @map("creator_id")
 
-  permissions Permission[]
-  userRoles   UserRole[]
-  updater     User?        @relation(fields: [updaterId], references: [id])
+  permissions      Permission[]
+  company          CateringCompany?  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  userCompanyRoles UserCompanyRole[]
+  creator          User              @relation(fields: [creatorId], references: [id])
 
   @@index([companyId])
+  @@map("roles")
 }
 
 model User {
-  id             String           @id @default(uuid())
-  extAuthUID     String           @unique @map("ext_auth_uid")
-  companyId      String?          @map("company_id")
-  emailEncrypted String           @map("email_encrypted")
-  emailHashed    String           @unique @map("email_hashed")
-  nameEncrypted  String           @map("name_encrypted")
-  emailVerified  Boolean          @default(false) @map("email_verified")
-  createdAt      DateTime         @default(now()) @map("created_at")
-  updatedAt      DateTime         @updatedAt @map("updated_at")
-  company        CateringCompany? @relation(name: "company_users", fields: [companyId], references: [id], onDelete: Cascade)
-  ownedCompany   CateringCompany? @relation("owner")
-  userRoles      UserRole[]       @relation("user")
-  addedUserRoles UserRole[]       @relation("adder")
-  updatedRoles   Role[]
+  id             String   @id @default(uuid())
+  extAuthUID     String   @unique @map("ext_auth_uid")
+  companyId      String?  @map("company_id")
+  emailEncrypted String   @map("email_encrypted")
+  emailHashed    String   @unique @map("email_hashed")
+  nameEncrypted  String   @map("name_encrypted")
+  emailVerified  Boolean  @default(false) @map("email_verified")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  company                  CateringCompany?          @relation(name: "company_users", fields: [companyId], references: [id], onDelete: Cascade)
+  ownerOf                  CateringCompany?          @relation("owner")
+  userCompanyRoles         UserCompanyRole[]         @relation("user")
+  createdUsercompanyRoles  UserCompanyRole[]         @relation("creator")
+  createdRoles             Role[]
+  createdIntegrations      CompanyIntegration[]
+  createdIntegrationAssets CompanyIntegrationAsset[] @relation("creator")
 
   @@index([extAuthUID])
   @@index([companyId])
   @@map("users")
 }
 
-model UserRole {
+model UserCompanyRole {
   id        String @id @default(uuid())
-  roleId    String
-  userId    String
-  companyId String
-  adderId   String
+  roleId    String @map("role_id")
+  userId    String @map("user_id")
+  companyId String @map("company_id")
+  creatorId String @map("creator_id")
 
-  role    Role            @relation(fields: [roleId], references: [id])
-  user    User            @relation("user", fields: [userId], references: [id])
-  company CateringCompany @relation(fields: [companyId], references: [id])
-  addedBy User            @relation("adder", fields: [adderId], references: [id])
+  role    Role            @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  user    User            @relation("user", fields: [userId], references: [id], onDelete: Cascade)
+  company CateringCompany @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  addedBy User            @relation("creator", fields: [creatorId], references: [id])
+
+  @@unique([roleId, userId])
+  @@map("user_company_roles")
 }
 
 // ENUMS (A-Z)
