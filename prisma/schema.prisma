@@ -96,7 +96,7 @@ model Permission {
   id   Int            @id @default(autoincrement())
   name PermissionName @unique
 
-  roles Role[]
+  roles Role[] @relation(name: "role_permissions")
 
   @@map("permissions")
 }
@@ -108,7 +108,7 @@ model Role {
   companyId   String? @map("company_id")
   creatorId   String  @map("creator_id")
 
-  permissions      Permission[]
+  permissions      Permission[]      @relation(name: "role_permissions")
   company          CateringCompany?  @relation(fields: [companyId], references: [id], onDelete: Cascade)
   userCompanyRoles UserCompanyRole[]
   creator          User              @relation(fields: [creatorId], references: [id])
@@ -154,6 +154,8 @@ model UserCompanyRole {
   addedBy User            @relation("creator", fields: [creatorId], references: [id])
 
   @@unique([roleId, userId])
+  @@index([userId])
+  @@index([companyId])
   @@map("user_company_roles")
 }
 
