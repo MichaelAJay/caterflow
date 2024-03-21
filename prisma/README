@@ -7,3 +7,11 @@ SQL applied:
 ALTER TABLE integration_template_requirements
 ADD CONSTRAINT check_system_null_if_datamap
 CHECK (NOT (type = 'dataMap' AND system IS NOT NULL));
+
+**_ LOOSE CONSTRAINT (unenforced) _**
+A CompanyIntegrationAsset's type and system must match its referenced IntegrationRequirement's type and system.
+
+Backend constraints:
+A company may have no more than one CompanyIntegration that references a given IntegrationTemplate
+
+A company may have no more than one CompanyIntegrationAssets that reference a given IntegrationRequirement.

@@ -10,17 +10,79 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// MODELS (A-Z)
 model CateringCompany {
-  id        String   @id @default(uuid())
-  name      String
-  isActive  Boolean  @default(false) @map("is_active")
-  ownerId   String   @unique
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  users     User[]   @relation("company_users")
-  owner     User     @relation("owner", fields: [ownerId], references: [id])
+  id                      String                    @id @default(uuid())
+  name                    String
+  isActive                Boolean                   @default(false) @map("is_active")
+  ownerId                 String                    @unique
+  createdAt               DateTime                  @default(now()) @map("created_at")
+  updatedAt               DateTime                  @updatedAt @map("updated_at")
+  users                   User[]                    @relation("company_users")
+  owner                   User                      @relation("owner", fields: [ownerId], references: [id])
+  CompanyIntegrationAsset CompanyIntegrationAsset[]
 
   @@map("catering_companies")
+}
+
+model CompanyIntegration {
+  id           String           @id @default(uuid())
+  companyId    String           @map("company_id")
+  templateId   String           @map("template_id")
+  event        IntegrationEvent
+  isConfigured Boolean          @default(false) @map("is_configured")
+  isTested     Boolean          @default(false) @map("is_tested")
+  isActive     Boolean          @default(false) @map("is_active")
+
+  template              IntegrationTemplate       @relation(fields: [integrationTemplateId], references: [id])
+  assets                CompanyIntegrationAsset[]
+  integrationTemplateId String
+
+  @@unique([companyId, event], name: "companyEventUnique", map: "company_event_unique")
+  @@index([companyId])
+  @@map("company_integrations")
+}
+
+model CompanyIntegrationAsset {
+  id                       String               @id @default(uuid())
+  companyId                String               @map("company_id")
+  integrationRequirementId String               @map("integration_requirement_id")
+  type                     IntegrationAssetType
+  system                   ExternalSystem?
+
+  company                CateringCompany        @relation(fields: [companyId], references: [id])
+  integrationRequirement IntegrationRequirement @relation(fields: [integrationRequirementId], references: [id])
+  companyIntegrations    CompanyIntegration[]
+
+  @@unique([companyId, integrationRequirementId], name: "assetRequirementUnique", map: "asset_requirement_unique")
+  @@index([companyId])
+  @@map("company_integration_assets")
+}
+
+model IntegrationRequirement {
+  id        String                @id @default(uuid())
+  type      IntegrationAssetType
+  system    ExternalSystem?
+  data      Json
+  templates IntegrationTemplate[]
+
+  companyAssets CompanyIntegrationAsset[]
+
+  @@map("integration_template_requirements")
+}
+
+model IntegrationTemplate {
+  id                 String                   @id @default(uuid())
+  event              IntegrationEvent
+  srcSystem          ExternalSystem           @map("src_system")
+  srcEntity          ExternalEntity           @map("src_entity")
+  targetSystem       ExternalSystem           @map("target_system")
+  targetEntity       ExternalEntity           @map("target_entity")
+  requirements       IntegrationRequirement[]
+  CompanyIntegration CompanyIntegration[]
+
+  @@unique([event], name: "EventUnique", map: "event_unique")
+  @@map("integration_templates")
 }
 
 model User {
@@ -41,49 +103,10 @@ model User {
   @@map("users")
 }
 
-model CompanyIntegration {
-  id        String                    @id @default(uuid())
-  companyId String
-  assets    CompanyIntegrationAsset[]
-
-  @@index([companyId])
-  @@map("company_integrations")
-}
-
-model CompanyIntegrationAsset {
-  id                  String               @id @default(uuid())
-  companyId           String
-  type                IntegrationAssetType
-  companyIntegrations CompanyIntegration[]
-
-  @@index([companyId])
-  @@map("company_integration_assets")
-}
-
-enum IntegrationAssetType {
-  apiConfiguration
-  dataMap
-}
-
-model IntegrationTemplateRequirement {
-  id        String                @id @default(uuid())
-  type      IntegrationAssetType
-  system    ExternalSystem?
-  data      Json
-  templates IntegrationTemplate[]
-
-  @@map("integration_template_requirements")
-}
-
-model IntegrationTemplate {
-  id           String                           @id @default(uuid())
-  srcSystem    ExternalSystem
-  srcEntity    ExternalEntity
-  targetSystem ExternalSystem
-  targetEntity ExternalEntity
-  fulfills     IntegrationTemplateRequirement[]
-
-  @@map("integration_templates")
+// ENUMS (A-Z)
+enum ExternalEntity {
+  Order
+  Lead
 }
 
 enum ExternalSystem {
@@ -91,7 +114,11 @@ enum ExternalSystem {
   Nutshell
 }
 
-enum ExternalEntity {
-  Order
-  Lead
+enum IntegrationAssetType {
+  apiConfiguration
+  dataMap
+}
+
+enum IntegrationEvent {
+  ezCaterOrderReceived
 }
