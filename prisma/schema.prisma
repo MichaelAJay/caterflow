@@ -22,6 +22,8 @@ model CateringCompany {
   owner             User                      @relation("owner", fields: [ownerId], references: [id])
   integrations      CompanyIntegration[]
   integrationAssets CompanyIntegrationAsset[]
+  roles             Role[]
+  userRoles         UserRole[]
 
   @@map("catering_companies")
 }
@@ -74,7 +76,7 @@ model IntegrationRequirement {
 
 model IntegrationTemplate {
   id           String                   @id @default(uuid())
-  event        IntegrationEvent
+  event        IntegrationEvent         @unique
   srcSystem    ExternalSystem           @map("src_system")
   srcEntity    ExternalEntity           @map("src_entity")
   targetSystem ExternalSystem           @map("target_system")
@@ -82,8 +84,29 @@ model IntegrationTemplate {
   requirements IntegrationRequirement[]
   integrations CompanyIntegration[]
 
-  @@unique([event], name: "EventUnique", map: "event_unique")
   @@map("integration_templates")
+}
+
+model Permission {
+  id   Int            @id @default(autoincrement())
+  name PermissionName @unique
+
+  roles Role[]
+}
+
+model Role {
+  id        String           @id @default(uuid())
+  name      String
+  companyId String?
+  company   CateringCompany? @relation(fields: [companyId], references: [id])
+  updaterId String?
+  updatedAt DateTime         @updatedAt @map("updated_at")
+
+  permissions Permission[]
+  userRoles   UserRole[]
+  updater     User?        @relation(fields: [updaterId], references: [id])
+
+  @@index([companyId])
 }
 
 model User {
@@ -98,10 +121,26 @@ model User {
   updatedAt      DateTime         @updatedAt @map("updated_at")
   company        CateringCompany? @relation(name: "company_users", fields: [companyId], references: [id], onDelete: Cascade)
   ownedCompany   CateringCompany? @relation("owner")
+  userRoles      UserRole[]       @relation("user")
+  addedUserRoles UserRole[]       @relation("adder")
+  updatedRoles   Role[]
 
   @@index([extAuthUID])
   @@index([companyId])
   @@map("users")
+}
+
+model UserRole {
+  id        String @id @default(uuid())
+  roleId    String
+  userId    String
+  companyId String
+  adderId   String
+
+  role    Role            @relation(fields: [roleId], references: [id])
+  user    User            @relation("user", fields: [userId], references: [id])
+  company CateringCompany @relation(fields: [companyId], references: [id])
+  addedBy User            @relation("adder", fields: [adderId], references: [id])
 }
 
 // ENUMS (A-Z)
@@ -122,4 +161,22 @@ enum IntegrationAssetType {
 
 enum IntegrationEvent {
   ezCaterOrderReceived
+}
+
+enum PermissionName {
+  CreateRole
+  AddPermissionToRole
+  RemovePermissionFromRole
+  DeleteRole
+  AssignRole
+  UnassignRole
+  GetIntegrations
+  CreateIntegration
+  UpdateIntegration
+  CancelIntegration
+  DeleteIntegration
+  GetIntegrationAssets
+  AddIntegrationAsset
+  UpdateIntegrationAsset
+  DeleteIntegrationAsset
 }
