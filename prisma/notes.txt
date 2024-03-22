@@ -1,0 +1,34 @@
+User story: A user wants to see all available integration options
+Data access pattern: Retrieve all IntegrationTemplates
+
+User story: A user wants to create an integration (company) from the list of all available integration options
+Data access pattern:
+    Retrieve integration template and all its requirements and any assets which fulfill those requirements
+    based on requirements prompt user to "Create Integration"
+
+User story: A user confirms "Create Integration"
+Data access pattern:
+    Create CompanyIntegration
+    Retrieve integration template and all its requirements and any assets which fulfill those requirements
+    For each asset which fulfills a requirement of the integration template, link that asset to the CompanyIntegration
+
+User story: A user adds an Integration asset (includes Requirement id)
+Data access pattern:
+    Create (unlinked) Company Integration Asset, reference requirement.
+    Retrieve all user's companyIntegrations, that companyIntegration's integrationTemplate, and the template's requirements
+    For each CompanyIntegration whose IntegrationTemplate includes the IntegrationRequirement, create a JOIN record
+    For each modified CompanyIntegration:
+        Retrieve company integration with its template and its requirements (note: I initially thought assets would be required)
+        For each company integration, if its template requirements includes the reference requirement, JOIN CompanyIntegration w/ Asset
+
+User story: A user updates an Integration asset
+Data access pattern:
+    If requires external validation, system performs external validation
+    If validation fails, prompt user to "confirm update" - even though it will break things
+        If the user confirms update, get all company integrations which use the asset and set company integration flags to is_tested false, is_active false
+    If validation succeeds, update asset
+
+User story: A user deletes an Integration asset
+Data access pattern:
+    Retrieve all company integrations that use the asset
+    Prompt user to confirm removal of asset based on the breaking integrations

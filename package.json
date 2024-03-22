@@ -18,10 +18,11 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "test:target": "npx jest --testPathPattern=common/guards/login/login.guard.*.spec.ts"
+    "test:target": "npx jest --testPathPattern=/system/modules/cache/.*.spec.ts"
   },
   "dependencies": {
     "@google-cloud/secret-manager": "^5.1.0",
+    "@nestjs/cache-manager": "^2.2.1",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.2.0",
     "@nestjs/core": "^10.0.0",
@@ -32,10 +33,12 @@
     "@sentry/node": "^7.102.1",
     "@sentry/profiling-node": "^7.102.1",
     "ajv": "^8.12.0",
+    "cache-manager": "^5.4.0",
     "firebase-admin": "^12.0.0",
     "graphql": "^16.8.1",
     "graphql-request": "^6.1.0",
     "jayson": "^4.1.0",
+    "pino": "^8.19.0",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1"
   },

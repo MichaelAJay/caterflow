@@ -10,33 +10,189 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// MODELS (A-Z)
 model CateringCompany {
-  id        String   @id @default(uuid())
-  name      String
-  isActive  Boolean  @default(false) @map("is_active")
-  ownerId   String   @unique
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  users     User[]   @relation("company_users")
-  owner     User     @relation("owner", fields: [ownerId], references: [id])
+  id                String                    @id @default(uuid())
+  name              String
+  isActive          Boolean                   @default(false) @map("is_active")
+  ownerId           String                    @unique @map("owner_id")
+  createdAt         DateTime                  @default(now()) @map("created_at")
+  updatedAt         DateTime                  @updatedAt @map("updated_at")
+  users             User[]                    @relation("company_users")
+  owner             User                      @relation("owner", fields: [ownerId], references: [id])
+  integrations      CompanyIntegration[]
+  integrationAssets CompanyIntegrationAsset[]
+  roles             Role[]
+  userCompanyRoles  UserCompanyRole[]
 
   @@map("catering_companies")
 }
 
+model CompanyIntegration {
+  id           String           @id @default(uuid())
+  companyId    String           @map("company_id")
+  templateId   String           @map("template_id")
+  event        IntegrationEvent
+  isConfigured Boolean          @default(false) @map("is_configured")
+  isTested     Boolean          @default(false) @map("is_tested")
+  isActive     Boolean          @default(false) @map("is_active")
+  creatorId    String           @map("creator_id")
+  createdAt    DateTime         @default(now()) @map("created_at")
+
+  company  CateringCompany           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  template IntegrationTemplate       @relation(fields: [templateId], references: [id])
+  assets   CompanyIntegrationAsset[]
+  creator  User                      @relation(fields: [creatorId], references: [id])
+
+  @@unique([companyId, templateId], name: "company_integration_unique", map: "company_integration_unique")
+  @@index([companyId])
+  @@map("company_integrations")
+}
+
+model CompanyIntegrationAsset {
+  id                       String               @id @default(uuid())
+  companyId                String               @map("company_id")
+  integrationRequirementId String               @map("integration_requirement_id")
+  type                     IntegrationAssetType
+  system                   ExternalSystem?
+  creatorId                String               @map("creator_id")
+
+  company                CateringCompany        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  integrationRequirement IntegrationRequirement @relation(fields: [integrationRequirementId], references: [id])
+  integrations           CompanyIntegration[]
+  creator                User                   @relation("creator", fields: [creatorId], references: [id])
+
+  @@unique([companyId, integrationRequirementId], name: "assetRequirementUnique", map: "asset_requirement_unique")
+  @@index([companyId])
+  @@map("company_integration_assets")
+}
+
+model IntegrationRequirement {
+  id     String               @id @default(uuid())
+  type   IntegrationAssetType
+  system ExternalSystem?
+  data   Json
+
+  templates IntegrationTemplate[]
+  assets    CompanyIntegrationAsset[]
+
+  @@map("integration_template_requirements")
+}
+
+model IntegrationTemplate {
+  id           String           @id @default(uuid())
+  event        IntegrationEvent
+  targetSystem ExternalSystem   @map("target_system")
+  targetEntity ExternalEntity   @map("target_entity")
+
+  requirements IntegrationRequirement[]
+  integrations CompanyIntegration[]
+
+  @@unique([event, targetSystem, targetEntity])
+  @@map("integration_templates")
+}
+
+model Permission {
+  id   Int            @id @default(autoincrement())
+  name PermissionName @unique
+
+  roles Role[] @relation(name: "role_permissions")
+
+  @@map("permissions")
+}
+
+model Role {
+  id          String  @id @default(uuid())
+  name        String
+  description String  @default("")
+  companyId   String? @map("company_id")
+  creatorId   String  @map("creator_id")
+
+  permissions      Permission[]      @relation(name: "role_permissions")
+  company          CateringCompany?  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  userCompanyRoles UserCompanyRole[]
+  creator          User              @relation(fields: [creatorId], references: [id])
+
+  @@index([companyId])
+  @@map("roles")
+}
+
 model User {
-  id             String           @id @default(uuid())
-  extAuthUID     String           @unique @map("ext_auth_uid")
-  companyId      String?          @map("company_id")
-  emailEncrypted String           @map("email_encrypted")
-  emailHashed    String           @unique @map("email_hashed")
-  nameEncrypted  String           @map("name_encrypted")
-  emailVerified  Boolean          @default(false) @map("email_verified")
-  createdAt      DateTime         @default(now()) @map("created_at")
-  updatedAt      DateTime         @updatedAt @map("updated_at")
-  company        CateringCompany? @relation(name: "company_users", fields: [companyId], references: [id], onDelete: Cascade)
-  ownedCompany   CateringCompany? @relation("owner")
+  id             String   @id @default(uuid())
+  extAuthUID     String   @unique @map("ext_auth_uid")
+  companyId      String?  @map("company_id")
+  emailEncrypted String   @map("email_encrypted")
+  emailHashed    String   @unique @map("email_hashed")
+  nameEncrypted  String   @map("name_encrypted")
+  emailVerified  Boolean  @default(false) @map("email_verified")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  company                  CateringCompany?          @relation(name: "company_users", fields: [companyId], references: [id], onDelete: Cascade)
+  ownerOf                  CateringCompany?          @relation("owner")
+  userCompanyRoles         UserCompanyRole[]         @relation("user")
+  createdUsercompanyRoles  UserCompanyRole[]         @relation("creator")
+  createdRoles             Role[]
+  createdIntegrations      CompanyIntegration[]
+  createdIntegrationAssets CompanyIntegrationAsset[] @relation("creator")
 
   @@index([extAuthUID])
   @@index([companyId])
   @@map("users")
+}
+
+model UserCompanyRole {
+  id        String @id @default(uuid())
+  roleId    String @map("role_id")
+  userId    String @map("user_id")
+  companyId String @map("company_id")
+  creatorId String @map("creator_id")
+
+  role    Role            @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  user    User            @relation("user", fields: [userId], references: [id], onDelete: Cascade)
+  company CateringCompany @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  addedBy User            @relation("creator", fields: [creatorId], references: [id])
+
+  @@unique([roleId, userId])
+  @@index([userId])
+  @@index([companyId])
+  @@map("user_company_roles")
+}
+
+// ENUMS (A-Z)
+enum ExternalEntity {
+  Order
+  Lead
+}
+
+enum ExternalSystem {
+  ezCater
+  Nutshell
+}
+
+enum IntegrationAssetType {
+  apiConfiguration
+  dataMap
+}
+
+enum IntegrationEvent {
+  ezCaterOrderReceived
+}
+
+enum PermissionName {
+  CreateRole
+  AddPermissionToRole
+  RemovePermissionFromRole
+  DeleteRole
+  AssignRole
+  UnassignRole
+  GetIntegrations
+  CreateIntegration
+  UpdateIntegration
+  CancelIntegration
+  DeleteIntegration
+  GetIntegrationAssets
+  AddIntegrationAsset
+  UpdateIntegrationAsset
+  DeleteIntegrationAsset
 }

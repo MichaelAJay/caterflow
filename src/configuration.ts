@@ -3,6 +3,7 @@ export default () => ({
   isLocal: process.env.IS_LOCAL ? process.env.IS_LOCAL === 'true' : false,
   env: process.env.ENV || 'development',
   googleProjectId: process.env.GOOGLE_PROJECT,
+  logPath: process.env.LOG_PATH,
   product: process.env.PROJECT || 'caterflow',
   localPathToSecret: {
     // These must follow the naming convention of the system secrets in the cloud-based secret manager
