@@ -1,9 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ILogService } from './interfaces/log.service.interface';
-import pino, { LoggerOptions } from 'pino';
-import { CustomConfigService } from 'src/utility/services/custom-config/custom-config.service';
-import * as path from 'path';
-import * as fs from 'fs';
+import pino from 'pino';
+
+export const LOGGER_PROVIDER_INJECTION_TOKEN = 'LOGGER_PROVIDER';
 
 type LogContext = Record<string, any>;
 
@@ -11,30 +10,8 @@ type LogContext = Record<string, any>;
 export class LogService implements ILogService {
   private logger: pino.Logger;
 
-  constructor(private readonly customConfigService: CustomConfigService) {
-    const logPath = this.customConfigService.getEnvVariable<string>(
-      'logPath',
-      './logs',
-    );
-
-    if (!fs.existsSync(logPath)) {
-      fs.mkdirSync(logPath, { recursive: true });
-    }
-
-    const isProduction =
-      this.customConfigService.getEnvVariable<string>('env') === 'production';
-
-    const options: LoggerOptions = {
-      level: isProduction ? 'warn' : 'debug',
-      transport: {
-        target: 'pino/file',
-        options: {
-          destination: path.join(logPath, 'app.log'),
-        },
-      },
-    };
-
-    this.logger = pino(options);
+  constructor(@Inject(LOGGER_PROVIDER_INJECTION_TOKEN) logger: pino.Logger) {
+    this.logger = logger;
     this.info('Logger initialized');
   }
 
