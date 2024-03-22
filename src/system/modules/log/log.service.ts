@@ -12,7 +12,7 @@ export class LogService implements ILogService {
 
   constructor(@Inject(LOGGER_PROVIDER_INJECTION_TOKEN) logger: pino.Logger) {
     this.logger = logger;
-    this.info('Logger initialized');
+    // this.info('Logger initialized');
   }
 
   debug(msg: string, context?: LogContext): void {
