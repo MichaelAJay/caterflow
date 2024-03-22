@@ -4,12 +4,14 @@ import { User } from '@prisma/client';
 import { UserDbHandlerService } from '../external-handlers/db-handlers/user-db-handler/user-db-handler.service';
 import { CryptoService } from '../../system/modules/crypto/crypto.service';
 import { IBuildUpdateUserArgs } from '../external-handlers/db-handlers/user-db-handler/interfaces/query-builder-args.interfaces';
+import { DataAccessService } from '../external-handlers/data-access/data-access.service';
 
 @Injectable()
 export class UserService implements IUserService {
   constructor(
     private readonly userDbHandler: UserDbHandlerService,
     private readonly cryptoService: CryptoService,
+    private readonly dataService: DataAccessService<any>,
   ) {}
 
   async createUser(
@@ -41,8 +43,18 @@ export class UserService implements IUserService {
   }
 
   async getUserByExternalUID(externalUID: string): Promise<User | null> {
-    const user =
-      await this.userDbHandler.retrieveUserByExternalAuthUID(externalUID);
-    return user;
+    // const user =
+    //   await this.userDbHandler.retrieveUserByExternalAuthUID(externalUID);
+    // return user;
+    const cacheKey = `user:${externalUID}`;
+    return this.dataService.retrieveAndCache(
+      cacheKey,
+      () => this.userDbHandler.retrieveUserByExternalAuthUID(externalUID),
+      (user) => ({
+        id: user.id,
+        name: user.name,
+        email: user.email, // Assume we only want to cache these fields
+      }),
+    );
   }
 }

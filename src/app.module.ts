@@ -8,16 +8,18 @@ import { AuthGuard } from './common/guards/auth/auth.guard';
 import { AppController } from './app.controller';
 import { UserModule } from './internal-modules/user/user.module';
 import { GuardModule } from './common/guards/guard/guard.module';
-import { CacheModule } from '@nestjs/cache-manager';
+// import { CacheModule } from '@nestjs/cache-manager';
 import { LogModule } from './system/modules/log/log.module';
+import { InternalCacheModule } from './system/modules/cache/cache.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, load: [configuration] }),
     LogModule,
-    CacheModule.register({
-      isGlobal: true,
-    }),
+    // CacheModule.register({
+    //   isGlobal: true,
+    // }),
+    InternalCacheModule,
     CateringCompanyApiModule,
     UserApiModule,
     UserModule,
