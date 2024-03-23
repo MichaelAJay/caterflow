@@ -12,19 +12,36 @@ export class LogService implements ILogService {
 
   constructor(@Inject(LOGGER_PROVIDER_INJECTION_TOKEN) logger: pino.Logger) {
     this.logger = logger;
-    // this.info('Logger initialized');
+  }
+
+  private safelyLog(
+    method: 'debug' | 'info' | 'warn' | 'error',
+    msg: string,
+    trace?: string,
+    context?: LogContext,
+  ) {
+    try {
+      const message = {
+        msg,
+        ...(typeof trace === 'string' ? { trace } : {}),
+        ...context,
+      };
+      this.logger[method](message);
+    } catch (err) {
+      console.error('Logging failed', err);
+    }
   }
 
   debug(msg: string, context?: LogContext): void {
-    this.logger.debug({ msg, ...context });
+    this.safelyLog('debug', msg, undefined, context);
   }
   info(msg: string, context?: LogContext): void {
-    this.logger.info({ msg, ...context });
+    this.safelyLog('info', msg, undefined, context);
   }
   warn(msg: string, context?: LogContext): void {
-    this.logger.warn({ msg, ...context });
+    this.safelyLog('warn', msg, undefined, context);
   }
   error(msg: string, trace: string, context?: LogContext): void {
-    this.logger.error({ msg, trace, ...context });
+    this.safelyLog('error', msg, trace, context);
   }
 }
