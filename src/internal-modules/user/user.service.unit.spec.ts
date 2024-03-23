@@ -5,11 +5,14 @@ import { CryptoService } from '../../system/modules/crypto/crypto.service';
 import { mockUserDbHandlerService } from '../../../test/mocks/providers/mock_user_db_handler';
 import { mockCryptoService } from '../../../test/mocks/providers/mock_crypto';
 import { User } from '@prisma/client';
+import { DataAccessService } from '../external-handlers/data-access/data-access.service';
+import { mockGeneralDataAccessService } from '../../../test/mocks/providers/data-access-services/general_data_access_service';
 
 describe('UserService', () => {
   let service: UserService;
   let userDbHandler: UserDbHandlerService;
   let cryptoService: CryptoService;
+  let dataService: DataAccessService<any>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -17,12 +20,14 @@ describe('UserService', () => {
         UserService,
         { provide: UserDbHandlerService, useValue: mockUserDbHandlerService },
         { provide: CryptoService, useValue: mockCryptoService },
+        { provide: DataAccessService, useValue: mockGeneralDataAccessService },
       ],
     }).compile();
 
     service = module.get<UserService>(UserService);
     userDbHandler = module.get<UserDbHandlerService>(UserDbHandlerService);
     cryptoService = module.get<CryptoService>(CryptoService);
+    dataService = module.get<DataAccessService<any>>(DataAccessService);
   });
 
   afterEach(() => {
