@@ -161,51 +161,36 @@ describe('UserService', () => {
   });
 
   describe('getUserByExternalUID', () => {
-    it('should return a user for a valid external UID', async () => {
-      const externalUID = 'valid-external-uid';
-      const expectedUser = {
-        id: 'user-id',
-        name: 'John Doe',
-        externalUID: externalUID,
-      };
-
+    const mockUser = { id: '123', name: 'John Doe', email: 'john@doe.com' };
+    const externalUID = 'user-external-123';
+    it('should retrieve and cache the user data successfully', async () => {
       jest
-        .spyOn(userDbHandler, 'retrieveUserByExternalAuthUID')
-        .mockResolvedValue(expectedUser);
+        .spyOn(dataService, 'retrieveAndCache')
+        .mockResolvedValueOnce(mockUser);
 
-      await expect(service.getUserByExternalUID(externalUID)).resolves.toEqual(
-        expectedUser,
+      const result = await service.getUserByExternalUID(externalUID);
+
+      expect(dataService.retrieveAndCache).toHaveBeenCalledWith(
+        `user:${externalUID}`,
+        expect.any(Function),
+        expect.any(Function),
+        14400000,
       );
-      expect(userDbHandler.retrieveUserByExternalAuthUID).toHaveBeenCalledWith(
-        externalUID,
-      );
+      expect(result).toEqual(mockUser);
+    });
+    it('should return null when the user is not found', async () => {
+      jest.spyOn(dataService, 'retrieveAndCache').mockResolvedValueOnce(null);
+
+      const result = await service.getUserByExternalUID('non-existing-uid');
+      expect(result).toBeNull();
     });
 
-    it('should return null if no user is found for the external UID', async () => {
-      const externalUID = 'non-existent-external-uid';
-
-      jest
-        .spyOn(userDbHandler, 'retrieveUserByExternalAuthUID')
-        .mockResolvedValue(null);
-
-      await expect(
-        service.getUserByExternalUID(externalUID),
-      ).resolves.toBeNull();
-      expect(userDbHandler.retrieveUserByExternalAuthUID).toHaveBeenCalledWith(
-        externalUID,
-      );
-    });
-
-    it('should propagate any errors from the userDbHandler', async () => {
-      const externalUID = 'error-prone-external-uid';
-      const error = new Error('An unexpected error occurred');
-
-      jest
-        .spyOn(userDbHandler, 'retrieveUserByExternalAuthUID')
-        .mockRejectedValue(error);
+    it('should handle errors gracefully', async () => {
+      const err = new Error('test error');
+      jest.spyOn(dataService, 'retrieveAndCache').mockRejectedValue(err);
 
       await expect(service.getUserByExternalUID(externalUID)).rejects.toThrow(
-        error,
+        err,
       );
     });
   });
