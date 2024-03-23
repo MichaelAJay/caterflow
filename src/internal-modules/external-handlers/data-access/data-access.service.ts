@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { IDataAccessService } from './interfaces/data-access.service.interface';
-import { CacheService } from 'src/system/modules/cache/cache.service';
+import { CacheService } from '../../../system/modules/cache/cache.service';
 
 @Injectable()
 export class DataAccessService<T> implements IDataAccessService<T> {
