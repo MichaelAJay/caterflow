@@ -3,7 +3,7 @@ import { UserApiModule } from './api/user/user-api.module';
 import { CateringCompanyApiModule } from './api/catering-company/catering-company-api.module';
 import { ConfigModule } from '@nestjs/config';
 import configuration from './configuration';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AuthGuard } from './common/guards/auth/auth.guard';
 import { AppController } from './app.controller';
 import { UserModule } from './internal-modules/user/user.module';
@@ -11,6 +11,8 @@ import { GuardModule } from './common/guards/guard/guard.module';
 // import { CacheModule } from '@nestjs/cache-manager';
 import { LogModule } from './system/modules/log/log.module';
 import { InternalCacheModule } from './system/modules/cache/cache.module';
+import { LoggingInterceptor } from './common/interceptors/logging/logging.interceptor';
+import { AllExceptionsFilter } from './common/filters/all-exceptions/all-exceptions.filter';
 
 @Module({
   imports: [
@@ -30,6 +32,14 @@ import { InternalCacheModule } from './system/modules/cache/cache.module';
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LoggingInterceptor,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: AllExceptionsFilter,
     },
   ],
 })
