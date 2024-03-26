@@ -1,1 +1,9 @@
-export interface ICompanyRoleAndPermissionDbHandler {}
+export interface ICompanyRoleAndPermissionDbHandler {
+  initializeRoles: () => {};
+  createRole: () => {};
+  editRole: () => {};
+  deleteRole: () => {};
+  assignRolesToUser: () => {};
+  unassignRolesToUser: () => {};
+  checkUserPermission: () => {};
+}
