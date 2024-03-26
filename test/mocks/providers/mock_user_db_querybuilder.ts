@@ -2,6 +2,6 @@ import { IUserDbQueryBuilder } from 'src/internal-modules/external-handlers/db-h
 
 export const mockUserDbQueryBuilderService: IUserDbQueryBuilder = {
   buildCreateUserQuery: jest.fn(),
-  buildFindUniqueUserWhereClause: jest.fn(),
+  buildRetrieveUniqueUserQuery: jest.fn(),
   buildUpdateUser: jest.fn(),
 };
