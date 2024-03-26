@@ -105,8 +105,9 @@ model Role {
   id          String  @id @default(uuid())
   name        String
   description String  @default("")
-  companyId   String? @map("company_id")
+  companyId   String? @map("company_id") // NULL companyId records indicate SYSTEM ROLES
   creatorId   String  @map("creator_id")
+  isEditable  Boolean @default(true) @map("is_editable") // SYSTEM ROLES and their derivatives must have FALSE
 
   permissions      Permission[]      @relation(name: "role_permissions")
   company          CateringCompany?  @relation(fields: [companyId], references: [id], onDelete: Cascade)
@@ -135,6 +136,7 @@ model User {
   createdRoles             Role[]
   createdIntegrations      CompanyIntegration[]
   createdIntegrationAssets CompanyIntegrationAsset[] @relation("creator")
+  systemActions            UserSystemAction[]
 
   @@index([extAuthUID])
   @@index([companyId])
@@ -159,6 +161,18 @@ model UserCompanyRole {
   @@map("user_company_roles")
 }
 
+model UserSystemAction {
+  id      String       @id @default(uuid())
+  userId  String       @map("user_id")
+  action  SystemAction
+  details Json
+  date    DateTime
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("user_system_actions")
+}
+
 // ENUMS (A-Z)
 enum ExternalEntity {
   Order
@@ -180,19 +194,26 @@ enum IntegrationEvent {
 }
 
 enum PermissionName {
-  CreateRole
-  AddPermissionToRole
-  RemovePermissionFromRole
-  DeleteRole
-  AssignRole
-  UnassignRole
-  GetIntegrations
-  CreateIntegration
+  ManageBilling
+  ManageCompanyRoles
+  ManageIntegrations
+  ManageIntegrationAssets
+  ManageRoleAssignments
+}
+
+enum SystemAction {
+  AddUser
+  RemoveUser
+  AddIntegration
   UpdateIntegration
-  CancelIntegration
   DeleteIntegration
-  GetIntegrationAssets
   AddIntegrationAsset
   UpdateIntegrationAsset
   DeleteIntegrationAsset
+  AddRole
+  EditRole
+  DeleteRole
+  AssignRole
+  UnassignRole
+  UpdateBilling
 }

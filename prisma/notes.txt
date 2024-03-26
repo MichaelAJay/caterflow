@@ -32,3 +32,8 @@ User story: A user deletes an Integration asset
 Data access pattern:
     Retrieve all company integrations that use the asset
     Prompt user to confirm removal of asset based on the breaking integrations
+
+ManageCompanyRoles: Encompasses creating, modifying, and deleting roles and their permissions.
+ManageRoleAssignments: Covers assigning and unassigning roles to users.
+ManageIntegrations: Includes the creation, update, cancellation, and deletion of integrations.
+ManageIntegrationAssets: Encompasses managing assets within an integration, including listing, adding, updating, and deleting.
