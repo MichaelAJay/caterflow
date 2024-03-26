@@ -5,8 +5,8 @@ import {
   NestInterceptor,
 } from '@nestjs/common';
 import { Observable, tap } from 'rxjs';
-import { LogService } from 'src/system/modules/log/log.service';
 import { FastifyRequest, FastifyReply } from 'fastify';
+import { LogService } from '../../../system/modules/log/log.service';
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
