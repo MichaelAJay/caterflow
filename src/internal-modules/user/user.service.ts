@@ -46,7 +46,7 @@ export class UserService implements IUserService {
     // const user =
     //   await this.userDbHandler.retrieveUserByExternalAuthUID(externalUID);
     // return user;
-    return this.dataService.retrieveAndCache(
+    const user = await this.dataService.retrieveAndCache(
       `user:${externalUID}`,
       () => this.userDbHandler.retrieveUserByExternalAuthUID(externalUID),
       (user) => ({
@@ -56,5 +56,6 @@ export class UserService implements IUserService {
       }),
       14400000, // ttl: 4 hrs
     );
+    return user;
   }
 }

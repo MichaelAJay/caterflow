@@ -4,9 +4,10 @@ import {
   ExceptionFilter,
   HttpException,
   HttpStatus,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
-import { LogService } from 'src/system/modules/log/log.service';
+import { LogService } from '../../../system/modules/log/log.service';
 
 @Catch()
 export class AllExceptionsFilter<T extends { message?: string }>
@@ -18,7 +19,6 @@ export class AllExceptionsFilter<T extends { message?: string }>
   ) {}
 
   catch(exception: T, host: ArgumentsHost): void {
-    console.error('exception', exception.message);
     const { httpAdapter } = this.httpAdapterHost;
 
     const ctx = host.switchToHttp();
@@ -32,7 +32,10 @@ export class AllExceptionsFilter<T extends { message?: string }>
       statusCode: httpStatus,
       timestamp: new Date().toISOString(),
       path: httpAdapter.getRequestUrl(ctx.getRequest()),
-      message: exception.message ? exception.message : 'Unknown server error',
+      message:
+        exception && exception.message
+          ? exception.message
+          : 'Unknown server error',
     };
 
     this.logService.error(
