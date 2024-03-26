@@ -166,7 +166,7 @@ model UserSystemAction {
   userId  String       @map("user_id")
   action  SystemAction
   details Json
-  date    DateTime
+  date    DateTime     @default(now())
 
   user User @relation(fields: [userId], references: [id])
 

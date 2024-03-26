@@ -9,7 +9,9 @@ describe('UserSystemActionDbQueryBuilderService', () => {
       providers: [UserSystemActionDbQueryBuilderService],
     }).compile();
 
-    service = module.get<UserSystemActionDbQueryBuilderService>(UserSystemActionDbQueryBuilderService);
+    service = module.get<UserSystemActionDbQueryBuilderService>(
+      UserSystemActionDbQueryBuilderService,
+    );
   });
 
   it('should be defined', () => {
