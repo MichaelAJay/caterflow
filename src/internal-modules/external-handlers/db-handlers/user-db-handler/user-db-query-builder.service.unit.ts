@@ -15,7 +15,7 @@ export class UserDbQueryBuilderService implements IUserDbQueryBuilder {
     };
   }
 
-  buildFindUniqueUserWhereClause(
+  buildRetrieveUniqueUserQuery(
     input: Prisma.UserWhereUniqueInput,
   ): Prisma.UserFindUniqueArgs {
     return {

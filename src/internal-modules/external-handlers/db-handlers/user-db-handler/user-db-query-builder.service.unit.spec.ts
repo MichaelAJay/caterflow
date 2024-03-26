@@ -25,7 +25,7 @@ describe('UserDbQueryBuilderService', () => {
       const input = { extAuthUID: 'testExtAuthUID' };
       const expectedOutput = { where: input };
 
-      const result = service.buildFindUniqueUserWhereClause(input);
+      const result = service.buildRetrieveUniqueUserQuery(input);
 
       expect(result).toEqual(expectedOutput);
     });

@@ -6,7 +6,7 @@ import {
 
 export interface IUserDbQueryBuilder {
   buildCreateUserQuery(input: IBuildCreateUserArgs): Prisma.UserCreateArgs;
-  buildFindUniqueUserWhereClause(
+  buildRetrieveUniqueUserQuery(
     input: Prisma.UserWhereUniqueInput,
   ): Prisma.UserFindUniqueArgs;
   buildUpdateUser(
