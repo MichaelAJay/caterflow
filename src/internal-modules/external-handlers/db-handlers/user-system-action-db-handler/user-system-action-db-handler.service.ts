@@ -25,6 +25,18 @@ export class UserSystemActionDbHandlerService
       throw err;
     }
   }
+  async createMany(input: IBuildCreateUserSystemActionArgs[]): Promise<any> {
+    try {
+      const result = await this.prismaClient.userSystemAction.createMany(
+        this.userSystemActionQueryBuilder.buildCreateManyUserSystemActionsQuery(
+          input,
+        ),
+      );
+      return result;
+    } catch (err) {
+      throw err;
+    }
+  }
   async retrieveOne(id: string): Promise<any> {
     try {
       const result = await this.prismaClient.userSystemAction.findUnique(

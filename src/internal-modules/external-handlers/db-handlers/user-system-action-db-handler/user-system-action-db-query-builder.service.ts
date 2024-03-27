@@ -2,18 +2,22 @@ import { Injectable } from '@nestjs/common';
 import { IUserSystemActionDbQueryBuilder } from './interfaces/user-system-action-db-query-builder.service.interface';
 import { Prisma } from '@prisma/client';
 import { DefaultArgs } from '@prisma/client/runtime/library';
+import { IBuildCreateUserSystemActionArgs } from './interfaces/query-builder-args.interface';
 
 @Injectable()
 export class UserSystemActionDbQueryBuilderService
   implements IUserSystemActionDbQueryBuilder
 {
   buildCreateUserSystemActionQuery(
-    input: Pick<
-      Prisma.UserSystemActionUncheckedCreateInput,
-      'userId' | 'action' | 'details'
-    >,
+    input: IBuildCreateUserSystemActionArgs,
   ): Prisma.UserSystemActionCreateArgs<DefaultArgs> {
     const query: Prisma.UserSystemActionCreateArgs = { data: input };
+    return query;
+  }
+  buildCreateManyUserSystemActionsQuery(
+    input: IBuildCreateUserSystemActionArgs[],
+  ): Prisma.UserSystemActionCreateManyArgs<DefaultArgs> {
+    const query: Prisma.UserSystemActionCreateManyArgs = { data: input };
     return query;
   }
   buildRetrieveUniqueUserSystemActionQuery(

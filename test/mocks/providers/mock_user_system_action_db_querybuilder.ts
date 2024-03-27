@@ -3,6 +3,7 @@ import { IUserSystemActionDbQueryBuilder } from 'src/internal-modules/external-h
 export const mockUserSystemActionDbQueryBuilder: IUserSystemActionDbQueryBuilder =
   {
     buildCreateUserSystemActionQuery: jest.fn(),
+    buildCreateManyUserSystemActionsQuery: jest.fn(),
     buildRetrieveUniqueUserSystemActionQuery: jest.fn(),
     buildRetrieveManyUserSystemActionsQuery: jest.fn(),
   };
