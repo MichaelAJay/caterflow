@@ -1,0 +1,63 @@
+In details:
+
+Add/remove user: Do NOT store email in any form. For delete, include user id removed
+Add integration: System target
+Update integration: Company target & changes made
+Delete integration: System target
+AddIntegrationAsset: System target
+UpdateIntegrationAsset: Company target & changes made
+DeleteIntegrationAsset: System target
+AddRole: Role name
+EditRole: Company target & changes made
+DeleteRole: Company target & all affected users - impossible to do from interceptor
+AssignRole: Company target (role and user)
+UnassignRole: Company target (UserRole)
+UpdateBilling: Unknown
+
+-- CHATGPT
+AddUser
+Added User ID: The unique identifier of the user who was added.
+Added User Details: Basic non-sensitive details of the added user, such as role or department.
+
+RemoveUser
+Removed User ID: The unique identifier of the user who was removed.
+Reason: Optionally, the reason for removal if available.
+
+AddIntegration
+Integration Details: Basic details about the integration added, including the targeted system record.
+
+UpdateIntegration
+Integration Details: Changes made to the integration, including the targeted company record.
+
+DeleteIntegration
+Integration ID: The unique identifier of the integration deleted, including the targeted company record.
+
+AddIntegrationAsset
+Asset Details: Basic details about the asset added, including the targeted system record.
+
+UpdateIntegrationAsset
+Asset Details: Changes made to the asset, including the targeted company record and references to secret pointers.
+
+DeleteIntegrationAsset
+Asset ID: The unique identifier of the asset deleted, including the targeted company record and references to secret pointers.
+
+AddRole
+Role Details: Basic details of the role added.
+
+EditRole
+Role ID: The unique identifier of the role edited.
+Changes: Details on permissions added or removed, and any changes to the role's scope.
+
+DeleteRole
+Role ID: The unique identifier of the role deleted.
+
+AssignRole
+Assigned User ID: The unique identifier of the user assigned to the role.
+Role Details: Details of the role assigned, including the targeted company record.
+
+UnassignRole
+Unassigned User ID: The unique identifier of the user unassigned from the role.
+Role ID: The unique identifier of the role unassigned.
+
+UpdateBilling
+Billing Changes: Details of what was updated in billing, though specifics depend on the system's billing structure and what data is considered sensitive.
