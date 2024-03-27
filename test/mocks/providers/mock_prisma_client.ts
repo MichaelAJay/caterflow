@@ -10,6 +10,7 @@ export const mockPrismaClientService = {
   },
   userSystemAction: {
     create: jest.fn(),
+    createMany: jest.fn(),
     findUnique: jest.fn(),
   },
 };

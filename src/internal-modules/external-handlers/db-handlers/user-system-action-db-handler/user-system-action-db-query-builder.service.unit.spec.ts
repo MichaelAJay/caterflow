@@ -35,6 +35,24 @@ describe('UserSystemActionDbQueryBuilderService', () => {
       expect(result).toEqual(expectedQuery);
     });
   });
+  describe('buildCreateManyUsersystemActionsQuery', () => {
+    it('should return a valid query object', () => {
+      const input: Prisma.UserSystemActionCreateManyInput[] = [
+        {
+          userId: '123',
+          action: 'AddIntegration',
+          details: 'testDetails',
+        },
+      ];
+      const expectedQuery: Prisma.UserSystemActionCreateManyArgs = {
+        data: input,
+      };
+
+      const result = service.buildCreateManyUserSystemActionsQuery(input);
+
+      expect(result).toEqual(expectedQuery);
+    });
+  });
   describe('buildRetrieveUniqueUserSystemActionQuery', () => {
     it('should return a valid query object', () => {
       const id = '123';

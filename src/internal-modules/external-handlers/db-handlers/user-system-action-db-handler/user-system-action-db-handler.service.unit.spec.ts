@@ -98,6 +98,46 @@ describe('UserSystemActionDbHandlerService', () => {
     });
   });
 
+  describe('createMany', () => {
+    const mockInput: IBuildCreateUserSystemActionArgs[] = [
+      { userId: 'user1', action: 'AddIntegration', details: {} },
+      { userId: 'user2', action: 'AddIntegration', details: {} },
+    ];
+    const mockResult = { count: 2 }; // Assuming the result format for demonstration
+
+    beforeEach(() => {
+      jest
+        .spyOn(
+          userSystemActionQueryBuilder,
+          'buildCreateManyUserSystemActionsQuery',
+        )
+        .mockReturnValue({ data: mockInput });
+      jest
+        .spyOn(prismaClient.userSystemAction, 'createMany')
+        .mockResolvedValue(mockResult);
+    });
+
+    it('should successfully create multiple user system actions', async () => {
+      const result = await service.createMany(mockInput);
+      expect(result).toEqual(mockResult);
+      expect(
+        userSystemActionQueryBuilder.buildCreateManyUserSystemActionsQuery,
+      ).toHaveBeenCalledWith(mockInput);
+      expect(prismaClient.userSystemAction.createMany).toHaveBeenCalledWith({
+        data: mockInput,
+      });
+    });
+
+    it('should throw an error when the database operation fails', async () => {
+      const errorMessage = 'Database operation failed';
+      jest
+        .spyOn(prismaClient.userSystemAction, 'createMany')
+        .mockRejectedValue(new Error(errorMessage));
+
+      await expect(service.createMany(mockInput)).rejects.toThrow(errorMessage);
+    });
+  });
+
   describe('retrieveOne', () => {
     it('should successfully retrieve a unique user system action', async () => {
       const id = '1';
