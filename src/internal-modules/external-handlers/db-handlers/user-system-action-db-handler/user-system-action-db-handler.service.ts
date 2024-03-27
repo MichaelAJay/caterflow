@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { IUserSystemActionDbHandler } from './interfaces/user-system-action-db-handler.service.interface';
 import { PrismaClientService } from '../../../../external-modules/prisma-client/prisma-client.service';
 import { UserSystemActionDbQueryBuilderService } from './user-system-action-db-query-builder.service';
-import { Prisma } from '@prisma/client';
+import { IBuildCreateUserSystemActionArgs } from './interfaces/query-builder-args.interface';
 
 @Injectable()
 export class UserSystemActionDbHandlerService
@@ -12,12 +12,7 @@ export class UserSystemActionDbHandlerService
     private readonly prismaClient: PrismaClientService,
     private readonly userSystemActionQueryBuilder: UserSystemActionDbQueryBuilderService,
   ) {}
-  async create(
-    input: Pick<
-      Prisma.UserSystemActionUncheckedCreateInput,
-      'userId' | 'action' | 'details'
-    >,
-  ): Promise<any> {
+  async create(input: IBuildCreateUserSystemActionArgs): Promise<any> {
     try {
       const result = await this.prismaClient.userSystemAction.create(
         this.userSystemActionQueryBuilder.buildCreateUserSystemActionQuery(
@@ -26,7 +21,7 @@ export class UserSystemActionDbHandlerService
       );
       return result;
     } catch (err) {
-      console.error(err);
+      // console.error(err);
       throw err;
     }
   }
@@ -39,7 +34,7 @@ export class UserSystemActionDbHandlerService
       );
       return result;
     } catch (err) {
-      console.error(err);
+      // console.error(err);
       throw err;
     }
   }

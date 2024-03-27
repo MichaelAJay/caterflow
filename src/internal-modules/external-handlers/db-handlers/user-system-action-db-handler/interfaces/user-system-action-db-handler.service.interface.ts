@@ -1,12 +1,7 @@
-import { Prisma } from '@prisma/client';
+import { IBuildCreateUserSystemActionArgs } from './query-builder-args.interface';
 
 export interface IUserSystemActionDbHandler {
-  create(
-    input: Pick<
-      Prisma.UserSystemActionUncheckedCreateInput,
-      'userId' | 'action' | 'details'
-    >,
-  ): Promise<any>;
+  create(input: IBuildCreateUserSystemActionArgs): Promise<any>;
   retrieveOne(id: string): Promise<any>;
   retrieve(): Promise<any>;
 }

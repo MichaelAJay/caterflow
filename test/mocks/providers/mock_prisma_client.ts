@@ -8,4 +8,8 @@ export const mockPrismaClientService = {
     findUnique: jest.fn(),
     update: jest.fn(),
   },
+  userSystemAction: {
+    create: jest.fn(),
+    findUnique: jest.fn(),
+  },
 };
