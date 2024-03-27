@@ -1,0 +1,25 @@
+IMPLEMENTATION NOTE (may be removed once built out)
+Consider the following set of System Actions
+  AddUser
+  RemoveUser
+  AddIntegration
+  UpdateIntegration
+  DeleteIntegration
+  AddIntegrationAsset
+  UpdateIntegrationAsset
+  DeleteIntegrationAsset
+  AddRole
+  EditRole
+  DeleteRole
+  AssignRole
+  UnassignRole
+  UpdateBilling
+
+Each action is not exactly 1:1 with a request.
+
+For instance, the action of deleting integration assets, in addition to the obvious 'DeleteIntegrationAsset',
+may also trigger 'UpdateIntegration'.
+
+See notes in action logging interceptor directory
+
+When a route is created, think about information that would be required in the interceptor.

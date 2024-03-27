@@ -4,11 +4,14 @@ import { CompanyRoleAndPermissionDbQueryBuilderService } from './company-role-an
 import { PrismaClientService } from '../../../../external-modules/prisma-client/prisma-client.service';
 import { mockCompanyRoleAndPermissionDbQueryBuilder } from '../../../../../test/mocks/providers/mock_company_role_and_permission_db_querybuilder';
 import { mockPrismaClientService } from '../../../../../test/mocks/providers/mock_prisma_client';
+import { LogService } from '../../../../system/modules/log/log.service';
+import { mockLogService } from '../../../../../test/mocks/providers/mock_log_service';
 
 describe('CompanyRoleAndPermissionDbHandlerService', () => {
   let service: CompanyRoleAndPermissionDbHandlerService;
   let companyRoleAndPermissionDbQueryBuilder: CompanyRoleAndPermissionDbQueryBuilderService;
   let prismaClient: PrismaClientService;
+  let logService: LogService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -22,6 +25,7 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
           provide: PrismaClientService,
           useValue: mockPrismaClientService,
         },
+        { provide: LogService, useValue: mockLogService },
       ],
     }).compile();
 
@@ -33,6 +37,7 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
         CompanyRoleAndPermissionDbQueryBuilderService,
       );
     prismaClient = module.get<PrismaClientService>(PrismaClientService);
+    logService = module.get<LogService>(LogService);
   });
 
   it('should be defined', () => {

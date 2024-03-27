@@ -1,5 +1,6 @@
 import { SystemAction } from '@prisma/client';
 import { IBuildCreateUserSystemActionArgs } from 'src/internal-modules/external-handlers/db-handlers/user-system-action-db-handler/interfaces/query-builder-args.interface';
+import { LogContext } from 'src/system/modules/log/log.service';
 
 // Routes should specify strings of form 'method:url' for each route that this interceptor services
 type Route = 'TOP' | 'BOTTOM';
@@ -12,11 +13,14 @@ export function buildSystemActionsForDB(
   request: any,
 ): IBuildCreateUserSystemActionArgs[] {
   const { method, url } = request.raw;
-
-  // Also need to pull the user off the request
-
   if (!(typeof method === 'string' && typeof url === 'string')) {
     throw new Error('Request object could not parse method and url');
+  }
+
+  // Also need to pull the user off the request
+  const { user } = request;
+  if (!(user && user.id && user.companyId)) {
+    throw new Error('Request body is missing user, user id, or company id');
   }
 
   /**
@@ -54,3 +58,7 @@ function buildSystemActionsForCreation(
 }
 
 function constructDetails(systemAction) {}
+
+export function buildErrorContextForLog(request: any): LogContext {
+  return {};
+}

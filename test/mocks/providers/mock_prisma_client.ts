@@ -3,6 +3,9 @@ export const mockPrismaClientService = {
   cateringCompany: {
     create: jest.fn(),
   },
+  role: {
+    findMany: jest.fn(),
+  },
   user: {
     create: jest.fn(),
     findUnique: jest.fn(),

@@ -4,7 +4,7 @@ import pino from 'pino';
 
 export const LOGGER_PROVIDER_INJECTION_TOKEN = 'LOGGER_PROVIDER';
 
-type LogContext = Record<string, any>;
+export type LogContext = Record<string, any>;
 
 @Injectable()
 export class LogService implements ILogService {
