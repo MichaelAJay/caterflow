@@ -197,7 +197,7 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
       });
     });
 
-    it('should correctly transform system roles to company roles', async () => {
+    it('should call buildCreateManySingleCompanyRolesQuery with correct parameters', async () => {
       // Arrange
       const companyId = 'testCompanyId';
       const creatorId = 'testCreatorId';
@@ -258,7 +258,7 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
       ).toHaveBeenCalledWith(systemRolesWithPermissions, companyId, creatorId);
     });
 
-    it('should call buildCreateManySingleCompanyRolesQuery with correct parameters', async () => {
+    it('should call prismaService.$transaction with correct parameters', async () => {
       // Arrange
       const companyId = 'testCompanyId';
       const creatorId = 'testCreatorId';
@@ -404,7 +404,6 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
         .mockReturnValue([]);
 
       // Act
-      // await service.initializeRoles(companyId, creatorId);
       await expect(
         service.initializeRoles(companyId, creatorId),
       ).rejects.toThrow();
