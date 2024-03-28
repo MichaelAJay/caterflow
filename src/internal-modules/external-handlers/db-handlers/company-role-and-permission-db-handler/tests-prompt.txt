@@ -1,59 +1,88 @@
-Given the method provided below, enclosed in triple backticks, and the NestJS Test module beforeEach enclosed in triple quotes, implement the test enclosed in triple question marks.
+Given the method provided below, enclosed in triple backticks, and the NestJS Test module beforeEach enclosed in triple quotes, create a comprehensive and complete set of unit tests.
+You may assume that the input will be provided correctly (I'm relying on TypeScript for that). Consider edge cases.
+Do not implement test, just provide stubs, as shown in the section below enclosed in triple hyphens.
 
 ```
-  buildCreateManySingleCompanyRolesQuery(
-    systemRolesWithPermissions: ({
-      permissions: {
-        id: number;
-        name: $Enums.PermissionName;
-      }[];
-    } & {
-      id: string;
-      name: string;
-      description: string;
-      companyId: string | null;
-      creatorId: string;
-      isEditable: boolean;
-    })[],
-    companyId: string,
-    creatorId: string,
-  ): Prisma.RoleCreateArgs[] {
-    const companyRecords: {
-      data: Omit<
-        Prisma.RoleUncheckedCreateInput,
-        'companyId' | 'isEditable'
-      > & {
-        companyId: string;
+ async initializeRoles(companyId: string, creatorId: string) {
+    try {
+      // Get system roles with permissions
+      const systemRolesWithPermissions: ({
+        permissions: {
+          id: number;
+          name: $Enums.PermissionName;
+        }[];
+      } & {
+        id: string;
+        name: string;
+        description: string;
+        companyId: string | null;
+        creatorId: string;
         isEditable: boolean;
-      };
-    }[] = systemRolesWithPermissions.map(
-      ({ name, description, permissions: rolePermissions }) => ({
-        data: {
-          name,
-          description,
+      })[] = await this.prismaClient.role.findMany({
+        where: { companyId: null },
+        include: {
+          permissions: true,
+        },
+      });
+
+      // Create company roles with matching names and isEditable false.
+      const roleCreateArgs =
+        this.companyRoleAndPermissionDbQueryBuilder.buildCreateManySingleCompanyRolesQuery(
+          systemRolesWithPermissions,
           companyId,
           creatorId,
-          isEditable: false,
-          permissions: {
-            connect: rolePermissions.map(({ id }) => ({ id })),
-          },
-        },
-      }),
-    );
-    return companyRecords;
+        );
+
+      await this.prismaClient.$transaction(
+        roleCreateArgs.map((roleCreateArg) => {
+          return this.prismaClient.role.create(roleCreateArg);
+        }),
+      );
+    } catch (err) {
+      const stackTrace = err.stack ? err.stack : 'Stack trace unavailable';
+      this.logService.error(err.message, stackTrace, {
+        companyId,
+        message: 'Company role initialization failed',
+      });
+      throw err;
+    }
   }
 ```
 '''
+describe('CompanyRoleAndPermissionDbHandlerService', () => {
+  let service: CompanyRoleAndPermissionDbHandlerService;
+  let companyRoleAndPermissionDbQueryBuilder: CompanyRoleAndPermissionDbQueryBuilderService;
+  let prismaClient: PrismaClientService;
+  let logService: LogService;
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [CompanyRoleAndPermissionDbQueryBuilderService],
+      providers: [
+        CompanyRoleAndPermissionDbHandlerService,
+        {
+          provide: CompanyRoleAndPermissionDbQueryBuilderService,
+          useValue: mockCompanyRoleAndPermissionDbQueryBuilder,
+        },
+        {
+          provide: PrismaClientService,
+          useValue: mockPrismaClientService,
+        },
+        { provide: LogService, useValue: mockLogService },
+      ],
     }).compile();
 
-    service = module.get<CompanyRoleAndPermissionDbQueryBuilderService>(
-      CompanyRoleAndPermissionDbQueryBuilderService,
+    service = module.get<CompanyRoleAndPermissionDbHandlerService>(
+      CompanyRoleAndPermissionDbHandlerService,
     );
+    companyRoleAndPermissionDbQueryBuilder =
+      module.get<CompanyRoleAndPermissionDbQueryBuilderService>(
+        CompanyRoleAndPermissionDbQueryBuilderService,
+      );
+    prismaClient = module.get<PrismaClientService>(PrismaClientService);
+    logService = module.get<LogService>(LogService);
   });
+});
 '''
-???
-
-???
+---
+it('should have a test description here, and no implemented method', async () => {})
+---

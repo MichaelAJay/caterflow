@@ -45,6 +45,10 @@ export class CompanyRoleAndPermissionDbHandlerService
           creatorId,
         );
 
+      if (roleCreateArgs.length === 0) {
+        throw new Error('roleCreateArgs is empty');
+      }
+
       await this.prismaClient.$transaction(
         roleCreateArgs.map((roleCreateArg) => {
           return this.prismaClient.role.create(roleCreateArg);

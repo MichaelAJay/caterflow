@@ -5,6 +5,7 @@ export const mockPrismaClientService = {
   },
   role: {
     findMany: jest.fn(),
+    create: jest.fn(),
   },
   user: {
     create: jest.fn(),
@@ -16,4 +17,5 @@ export const mockPrismaClientService = {
     createMany: jest.fn(),
     findUnique: jest.fn(),
   },
+  $transaction: jest.fn(),
 };
