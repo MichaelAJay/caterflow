@@ -6,6 +6,9 @@ import {
 
 export interface ICompanyRoleAndPermissionDbHandler {
   initializeRoles: (companyId: string, creatorId: string) => Promise<any>;
+  /**
+   * @TODO ensure name is a valid, non-empty string in request validation step
+   */
   createRole: (input: IBuildCreateCompanyRoleArgs) => Promise<any>;
   /**
    * Retrieve a role by PK
@@ -23,6 +26,8 @@ export interface ICompanyRoleAndPermissionDbHandler {
   /**
    * Deletes a set of roles for a company
    * Requester may only delete roles for which they have all permissions
+   *
+   * @TODO This needs sharpening up
    * @param ids
    * @param companyId
    */

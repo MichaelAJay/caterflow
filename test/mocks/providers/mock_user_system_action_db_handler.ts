@@ -2,6 +2,7 @@ import { IUserSystemActionDbHandler } from 'src/internal-modules/external-handle
 
 export const mockUserSystemActionDbHandler: IUserSystemActionDbHandler = {
   create: jest.fn(),
+  createMany: jest.fn(),
   retrieveOne: jest.fn(),
   retrieve: jest.fn(),
 };

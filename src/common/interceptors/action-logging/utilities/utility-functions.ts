@@ -57,7 +57,7 @@ function buildSystemActionsForCreation(
   return [];
 }
 
-function constructDetails(systemAction) {}
+function constructDetails(systemAction: any) {}
 
 export function buildErrorContextForLog(request: any): LogContext {
   return {};

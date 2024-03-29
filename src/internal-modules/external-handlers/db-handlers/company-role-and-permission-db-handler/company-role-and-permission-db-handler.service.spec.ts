@@ -7,7 +7,12 @@ import { mockPrismaClientService } from '../../../../../test/mocks/providers/moc
 import { LogService } from '../../../../system/modules/log/log.service';
 import { mockLogService } from '../../../../../test/mocks/providers/mock_log_service';
 import { $Enums, PermissionName, Prisma } from '@prisma/client';
-import { IBuildCreateCompanyRoleArgs } from './interfaces/query-builder-args.interface';
+import uuidUtils from '../../../../utility/functions/is_uuid';
+import { InvalidUUIDError } from '../../../../common/errors/invalid_uuid.error';
+import {
+  IBuildCreateCompanyRoleArgs,
+  IBuildUpdateCompanyRoleArgs,
+} from './interfaces/query-builder-args.interface';
 
 describe('CompanyRoleAndPermissionDbHandlerService', () => {
   let service: CompanyRoleAndPermissionDbHandlerService;
@@ -40,6 +45,8 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
       );
     prismaClient = module.get<PrismaClientService>(PrismaClientService);
     logService = module.get<LogService>(LogService);
+
+    jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(true);
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -52,6 +59,9 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
   });
 
   describe('initializeRoles', () => {
+    const validCompanyId = '00000000-0000-4000-8000-000000000000';
+    const validCreatorId = '11111111-1111-4111-8111-111111111111';
+
     let systemRolesWithPermissions: ({
       permissions: {
         id: number;
@@ -67,8 +77,8 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
     })[];
     it('should successfully initialize roles with permissions for a new company and return true', async () => {
       // Arrange
-      const companyId = 'testCompanyId';
-      const creatorId = 'testCreatorId';
+      const companyId = validCompanyId;
+      const creatorId = validCreatorId;
       systemRolesWithPermissions = [
         {
           id: 'role1',
@@ -137,10 +147,70 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
       );
     });
 
+    it('should throw invalid uuid error if companyId is empty and only call isUUID once with companyId', async () => {
+      const companyId = '';
+      const creatorId = '';
+
+      const spy = jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
+      await expect(
+        service.initializeRoles(companyId, creatorId),
+      ).rejects.toThrow(InvalidUUIDError);
+
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledWith(companyId);
+    });
+
+    it('should throw invalid uuid error if companyId is not valid uuid and only call isUUID once with companyId', async () => {
+      const companyId = 'invalid-id';
+      const creatorId = '';
+
+      const spy = jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
+      await expect(
+        service.initializeRoles(companyId, creatorId),
+      ).rejects.toThrow(InvalidUUIDError);
+
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledWith(companyId);
+    });
+
+    it('should throw invalid uuid error if creatorId is empty and call isUUID twice', async () => {
+      const companyId = validCompanyId;
+      const creatorId = '';
+
+      const spy = jest
+        .spyOn(uuidUtils, 'isUUID')
+        .mockReturnValueOnce(true)
+        .mockReturnValueOnce(false);
+      await expect(
+        service.initializeRoles(companyId, creatorId),
+      ).rejects.toThrow(InvalidUUIDError);
+
+      expect(spy).toHaveBeenCalledTimes(2);
+      expect(spy).toHaveBeenCalledWith(companyId);
+      expect(spy).toHaveBeenCalledWith(creatorId);
+    });
+
+    it('should throw invalid uuid error if creatorId is not valid uuid and call isUUID twice', async () => {
+      const companyId = validCompanyId;
+      const creatorId = 'invalid id';
+
+      const spy = jest
+        .spyOn(uuidUtils, 'isUUID')
+        .mockReturnValueOnce(true)
+        .mockReturnValueOnce(false);
+      await expect(
+        service.initializeRoles(companyId, creatorId),
+      ).rejects.toThrow(InvalidUUIDError);
+
+      expect(spy).toHaveBeenCalledTimes(2);
+      expect(spy).toHaveBeenCalledWith(companyId);
+      expect(spy).toHaveBeenCalledWith(creatorId);
+    });
+
     it('should call Prisma client findMany with correct parameters', async () => {
       // Arrange
-      const companyId = 'testCompanyId';
-      const creatorId = 'testCreatorId';
+      const companyId = validCompanyId;
+      const creatorId = validCreatorId;
       const systemRolesWithPermissions = [
         {
           id: 'role1',
@@ -201,8 +271,8 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
 
     it('should call buildCreateManySingleCompanyRolesQuery with correct parameters', async () => {
       // Arrange
-      const companyId = 'testCompanyId';
-      const creatorId = 'testCreatorId';
+      const companyId = validCompanyId;
+      const creatorId = validCreatorId;
       const systemRolesWithPermissions = [
         {
           id: 'role1',
@@ -262,8 +332,8 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
 
     it('should call prismaService.$transaction with correct parameters', async () => {
       // Arrange
-      const companyId = 'testCompanyId';
-      const creatorId = 'testCreatorId';
+      const companyId = validCompanyId;
+      const creatorId = validCreatorId;
       const systemRolesWithPermissions = [
         {
           id: 'role1',
@@ -325,8 +395,8 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
 
     it('should execute a transaction with the correct number of create operations', async () => {
       // Arrange
-      const companyId = 'testCompanyId';
-      const creatorId = 'testCreatorId';
+      const companyId = validCompanyId;
+      const creatorId = validCreatorId;
       const systemRolesWithPermissions = [
         {
           id: 'role1',
@@ -391,8 +461,8 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
 
     it('should handle the case when no system roles are found', async () => {
       // Arrange
-      const companyId = 'testCompanyId';
-      const creatorId = 'testCreatorId';
+      const companyId = validCompanyId;
+      const creatorId = validCreatorId;
       systemRolesWithPermissions = [];
       jest
         .spyOn(mockPrismaClientService.role, 'findMany')
@@ -419,8 +489,8 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
 
     it('should return false and log an error and rethrow it when an error occurs during the findMany operation', async () => {
       // Arrange
-      const companyId = 'testCompanyId';
-      const creatorId = 'testCreatorId';
+      const companyId = validCompanyId;
+      const creatorId = validCreatorId;
       const error = new Error('findMany error');
       jest
         .spyOn(mockPrismaClientService.role, 'findMany')
@@ -442,8 +512,8 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
 
     it('should return false and log an error and rethrow it when an error occurs during the transaction', async () => {
       // Arrange
-      const companyId = 'testCompanyId';
-      const creatorId = 'testCreatorId';
+      const companyId = validCompanyId;
+      const creatorId = validCreatorId;
       const error = new Error('Transaction error');
       systemRolesWithPermissions = [
         {
@@ -514,8 +584,8 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
 
     it('should verify that the logService.error method is called with the right arguments upon failure', async () => {
       // Arrange
-      const companyId = 'testCompanyId';
-      const creatorId = 'testCreatorId';
+      const companyId = validCompanyId;
+      const creatorId = validCreatorId;
       const error = new Error('roleCreateArgs is empty');
       systemRolesWithPermissions = [
         {
@@ -564,8 +634,8 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
 
     it('should not call prismaClient.$transaction if query builder returns empty array', async () => {
       // Arrange
-      const companyId = 'testCompanyId';
-      const creatorId = 'testCreatorId';
+      const companyId = validCompanyId;
+      const creatorId = validCreatorId;
       systemRolesWithPermissions = [
         {
           id: 'role1',
@@ -611,309 +681,1596 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
   });
 
   describe('createRole', () => {
+    const validInput: IBuildCreateCompanyRoleArgs = {
+      name: 'Role Name',
+      description: 'Role Description',
+      companyId: '00000000-0000-4000-8000-000000000000',
+      creatorId: '11111111-1111-4111-8111-111111111111',
+    };
+
     it('should create a company role with valid input', async () => {
-      // Arrange
-      const input: IBuildCreateCompanyRoleArgs = {
-        name: 'Admin',
-        description: 'Administrator role',
-        companyId: 'company-1',
-        creatorId: 'user-1',
-      };
+      const queryBuilderReturn = {
+        key: 'value',
+      } as unknown as Prisma.RoleCreateArgs;
+      const queryBuilderSpy = jest
+        .spyOn(
+          companyRoleAndPermissionDbQueryBuilder,
+          'buildCreateCompanyRoleQuery',
+        )
+        .mockReturnValue(queryBuilderReturn);
 
-      // Act
+      await service.createRole(validInput);
 
-      // Assert
+      expect(queryBuilderSpy).toHaveBeenCalledWith(validInput);
+      expect(prismaClient.role.create).toHaveBeenCalledWith(queryBuilderReturn);
     });
 
-    it('should throw an error if the company role name is empty', async () => {
-      // Arrange
-      const input: IBuildCreateCompanyRoleArgs = {
-        name: '',
-        description: 'Administrator role',
-        companyId: 'company-1',
-        creatorId: 'user-1',
-      };
+    it('should throw an InvalidUUIDError if companyId is empty and only call isUUID once with companyId', async () => {
+      const invalidInput = { ...validInput, companyId: '' };
 
-      // Act
+      const isUUIDSpy = jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
 
-      // Assert
+      await expect(service.createRole(invalidInput)).rejects.toThrow(
+        InvalidUUIDError,
+      );
+      expect(isUUIDSpy).toHaveBeenCalledTimes(1);
+      expect(isUUIDSpy).toHaveBeenCalledWith(invalidInput.companyId);
+      expect(
+        companyRoleAndPermissionDbQueryBuilder.buildCreateCompanyRoleQuery,
+      ).not.toHaveBeenCalled();
+      expect(prismaClient.role.create).not.toHaveBeenCalled();
     });
 
-    it('should return default description if default is empty', async () => {
-      // Arrange
-      const input: IBuildCreateCompanyRoleArgs = {
-        name: 'Admin',
-        description: '',
-        companyId: 'company-1',
-        creatorId: 'user-1',
-      };
+    it('should throw an InvalidUUIDError if companyId is not a valid UUID and only call isUUID once with companyId', async () => {
+      const isUUIDSpy = jest
+        .spyOn(uuidUtils, 'isUUID')
+        .mockReturnValueOnce(false);
+      const invalidInput = { ...validInput, companyId: 'invalid-uuid' };
+      await expect(service.createRole(invalidInput)).rejects.toThrow(
+        InvalidUUIDError,
+      );
+      expect(isUUIDSpy).toHaveBeenCalledTimes(1);
+      expect(isUUIDSpy).toHaveBeenCalledWith(invalidInput.companyId);
+      expect(
+        companyRoleAndPermissionDbQueryBuilder.buildCreateCompanyRoleQuery,
+      ).not.toHaveBeenCalled();
+      expect(prismaClient.role.create).not.toHaveBeenCalled();
+    });
 
-      // Act
+    it('should throw an InvalidUUIDError if creatorId is empty and call isUUID twice', async () => {
+      const invalidInput = { ...validInput, creatorId: '' };
 
-      // Assert
+      const isUUIDSpy = jest
+        .spyOn(uuidUtils, 'isUUID')
+        .mockReturnValueOnce(true)
+        .mockReturnValueOnce(false);
+
+      await expect(service.createRole(invalidInput)).rejects.toThrow(
+        InvalidUUIDError,
+      );
+      expect(isUUIDSpy).toHaveBeenCalledTimes(2);
+      expect(isUUIDSpy).toHaveBeenNthCalledWith(1, invalidInput.companyId);
+      expect(isUUIDSpy).toHaveBeenNthCalledWith(2, invalidInput.creatorId);
+      expect(
+        companyRoleAndPermissionDbQueryBuilder.buildCreateCompanyRoleQuery,
+      ).not.toHaveBeenCalled();
+      expect(prismaClient.role.create).not.toHaveBeenCalled();
+    });
+
+    it('should throw an InvalidUUIDError if creatorId is not a valid UUID and call isUUID twice', async () => {
+      const isUUIDSpy = jest
+        .spyOn(uuidUtils, 'isUUID')
+        .mockReturnValueOnce(true)
+        .mockReturnValueOnce(false);
+      const invalidInput = { ...validInput, creatorId: 'invalid-uuid' };
+      await expect(service.createRole(invalidInput)).rejects.toThrow(
+        InvalidUUIDError,
+      );
+      expect(isUUIDSpy).toHaveBeenCalledTimes(2);
+      expect(isUUIDSpy).toHaveBeenNthCalledWith(1, invalidInput.companyId);
+      expect(isUUIDSpy).toHaveBeenNthCalledWith(2, invalidInput.creatorId);
+      expect(
+        companyRoleAndPermissionDbQueryBuilder.buildCreateCompanyRoleQuery,
+      ).not.toHaveBeenCalled();
+      expect(prismaClient.role.create).not.toHaveBeenCalled();
     });
 
     it('should call the companyRoleAndPermissionDbQueryBuilder with the correct input', async () => {
-      // Arrange
-      const input: IBuildCreateCompanyRoleArgs = {
-        name: 'Admin',
-        description: 'Administrator role',
-        companyId: 'company-1',
-        creatorId: 'user-1',
-      };
+      const queryBuilderReturn = {
+        key: 'value',
+      } as unknown as Prisma.RoleCreateArgs;
+      const queryBuilderSpy = jest
+        .spyOn(
+          companyRoleAndPermissionDbQueryBuilder,
+          'buildCreateCompanyRoleQuery',
+        )
+        .mockReturnValue(queryBuilderReturn);
 
-      // Act
+      await service.createRole(validInput);
 
-      // Assert
+      expect(queryBuilderSpy).toHaveBeenCalledWith(validInput);
     });
 
     it('should call the prismaClient.role.create method with the query returned by the companyRoleAndPermissionDbQueryBuilder', async () => {
-      // Arrange
-      const input: IBuildCreateCompanyRoleArgs = {
-        name: 'Admin',
-        description: 'Administrator role',
-        companyId: 'company-1',
-        creatorId: 'user-1',
-      };
+      const queryBuilderReturn = {
+        key: 'value',
+      } as unknown as Prisma.RoleCreateArgs;
+      jest
+        .spyOn(
+          companyRoleAndPermissionDbQueryBuilder,
+          'buildCreateCompanyRoleQuery',
+        )
+        .mockReturnValue(queryBuilderReturn);
 
-      // Act
+      await service.createRole(validInput);
 
-      // Assert
+      expect(prismaClient.role.create).toHaveBeenCalledWith(queryBuilderReturn);
     });
 
     it('should throw an error if the prismaClient.role.create method throws an error', async () => {
-      // Arrange
-      const input: IBuildCreateCompanyRoleArgs = {
-        name: 'Admin',
-        description: 'Administrator role',
-        companyId: 'company-1',
-        creatorId: 'user-1',
-      };
+      const queryBuilderReturn = {
+        key: 'value',
+      } as unknown as Prisma.RoleCreateArgs;
+      jest
+        .spyOn(
+          companyRoleAndPermissionDbQueryBuilder,
+          'buildCreateCompanyRoleQuery',
+        )
+        .mockReturnValue(queryBuilderReturn);
+      jest
+        .spyOn(prismaClient.role, 'create')
+        .mockRejectedValue(new Error('Database error'));
 
-      // Act
-
-      // Assert
+      await expect(service.createRole(validInput)).rejects.toThrow(
+        'Database error',
+      );
     });
-
-    // Test that methods aren't called after errors
   });
 
   describe('retrieveRole', () => {
-    it('should retrieve a company role by its ID', async () => {});
+    const validRoleId = '00000000-0000-4000-8000-000000000000';
+    it('should retrieve a company role by its ID', async () => {
+      const role = { id: validRoleId, name: 'Role Name' };
+      const queryBuilderReturn = {
+        where: { id: validRoleId },
+      } as unknown as Prisma.RoleFindUniqueArgs;
+      jest
+        .spyOn(companyRoleAndPermissionDbQueryBuilder, 'buildRetrieveRoleQuery')
+        .mockReturnValue(queryBuilderReturn);
+      jest
+        .spyOn(prismaClient.role, 'findUnique')
+        .mockResolvedValue(role as any);
 
-    it('should return null if the company role is not found', async () => {});
+      const result = await service.retrieveRole(validRoleId);
 
-    it('should call the companyRoleAndPermissionDbQueryBuilder with the correct role ID', async () => {});
+      expect(result).toEqual(role);
+    });
 
-    it('should call the prismaClient.role.findUnique method with the query returned by the companyRoleAndPermissionDbQueryBuilder', async () => {});
+    it('should return null if the company role is not found', async () => {
+      const queryBuilderReturn = {
+        where: { id: validRoleId },
+      } as unknown as Prisma.RoleFindUniqueArgs;
+      jest
+        .spyOn(companyRoleAndPermissionDbQueryBuilder, 'buildRetrieveRoleQuery')
+        .mockReturnValue(queryBuilderReturn);
+      jest.spyOn(prismaClient.role, 'findUnique').mockResolvedValue(null);
 
-    it('should throw an error if the prismaClient.role.findUnique method throws an error', async () => {});
+      const result = await service.retrieveRole(validRoleId);
 
-    it('should return the retrieved company role', async () => {});
+      expect(result).toBeNull();
+    });
 
-    it('should retrieve a company role with all its associated permissions', async () => {});
+    it('should call the companyRoleAndPermissionDbQueryBuilder with the correct role ID', async () => {
+      const queryBuilderReturn = {
+        where: { id: validRoleId },
+      } as unknown as Prisma.RoleFindUniqueArgs;
+      const queryBuilderSpy = jest
+        .spyOn(companyRoleAndPermissionDbQueryBuilder, 'buildRetrieveRoleQuery')
+        .mockReturnValue(queryBuilderReturn);
 
-    it('should retrieve a company role with its associated company details', async () => {});
+      await service.retrieveRole(validRoleId);
 
-    it('should retrieve a company role with its creator user details', async () => {});
+      expect(queryBuilderSpy).toHaveBeenCalledWith(validRoleId);
+    });
 
-    it('should retrieve a company role with its last modifier user details', async () => {});
+    it('should call the prismaClient.role.findUnique method with the query returned by the companyRoleAndPermissionDbQueryBuilder', async () => {
+      const queryBuilderReturn = {
+        where: { id: validRoleId },
+      } as unknown as Prisma.RoleFindUniqueArgs;
+      jest
+        .spyOn(companyRoleAndPermissionDbQueryBuilder, 'buildRetrieveRoleQuery')
+        .mockReturnValue(queryBuilderReturn);
 
-    it('should retrieve a company role with its creation and modification timestamps', async () => {});
+      await service.retrieveRole(validRoleId);
+
+      expect(prismaClient.role.findUnique).toHaveBeenCalledWith(
+        queryBuilderReturn,
+      );
+    });
+
+    it('should throw an InvalidUUIDError if the role ID is the empty string', async () => {
+      jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
+
+      await expect(service.retrieveRole('')).rejects.toThrow(InvalidUUIDError);
+      expect(
+        companyRoleAndPermissionDbQueryBuilder.buildRetrieveRoleQuery,
+      ).not.toHaveBeenCalled();
+      expect(prismaClient.role.findUnique).not.toHaveBeenCalled();
+    });
+
+    it('should throw an InvalidUUIDError if the role ID is not a valid UUID', async () => {
+      jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
+
+      await expect(service.retrieveRole('invalid-role-id')).rejects.toThrow(
+        InvalidUUIDError,
+      );
+      expect(
+        companyRoleAndPermissionDbQueryBuilder.buildRetrieveRoleQuery,
+      ).not.toHaveBeenCalled();
+      expect(prismaClient.role.findUnique).not.toHaveBeenCalled();
+    });
+
+    it('should throw an error if the prismaClient.role.findUnique method throws an error', async () => {
+      const queryBuilderReturn = {
+        where: { id: validRoleId },
+      } as unknown as Prisma.RoleFindUniqueArgs;
+      jest
+        .spyOn(companyRoleAndPermissionDbQueryBuilder, 'buildRetrieveRoleQuery')
+        .mockReturnValue(queryBuilderReturn);
+      jest
+        .spyOn(prismaClient.role, 'findUnique')
+        .mockRejectedValue(new Error('Database error'));
+
+      await expect(service.retrieveRole(validRoleId)).rejects.toThrow(
+        'Database error',
+      );
+    });
+
+    it('should return the retrieved company role', async () => {
+      const role = { id: validRoleId, name: 'Role Name' };
+      const queryBuilderReturn = {
+        where: { id: validRoleId },
+      } as unknown as Prisma.RoleFindUniqueArgs;
+      jest
+        .spyOn(companyRoleAndPermissionDbQueryBuilder, 'buildRetrieveRoleQuery')
+        .mockReturnValue(queryBuilderReturn);
+      jest
+        .spyOn(prismaClient.role, 'findUnique')
+        .mockResolvedValue(role as any);
+
+      const result = await service.retrieveRole(validRoleId);
+
+      expect(result).toEqual(role);
+    });
+
+    // This test is not true - the method doesn't do that. But maybe it should.
+    // it('should retrieve a company role with all its associated permissions', async () => {
+    //   const role = {
+    //     id: validRoleId,
+    //     name: 'Role Name',
+    //     permissions: [
+    //       { id: 'permission-1', name: 'Permission 1' },
+    //       { id: 'permission-2', name: 'Permission 2' },
+    //     ],
+    //   };
+    //   const queryBuilderReturn = {
+    //     where: { id: validRoleId },
+    //     include: { permissions: true },
+    //   } as unknown as Prisma.RoleFindUniqueArgs;
+    //   jest
+    //     .spyOn(companyRoleAndPermissionDbQueryBuilder, 'buildRetrieveRoleQuery')
+    //     .mockReturnValue(queryBuilderReturn);
+    //   jest
+    //     .spyOn(prismaClient.role, 'findUnique')
+    //     .mockResolvedValue(role as any);
+
+    //   const result = await service.retrieveRole(validRoleId);
+
+    //   expect(result).toEqual(role);
+    // });
   });
 
   describe('editRole', () => {
-    it('should update a company role with valid input', async () => {});
+    const validRoleId = '00000000-0000-4000-8000-000000000000';
+    const invalidRoleId = 'invalid-uuid';
+    const validUpdates: IBuildUpdateCompanyRoleArgs = {
+      name: 'Updated Role Name',
+      description: 'Updated Role Description',
+    };
 
-    it('should throw an error if id is not a valid uuid');
+    it('should update a company role with valid input', async () => {
+      const queryBuilderReturn = {
+        where: { id: validRoleId },
+        data: validUpdates,
+      } as unknown as Prisma.RoleUpdateArgs;
+      const queryBuilderSpy = jest
+        .spyOn(
+          companyRoleAndPermissionDbQueryBuilder,
+          'buildUpdateCompanyRoleQuery',
+        )
+        .mockReturnValue(queryBuilderReturn);
 
-    it('should update the company role name', async () => {});
+      await service.editRole(validRoleId, validUpdates);
 
-    it('should update the company role description', async () => {});
+      expect(queryBuilderSpy).toHaveBeenCalledWith(validRoleId, validUpdates);
+      expect(prismaClient.role.update).toHaveBeenCalledWith(queryBuilderReturn);
+    });
 
-    it('should update the company role name and description simultaneously', async () => {});
+    it('should throw an error if id is not a valid uuid', async () => {
+      jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
 
-    it('should not update the company role if no updates are provided', async () => {});
+      await expect(
+        service.editRole(invalidRoleId, validUpdates),
+      ).rejects.toThrow(InvalidUUIDError);
+      expect(
+        companyRoleAndPermissionDbQueryBuilder.buildUpdateCompanyRoleQuery,
+      ).not.toHaveBeenCalled();
+      expect(prismaClient.role.update).not.toHaveBeenCalled();
+    });
 
-    it('should call the companyRoleAndPermissionDbQueryBuilder with the correct role ID and updates', async () => {});
+    it('should update the company role name', async () => {
+      const queryBuilderReturn = {
+        where: { id: validRoleId },
+        data: { name: validUpdates.name },
+      } as unknown as Prisma.RoleUpdateArgs;
+      jest
+        .spyOn(
+          companyRoleAndPermissionDbQueryBuilder,
+          'buildUpdateCompanyRoleQuery',
+        )
+        .mockReturnValue(queryBuilderReturn);
 
-    it('should call the prismaClient.role.update method with the query returned by the companyRoleAndPermissionDbQueryBuilder', async () => {});
+      await service.editRole(validRoleId, { name: validUpdates.name });
 
-    it('should throw an error if the prismaClient.role.update method throws an error', async () => {});
+      expect(prismaClient.role.update).toHaveBeenCalledWith(queryBuilderReturn);
+    });
 
-    // Eyes
-    it('should update the company role last modifier user ID', async () => {});
+    it('should update the company role description', async () => {
+      const queryBuilderReturn = {
+        where: { id: validRoleId },
+        data: { description: validUpdates.description },
+      } as unknown as Prisma.RoleUpdateArgs;
+      jest
+        .spyOn(
+          companyRoleAndPermissionDbQueryBuilder,
+          'buildUpdateCompanyRoleQuery',
+        )
+        .mockReturnValue(queryBuilderReturn);
 
-    it('should update the company role modification timestamp', async () => {});
+      await service.editRole(validRoleId, {
+        description: validUpdates.description,
+      });
 
-    it('should not update the company role creator user ID', async () => {});
+      expect(prismaClient.role.update).toHaveBeenCalledWith(queryBuilderReturn);
+    });
 
-    it('should not update the company role creation timestamp', async () => {});
+    it('should call the companyRoleAndPermissionDbQueryBuilder with the correct role ID and updates', async () => {
+      const queryBuilderReturn = {
+        where: { id: validRoleId },
+        data: validUpdates,
+      } as unknown as Prisma.RoleUpdateArgs;
+      const queryBuilderSpy = jest
+        .spyOn(
+          companyRoleAndPermissionDbQueryBuilder,
+          'buildUpdateCompanyRoleQuery',
+        )
+        .mockReturnValue(queryBuilderReturn);
 
-    it('should not update the company role associated permissions', async () => {});
+      await service.editRole(validRoleId, validUpdates);
 
-    it('should not update the company role associated company details', async () => {});
+      expect(queryBuilderSpy).toHaveBeenCalledWith(validRoleId, validUpdates);
+    });
+
+    it('should call the prismaClient.role.update method with the query returned by the companyRoleAndPermissionDbQueryBuilder', async () => {
+      const queryBuilderReturn = {
+        where: { id: validRoleId },
+        data: validUpdates,
+      } as unknown as Prisma.RoleUpdateArgs;
+      jest
+        .spyOn(
+          companyRoleAndPermissionDbQueryBuilder,
+          'buildUpdateCompanyRoleQuery',
+        )
+        .mockReturnValue(queryBuilderReturn);
+
+      await service.editRole(validRoleId, validUpdates);
+
+      expect(prismaClient.role.update).toHaveBeenCalledWith(queryBuilderReturn);
+    });
+
+    it('should propagate any error thrown by prismaClient.role.update', async () => {
+      const queryBuilderReturn = {
+        where: { id: validRoleId },
+        data: validUpdates,
+      } as unknown as Prisma.RoleUpdateArgs;
+      jest
+        .spyOn(
+          companyRoleAndPermissionDbQueryBuilder,
+          'buildUpdateCompanyRoleQuery',
+        )
+        .mockReturnValue(queryBuilderReturn);
+      jest
+        .spyOn(prismaClient.role, 'update')
+        .mockRejectedValue(new Error('Database error'));
+
+      await expect(service.editRole(validRoleId, validUpdates)).rejects.toThrow(
+        'Database error',
+      );
+    });
   });
 
   describe('deleteRoles', () => {
-    it('should delete a single company role when provided with a single role ID', async () => {});
+    const validRoleId = '00000000-0000-4000-8000-000000000000';
+    const anotherValidRoleId = '00000000-0000-4000-8000-000000000001';
+    const validCompanyId = '11111111-1111-4111-8111-111111111111';
+    const invalidCompanyId = 'invalid-company-uuid';
 
-    it('should delete multiple company roles when provided with multiple role IDs', async () => {});
+    it('should delete a single company role when provided with a single role ID', async () => {
+      const queryBuilderReturn = {
+        where: { id: validRoleId, companyId: validCompanyId },
+      } as unknown as Prisma.RoleDeleteArgs;
+      jest
+        .spyOn(
+          companyRoleAndPermissionDbQueryBuilder,
+          'buildDeleteCompanyRoleQuery',
+        )
+        .mockReturnValue(queryBuilderReturn);
 
-    it('should throw an error if the role IDs array is empty', async () => {});
+      await service.deleteRoles([validRoleId], validCompanyId);
 
-    it('should throw an error if the company ID is not a valid uuid', async () => {});
+      expect(prismaClient.role.delete).toHaveBeenCalledWith(queryBuilderReturn);
+      expect(
+        companyRoleAndPermissionDbQueryBuilder.buildDeleteManyCompanyRolesQuery,
+      ).not.toHaveBeenCalled();
+      expect(prismaClient.role.deleteMany).not.toHaveBeenCalled();
+    });
 
-    it('should remove empty string role ids', async () => {});
+    it('should delete multiple company roles when provided with multiple role IDs', async () => {
+      const roleIds = [validRoleId, anotherValidRoleId];
+      const queryBuilderReturn = {
+        where: { id: { in: roleIds }, companyId: validCompanyId },
+      } as unknown as Prisma.RoleDeleteManyArgs;
+      jest
+        .spyOn(
+          companyRoleAndPermissionDbQueryBuilder,
+          'buildDeleteManyCompanyRolesQuery',
+        )
+        .mockReturnValue(queryBuilderReturn);
 
-    it('should call the companyRoleAndPermissionDbQueryBuilder with the correct role ID and company ID when deleting a single role', async () => {});
+      await service.deleteRoles(roleIds, validCompanyId);
 
-    it('should call the companyRoleAndPermissionDbQueryBuilder with the correct role IDs and company ID when deleting multiple roles', async () => {});
+      expect(prismaClient.role.deleteMany).toHaveBeenCalledWith(
+        queryBuilderReturn,
+      );
+      expect(
+        companyRoleAndPermissionDbQueryBuilder.buildDeleteCompanyRoleQuery,
+      ).not.toHaveBeenCalled();
+      expect(prismaClient.role.delete).not.toHaveBeenCalled();
+    });
 
-    it('should call the prismaClient.role.delete method with the query returned by the companyRoleAndPermissionDbQueryBuilder when deleting a single role', async () => {});
+    it('should throw an error if the role IDs array is empty', async () => {
+      await expect(service.deleteRoles([], validCompanyId)).rejects.toThrow(
+        'ids array may not be empty',
+      );
+      expect(
+        companyRoleAndPermissionDbQueryBuilder.buildDeleteCompanyRoleQuery,
+      ).not.toHaveBeenCalled();
+      expect(
+        companyRoleAndPermissionDbQueryBuilder.buildDeleteManyCompanyRolesQuery,
+      ).not.toHaveBeenCalled();
+      expect(prismaClient.role.delete).not.toHaveBeenCalled();
+      expect(prismaClient.role.deleteMany).not.toHaveBeenCalled();
+    });
 
-    it('should call the prismaClient.role.deleteMany method with the query returned by the companyRoleAndPermissionDbQueryBuilder when deleting multiple roles', async () => {});
+    it('should throw an error if the company ID is not a valid uuid', async () => {
+      jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
 
-    it('should throw an error if the prismaClient.role.delete method throws an error when deleting a single role', async () => {});
+      await expect(
+        service.deleteRoles([validRoleId], invalidCompanyId),
+      ).rejects.toThrow(InvalidUUIDError);
+      expect(
+        companyRoleAndPermissionDbQueryBuilder.buildDeleteCompanyRoleQuery,
+      ).not.toHaveBeenCalled();
+      expect(
+        companyRoleAndPermissionDbQueryBuilder.buildDeleteManyCompanyRolesQuery,
+      ).not.toHaveBeenCalled();
+      expect(prismaClient.role.delete).not.toHaveBeenCalled();
+      expect(prismaClient.role.deleteMany).not.toHaveBeenCalled();
+    });
 
-    it('should throw an error if the prismaClient.role.deleteMany method throws an error when deleting multiple roles', async () => {});
+    it('should throw InvalidUUIDError if roleIds includes an empty string element', async () => {
+      const roleIds = [validRoleId, ''];
+      jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
 
-    it('should return the deleted company role when deleting a single role', async () => {});
+      await expect(
+        service.deleteRoles(roleIds, validCompanyId),
+      ).rejects.toThrow(InvalidUUIDError);
+    });
 
-    it('should return the number of deleted company roles when deleting multiple roles', async () => {});
+    it('should throw InvalidUUIDError if roleIds includes an element which is not a uuid', async () => {
+      const roleIds = [validRoleId, 'not-uuid'];
+      jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
 
-    it('should delete the associated permissions of the deleted company roles', async () => {});
+      await expect(
+        service.deleteRoles(roleIds, validCompanyId),
+      ).rejects.toThrow(InvalidUUIDError);
+    });
+
+    it('should call the companyRoleAndPermissionDbQueryBuilder with the correct role ID and company ID when deleting a single role', async () => {
+      const queryBuilderReturn = {
+        where: { id: validRoleId, companyId: validCompanyId },
+      } as unknown as Prisma.RoleDeleteArgs;
+      const queryBuilderSpy = jest
+        .spyOn(
+          companyRoleAndPermissionDbQueryBuilder,
+          'buildDeleteCompanyRoleQuery',
+        )
+        .mockReturnValue(queryBuilderReturn);
+
+      await service.deleteRoles([validRoleId], validCompanyId);
+
+      expect(queryBuilderSpy).toHaveBeenCalledWith(validRoleId, validCompanyId);
+    });
+
+    it('should call the companyRoleAndPermissionDbQueryBuilder with the correct role IDs and company ID when deleting multiple roles', async () => {
+      const roleIds = [validRoleId, anotherValidRoleId];
+      const queryBuilderReturn = {
+        where: { id: { in: roleIds }, companyId: validCompanyId },
+      } as unknown as Prisma.RoleDeleteManyArgs;
+      const queryBuilderSpy = jest
+        .spyOn(
+          companyRoleAndPermissionDbQueryBuilder,
+          'buildDeleteManyCompanyRolesQuery',
+        )
+        .mockReturnValue(queryBuilderReturn);
+
+      await service.deleteRoles(roleIds, validCompanyId);
+
+      expect(queryBuilderSpy).toHaveBeenCalledWith(roleIds, validCompanyId);
+    });
+
+    it('should call the prismaClient.role.delete method with the query returned by the companyRoleAndPermissionDbQueryBuilder when deleting a single role', async () => {
+      const queryBuilderReturn = {
+        where: { id: validRoleId, companyId: validCompanyId },
+      } as unknown as Prisma.RoleDeleteArgs;
+      jest
+        .spyOn(
+          companyRoleAndPermissionDbQueryBuilder,
+          'buildDeleteCompanyRoleQuery',
+        )
+        .mockReturnValue(queryBuilderReturn);
+
+      await service.deleteRoles([validRoleId], validCompanyId);
+
+      expect(prismaClient.role.delete).toHaveBeenCalledWith(queryBuilderReturn);
+    });
+
+    it('should call the prismaClient.role.deleteMany method with the query returned by the companyRoleAndPermissionDbQueryBuilder when deleting multiple roles', async () => {
+      const roleIds = [validRoleId, 'another-valid-uuid'];
+      const queryBuilderReturn = {
+        where: { id: { in: roleIds }, companyId: validCompanyId },
+      } as unknown as Prisma.RoleDeleteManyArgs;
+      jest
+        .spyOn(
+          companyRoleAndPermissionDbQueryBuilder,
+          'buildDeleteManyCompanyRolesQuery',
+        )
+        .mockReturnValue(queryBuilderReturn);
+
+      await service.deleteRoles(roleIds, validCompanyId);
+
+      expect(prismaClient.role.deleteMany).toHaveBeenCalledWith(
+        queryBuilderReturn,
+      );
+    });
+
+    it('should throw an error if the prismaClient.role.delete method throws an error when deleting a single role', async () => {
+      const queryBuilderReturn = {
+        where: { id: validRoleId, companyId: validCompanyId },
+      } as unknown as Prisma.RoleDeleteArgs;
+      jest
+        .spyOn(
+          companyRoleAndPermissionDbQueryBuilder,
+          'buildDeleteCompanyRoleQuery',
+        )
+        .mockReturnValue(queryBuilderReturn);
+      jest
+        .spyOn(prismaClient.role, 'delete')
+        .mockRejectedValue(new Error('Database error'));
+
+      await expect(
+        service.deleteRoles([validRoleId], validCompanyId),
+      ).rejects.toThrow('Database error');
+    });
+
+    it('should throw an error if the prismaClient.role.deleteMany method throws an error when deleting multiple roles', async () => {
+      const roleIds = [validRoleId, 'another-valid-uuid'];
+      const queryBuilderReturn = {
+        where: { id: { in: roleIds }, companyId: validCompanyId },
+      } as unknown as Prisma.RoleDeleteManyArgs;
+      jest
+        .spyOn(
+          companyRoleAndPermissionDbQueryBuilder,
+          'buildDeleteManyCompanyRolesQuery',
+        )
+        .mockReturnValue(queryBuilderReturn);
+      jest
+        .spyOn(prismaClient.role, 'deleteMany')
+        .mockRejectedValue(new Error('Database error'));
+
+      await expect(
+        service.deleteRoles(roleIds, validCompanyId),
+      ).rejects.toThrow('Database error');
+    });
   });
 
   describe('addRolesToUser', () => {
-    it('should add multiple roles to a user', async () => {});
+    const validRoleIds = [
+      '00000000-0000-4000-8000-000000000000',
+      '00000000-0000-4000-8000-000000000001',
+    ];
+    const validUserId = '11111111-1111-4111-8111-111111111111';
+    const validCompanyId = '11111111-1111-4111-8111-111111111112';
+    const validCreatorId = '11111111-1111-4111-8111-1111111111113';
+    const invalidUserId = 'invalid-user-uuid';
+    const invalidCompanyId = 'invalid-company-uuid';
 
-    it('should throw an error if the role IDs array is empty', async () => {});
+    it('should add multiple roles to a user', async () => {
+      const queryBuilderReturn = {
+        data: [
+          {
+            roleId: validRoleIds[0],
+            userId: validUserId,
+            companyId: validCompanyId,
+            createdBy: validCreatorId,
+          },
+          {
+            roleId: validRoleIds[1],
+            userId: validUserId,
+            companyId: validCompanyId,
+            createdBy: validCreatorId,
+          },
+        ],
+      } as unknown as Prisma.UserCompanyRoleCreateManyArgs;
+      jest
+        .spyOn(
+          companyRoleAndPermissionDbQueryBuilder,
+          'buildCreateManyCompanyUserRolesQuery',
+        )
+        .mockReturnValue(queryBuilderReturn);
 
-    it('should handle empty string role ids', async () => {});
+      await service.addRolesToUser(
+        validRoleIds,
+        validUserId,
+        validCompanyId,
+        validCreatorId,
+      );
 
-    it('should throw an error if the user ID is empty', async () => {});
+      expect(prismaClient.userCompanyRole.createMany).toHaveBeenCalledWith(
+        queryBuilderReturn,
+      );
+    });
 
-    it('should throw an error if the user ID is not a valid uuid', async () => {});
+    it('should throw an error if the role IDs array is empty', async () => {
+      await expect(
+        service.addRolesToUser([], validUserId, validCompanyId, validCreatorId),
+      ).rejects.toThrow('role ids array may not be empty');
+      expect(
+        companyRoleAndPermissionDbQueryBuilder.buildCreateManyCompanyUserRolesQuery,
+      ).not.toHaveBeenCalled();
+      expect(prismaClient.userCompanyRole.createMany).not.toHaveBeenCalled();
+    });
 
-    it('should throw an error if the company ID is empty', async () => {});
+    it('should handle empty string role ids', async () => {
+      jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
+      await expect(
+        service.addRolesToUser(
+          [validRoleIds[0], ''],
+          validUserId,
+          validCompanyId,
+          validCreatorId,
+        ),
+      ).rejects.toThrow(InvalidUUIDError);
 
-    it('should throw an error if the company ID is not a valid uuid', async () => {});
+      expect(prismaClient.userCompanyRole.createMany).not.toHaveBeenCalled();
+    });
 
-    it('should call the companyRoleAndPermissionDbQueryBuilder with the correct role IDs, user ID, company ID, and creator ID', async () => {});
+    it('should throw an error if the user ID is empty', async () => {
+      jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
 
-    it('should call the prismaClient.userCompanyRole.createMany method with the query returned by the companyRoleAndPermissionDbQueryBuilder', async () => {});
+      await expect(
+        service.addRolesToUser(
+          validRoleIds,
+          '',
+          validCompanyId,
+          validCreatorId,
+        ),
+      ).rejects.toThrow(InvalidUUIDError);
+      expect(
+        companyRoleAndPermissionDbQueryBuilder.buildCreateManyCompanyUserRolesQuery,
+      ).not.toHaveBeenCalled();
+      expect(prismaClient.userCompanyRole.createMany).not.toHaveBeenCalled();
+    });
 
-    it('should throw an error if the prismaClient.userCompanyRole.createMany method throws an error', async () => {});
+    it('should throw an error if the user ID is not a valid uuid', async () => {
+      jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
+      await expect(
+        service.addRolesToUser(
+          validRoleIds,
+          invalidUserId,
+          validCompanyId,
+          validCreatorId,
+        ),
+      ).rejects.toThrow(InvalidUUIDError);
+      expect(
+        companyRoleAndPermissionDbQueryBuilder.buildCreateManyCompanyUserRolesQuery,
+      ).not.toHaveBeenCalled();
+      expect(prismaClient.userCompanyRole.createMany).not.toHaveBeenCalled();
+    });
 
-    it('should return the result of adding the roles to the user', async () => {});
+    it('should throw an error if the company ID is empty', async () => {
+      jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
+      await expect(
+        service.addRolesToUser(validRoleIds, validUserId, '', validCreatorId),
+      ).rejects.toThrow(InvalidUUIDError);
+      expect(
+        companyRoleAndPermissionDbQueryBuilder.buildCreateManyCompanyUserRolesQuery,
+      ).not.toHaveBeenCalled();
+      expect(prismaClient.userCompanyRole.createMany).not.toHaveBeenCalled();
+    });
 
-    it('should create the user-role associations with the correct creation timestamps', async () => {});
+    it('should throw an error if the company ID is not a valid uuid', async () => {
+      jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
+      await expect(
+        service.addRolesToUser(
+          validRoleIds,
+          validUserId,
+          invalidCompanyId,
+          validCreatorId,
+        ),
+      ).rejects.toThrow(InvalidUUIDError);
+      expect(
+        companyRoleAndPermissionDbQueryBuilder.buildCreateManyCompanyUserRolesQuery,
+      ).not.toHaveBeenCalled();
+      expect(prismaClient.userCompanyRole.createMany).not.toHaveBeenCalled();
+    });
 
-    it('should not create duplicate user-role associations if they already exist', async () => {});
+    it('should throw an error if the creator ID is empty', async () => {
+      jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
+      await expect(
+        service.addRolesToUser(validRoleIds, validUserId, validCompanyId, ''),
+      ).rejects.toThrow(InvalidUUIDError);
+      expect(
+        companyRoleAndPermissionDbQueryBuilder.buildCreateManyCompanyUserRolesQuery,
+      ).not.toHaveBeenCalled();
+      expect(prismaClient.userCompanyRole.createMany).not.toHaveBeenCalled();
+    });
+
+    it('should throw an error if the creator ID is not a valid uuid', async () => {
+      jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
+      await expect(
+        service.addRolesToUser(
+          validRoleIds,
+          validUserId,
+          validCompanyId,
+          'invalid-id',
+        ),
+      ).rejects.toThrow(InvalidUUIDError);
+      expect(
+        companyRoleAndPermissionDbQueryBuilder.buildCreateManyCompanyUserRolesQuery,
+      ).not.toHaveBeenCalled();
+      expect(prismaClient.userCompanyRole.createMany).not.toHaveBeenCalled();
+    });
+
+    it('should call the companyRoleAndPermissionDbQueryBuilder with the correct role IDs, user ID, company ID, and creator ID', async () => {
+      const queryBuilderReturn = {
+        data: [
+          {
+            roleId: validRoleIds[0],
+            userId: validUserId,
+            companyId: validCompanyId,
+            createdBy: validCreatorId,
+          },
+          {
+            roleId: validRoleIds[1],
+            userId: validUserId,
+            companyId: validCompanyId,
+            createdBy: validCreatorId,
+          },
+        ],
+      } as unknown as Prisma.UserCompanyRoleCreateManyArgs;
+      const queryBuilderSpy = jest
+        .spyOn(
+          companyRoleAndPermissionDbQueryBuilder,
+          'buildCreateManyCompanyUserRolesQuery',
+        )
+        .mockReturnValue(queryBuilderReturn);
+
+      await service.addRolesToUser(
+        validRoleIds,
+        validUserId,
+        validCompanyId,
+        validCreatorId,
+      );
+
+      expect(queryBuilderSpy).toHaveBeenCalledWith(
+        validRoleIds,
+        validUserId,
+        validCompanyId,
+        validCreatorId,
+      );
+    });
+
+    it('should call the prismaClient.userCompanyRole.createMany method with the query returned by the companyRoleAndPermissionDbQueryBuilder', async () => {
+      const queryBuilderReturn = {
+        data: [
+          {
+            roleId: validRoleIds[0],
+            userId: validUserId,
+            companyId: validCompanyId,
+            createdBy: validCreatorId,
+          },
+          {
+            roleId: validRoleIds[1],
+            userId: validUserId,
+            companyId: validCompanyId,
+            createdBy: validCreatorId,
+          },
+        ],
+      } as unknown as Prisma.UserCompanyRoleCreateManyArgs;
+      jest
+        .spyOn(
+          companyRoleAndPermissionDbQueryBuilder,
+          'buildCreateManyCompanyUserRolesQuery',
+        )
+        .mockReturnValue(queryBuilderReturn);
+
+      await service.addRolesToUser(
+        validRoleIds,
+        validUserId,
+        validCompanyId,
+        validCreatorId,
+      );
+
+      expect(prismaClient.userCompanyRole.createMany).toHaveBeenCalledWith(
+        queryBuilderReturn,
+      );
+    });
+
+    it('should throw an error if the prismaClient.userCompanyRole.createMany method throws an error', async () => {
+      const queryBuilderReturn = {
+        data: [
+          {
+            roleId: validRoleIds[0],
+            userId: validUserId,
+            companyId: validCompanyId,
+            createdBy: validCreatorId,
+          },
+          {
+            roleId: validRoleIds[1],
+            userId: validUserId,
+            companyId: validCompanyId,
+            createdBy: validCreatorId,
+          },
+        ],
+      } as unknown as Prisma.UserCompanyRoleCreateManyArgs;
+      jest
+        .spyOn(
+          companyRoleAndPermissionDbQueryBuilder,
+          'buildCreateManyCompanyUserRolesQuery',
+        )
+        .mockReturnValue(queryBuilderReturn);
+      jest
+        .spyOn(prismaClient.userCompanyRole, 'createMany')
+        .mockRejectedValue(new Error('Database error'));
+
+      await expect(
+        service.addRolesToUser(
+          validRoleIds,
+          validUserId,
+          validCompanyId,
+          validCreatorId,
+        ),
+      ).rejects.toThrow('Database error');
+    });
+
+    it('should return the result of adding the roles to the user', async () => {
+      const createManyResult = { count: validRoleIds.length };
+      const queryBuilderReturn = {
+        data: [
+          {
+            roleId: validRoleIds[0],
+            userId: validUserId,
+            companyId: validCompanyId,
+            createdBy: validCreatorId,
+          },
+          {
+            roleId: validRoleIds[1],
+            userId: validUserId,
+            companyId: validCompanyId,
+            createdBy: validCreatorId,
+          },
+        ],
+      } as unknown as Prisma.UserCompanyRoleCreateManyArgs;
+      jest
+        .spyOn(
+          companyRoleAndPermissionDbQueryBuilder,
+          'buildCreateManyCompanyUserRolesQuery',
+        )
+        .mockReturnValue(queryBuilderReturn);
+      jest
+        .spyOn(prismaClient.userCompanyRole, 'createMany')
+        .mockResolvedValue(createManyResult);
+
+      const result = await service.addRolesToUser(
+        validRoleIds,
+        validUserId,
+        validCompanyId,
+        validCreatorId,
+      );
+
+      expect(result).toEqual(createManyResult);
+    });
   });
 
   describe('removeRolesFromUser', () => {
-    it('should remove multiple roles from a user', async () => {});
+    const validRoleIds = ['valid-role-1', 'valid-role-2'];
+    const validUserId = 'valid-user-uuid';
+    const validCompanyId = 'valid-company-uuid';
+    const invalidUserId = 'invalid-user-uuid';
+    const invalidCompanyId = 'invalid-company-uuid';
+    it('should remove multiple roles from a user', async () => {
+      const queryBuilderReturn = {
+        where: {
+          roleId: { in: validRoleIds },
+          userId: validUserId,
+          companyId: validCompanyId,
+        },
+      } as unknown as Prisma.UserCompanyRoleDeleteManyArgs;
+      jest
+        .spyOn(
+          companyRoleAndPermissionDbQueryBuilder,
+          'buildDeleteManyCompanyUserRolesQuery',
+        )
+        .mockReturnValue(queryBuilderReturn);
 
-    it('should throw an error if the role IDs array is empty', async () => {});
+      await service.removeRolesFromUser(
+        validRoleIds,
+        validUserId,
+        validCompanyId,
+      );
 
-    it('should handle empty string role ids', async () => {});
+      expect(prismaClient.userCompanyRole.deleteMany).toHaveBeenCalledWith(
+        queryBuilderReturn,
+      );
+    });
 
-    it('should throw an error if the user ID is empty', async () => {});
+    it('should throw an error if the role IDs array is empty', async () => {
+      await expect(
+        service.removeRolesFromUser([], validUserId, validCompanyId),
+      ).rejects.toThrow('role ids array may not be empty');
+      expect(
+        companyRoleAndPermissionDbQueryBuilder.buildDeleteManyCompanyUserRolesQuery,
+      ).not.toHaveBeenCalled();
+      expect(prismaClient.userCompanyRole.deleteMany).not.toHaveBeenCalled();
+    });
 
-    it('should throw an error if the user ID is not a valid UUID', async () => {});
+    it('should handle empty string role ids', async () => {
+      jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
 
-    it('should throw an error if the company ID is empty', async () => {});
+      await expect(
+        service.removeRolesFromUser(
+          [validRoleIds[0], ''],
+          validUserId,
+          validCompanyId,
+        ),
+      ).rejects.toThrow(InvalidUUIDError);
 
-    it('should throw an error if the company ID is not a valid UUID', async () => {});
+      expect(prismaClient.userCompanyRole.deleteMany).not.toHaveBeenCalled();
+    });
 
-    it('should call the companyRoleAndPermissionDbQueryBuilder with the correct role IDs, user ID, and company ID', async () => {});
+    it('should throw an error if the user ID is empty', async () => {
+      jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
 
-    it('should call the prismaClient.userCompanyRole.deleteMany method with the query returned by the companyRoleAndPermissionDbQueryBuilder', async () => {});
+      await expect(
+        service.removeRolesFromUser(validRoleIds, '', validCompanyId),
+      ).rejects.toThrow(InvalidUUIDError);
+      expect(
+        companyRoleAndPermissionDbQueryBuilder.buildDeleteManyCompanyUserRolesQuery,
+      ).not.toHaveBeenCalled();
+      expect(prismaClient.userCompanyRole.deleteMany).not.toHaveBeenCalled();
+    });
 
-    it('should throw an error if the prismaClient.userCompanyRole.deleteMany method throws an error', async () => {});
+    it('should throw an error if the user ID is not a valid UUID', async () => {
+      jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
 
-    it('should return the result of removing the roles from the user', async () => {});
+      await expect(
+        service.removeRolesFromUser(
+          validRoleIds,
+          invalidUserId,
+          validCompanyId,
+        ),
+      ).rejects.toThrow(InvalidUUIDError);
+      expect(
+        companyRoleAndPermissionDbQueryBuilder.buildDeleteManyCompanyUserRolesQuery,
+      ).not.toHaveBeenCalled();
+      expect(prismaClient.userCompanyRole.deleteMany).not.toHaveBeenCalled();
+    });
 
-    it('should remove all the specified user-role associations', async () => {});
+    it('should throw an error if the company ID is empty', async () => {
+      jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
 
-    it('should not throw an error if the specified user-role associations do not exist', async () => {});
+      await expect(
+        service.removeRolesFromUser(validRoleIds, validUserId, ''),
+      ).rejects.toThrow(InvalidUUIDError);
+      expect(
+        companyRoleAndPermissionDbQueryBuilder.buildDeleteManyCompanyUserRolesQuery,
+      ).not.toHaveBeenCalled();
+      expect(prismaClient.userCompanyRole.deleteMany).not.toHaveBeenCalled();
+    });
 
-    it('should not remove user-role associations that are not specified', async () => {});
+    it('should throw an error if the company ID is not a valid UUID', async () => {
+      jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
 
-    it('should not remove user-role associations from other users', async () => {});
+      await expect(
+        service.removeRolesFromUser(
+          validRoleIds,
+          validUserId,
+          invalidCompanyId,
+        ),
+      ).rejects.toThrow(InvalidUUIDError);
+      expect(
+        companyRoleAndPermissionDbQueryBuilder.buildDeleteManyCompanyUserRolesQuery,
+      ).not.toHaveBeenCalled();
+      expect(prismaClient.userCompanyRole.deleteMany).not.toHaveBeenCalled();
+    });
 
-    it('should not remove user-role associations from other companies', async () => {});
+    it('should call the companyRoleAndPermissionDbQueryBuilder with the correct role IDs, user ID, and company ID', async () => {
+      const queryBuilderReturn = {
+        where: {
+          roleId: { in: validRoleIds },
+          userId: validUserId,
+          companyId: validCompanyId,
+        },
+      } as unknown as Prisma.UserCompanyRoleDeleteManyArgs;
+      const queryBuilderSpy = jest
+        .spyOn(
+          companyRoleAndPermissionDbQueryBuilder,
+          'buildDeleteManyCompanyUserRolesQuery',
+        )
+        .mockReturnValue(queryBuilderReturn);
+
+      await service.removeRolesFromUser(
+        validRoleIds,
+        validUserId,
+        validCompanyId,
+      );
+
+      expect(queryBuilderSpy).toHaveBeenCalledWith(
+        validRoleIds,
+        validUserId,
+        validCompanyId,
+      );
+    });
+
+    it('should call the prismaClient.userCompanyRole.deleteMany method with the query returned by the companyRoleAndPermissionDbQueryBuilder', async () => {
+      const queryBuilderReturn = {
+        where: {
+          roleId: { in: validRoleIds },
+          userId: validUserId,
+          companyId: validCompanyId,
+        },
+      } as unknown as Prisma.UserCompanyRoleDeleteManyArgs;
+      jest
+        .spyOn(
+          companyRoleAndPermissionDbQueryBuilder,
+          'buildDeleteManyCompanyUserRolesQuery',
+        )
+        .mockReturnValue(queryBuilderReturn);
+
+      await service.removeRolesFromUser(
+        validRoleIds,
+        validUserId,
+        validCompanyId,
+      );
+
+      expect(prismaClient.userCompanyRole.deleteMany).toHaveBeenCalledWith(
+        queryBuilderReturn,
+      );
+    });
+
+    it('should throw an error if the prismaClient.userCompanyRole.deleteMany method throws an error', async () => {
+      const queryBuilderReturn = {
+        where: {
+          roleId: { in: validRoleIds },
+          userId: validUserId,
+          companyId: validCompanyId,
+        },
+      } as unknown as Prisma.UserCompanyRoleDeleteManyArgs;
+      jest
+        .spyOn(
+          companyRoleAndPermissionDbQueryBuilder,
+          'buildDeleteManyCompanyUserRolesQuery',
+        )
+        .mockReturnValue(queryBuilderReturn);
+      jest
+        .spyOn(prismaClient.userCompanyRole, 'deleteMany')
+        .mockRejectedValue(new Error('Database error'));
+
+      await expect(
+        service.removeRolesFromUser(validRoleIds, validUserId, validCompanyId),
+      ).rejects.toThrow('Database error');
+    });
+
+    it('should return the result of removing the roles from the user', async () => {
+      const deleteManyResult = { count: validRoleIds.length };
+      const queryBuilderReturn = {
+        where: {
+          roleId: { in: validRoleIds },
+          userId: validUserId,
+          companyId: validCompanyId,
+        },
+      } as unknown as Prisma.UserCompanyRoleDeleteManyArgs;
+      jest
+        .spyOn(
+          companyRoleAndPermissionDbQueryBuilder,
+          'buildDeleteManyCompanyUserRolesQuery',
+        )
+        .mockReturnValue(queryBuilderReturn);
+      jest
+        .spyOn(prismaClient.userCompanyRole, 'deleteMany')
+        .mockResolvedValue(deleteManyResult);
+
+      const result = await service.removeRolesFromUser(
+        validRoleIds,
+        validUserId,
+        validCompanyId,
+      );
+
+      expect(result).toEqual(deleteManyResult);
+    });
   });
 
   describe('checkUserPermission', () => {
-    it('should return true if the user has the specified permission', async () => {});
+    const validUserId = 'valid-user-uuid';
+    const validCompanyId = 'valid-company-uuid';
+    const validPermissionName = $Enums.PermissionName.ManageBilling;
+    const invalidUserId = 'invalid-user-uuid';
+    const invalidCompanyId = 'invalid-company-uuid';
 
-    it('should return false if the user does not have the specified permission', async () => {});
+    it('should return true if the user has the specified permission', async () => {
+      const queryBuilderReturn = {
+        where: {
+          userId: validUserId,
+          companyId: validCompanyId,
+          role: {
+            permissions: {
+              some: {
+                name: validPermissionName,
+              },
+            },
+          },
+        },
+      } as unknown as Prisma.UserCompanyRoleFindFirstArgs;
+      jest
+        .spyOn(
+          companyRoleAndPermissionDbQueryBuilder,
+          'buildFindFirstUserCompanyRoleWithPermission',
+        )
+        .mockReturnValue(queryBuilderReturn);
+      jest
+        .spyOn(prismaClient.userCompanyRole, 'findFirst')
+        .mockResolvedValue({} as any);
 
-    it('should throw an error if the user ID is empty', async () => {});
+      const result = await service.checkUserPermission(
+        validUserId,
+        validCompanyId,
+        validPermissionName,
+      );
 
-    it('should throw an error if the user ID is not a valid UUID', async () => {});
+      expect(result).toBe(true);
+    });
 
-    it('should throw an error if the company ID is empty', async () => {});
+    it('should return false if the user does not have the specified permission', async () => {
+      const queryBuilderReturn = {
+        where: {
+          userId: validUserId,
+          companyId: validCompanyId,
+          role: {
+            permissions: {
+              some: {
+                name: validPermissionName,
+              },
+            },
+          },
+        },
+      } as unknown as Prisma.UserCompanyRoleFindFirstArgs;
+      jest
+        .spyOn(
+          companyRoleAndPermissionDbQueryBuilder,
+          'buildFindFirstUserCompanyRoleWithPermission',
+        )
+        .mockReturnValue(queryBuilderReturn);
+      jest
+        .spyOn(prismaClient.userCompanyRole, 'findFirst')
+        .mockResolvedValue(null);
 
-    it('should throw an error if the company ID is not a valid UUID', async () => {});
+      const result = await service.checkUserPermission(
+        validUserId,
+        validCompanyId,
+        validPermissionName,
+      );
 
-    it('should throw an error if the permission name is empty', async () => {});
+      expect(result).toBe(false);
+    });
 
-    it('should throw an error if the permission name is not a valid enum value', async () => {});
+    it('should throw an error if the user ID is empty', async () => {
+      jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
 
-    it('should call the companyRoleAndPermissionDbQueryBuilder with the correct user ID, company ID, and permission name', async () => {});
+      await expect(
+        service.checkUserPermission('', validCompanyId, validPermissionName),
+      ).rejects.toThrow(InvalidUUIDError);
+      expect(
+        companyRoleAndPermissionDbQueryBuilder.buildFindFirstUserCompanyRoleWithPermission,
+      ).not.toHaveBeenCalled();
+      expect(prismaClient.userCompanyRole.findFirst).not.toHaveBeenCalled();
+    });
 
-    it('should call the prismaClient.userCompanyRole.findFirst method with the query returned by the companyRoleAndPermissionDbQueryBuilder', async () => {});
+    it('should throw an error if the user ID is not a valid UUID', async () => {
+      jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
 
-    it('should throw an error if the prismaClient.userCompanyRole.findFirst method throws an error', async () => {});
+      await expect(
+        service.checkUserPermission(
+          invalidUserId,
+          validCompanyId,
+          validPermissionName,
+        ),
+      ).rejects.toThrow(InvalidUUIDError);
+      expect(
+        companyRoleAndPermissionDbQueryBuilder.buildFindFirstUserCompanyRoleWithPermission,
+      ).not.toHaveBeenCalled();
+      expect(prismaClient.userCompanyRole.findFirst).not.toHaveBeenCalled();
+    });
 
-    it('should return false if the user does not have any roles in the company', async () => {});
+    it('should throw an error if the company ID is empty', async () => {
+      jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
 
-    it('should return false if the user has roles in the company but none of them have the specified permission', async () => {});
+      await expect(
+        service.checkUserPermission(validUserId, '', validPermissionName),
+      ).rejects.toThrow(InvalidUUIDError);
+      expect(
+        companyRoleAndPermissionDbQueryBuilder.buildFindFirstUserCompanyRoleWithPermission,
+      ).not.toHaveBeenCalled();
+      expect(prismaClient.userCompanyRole.findFirst).not.toHaveBeenCalled();
+    });
 
-    it('should return true if the user has at least one role in the company with the specified permission', async () => {});
+    it('should throw an error if the company ID is not a valid UUID', async () => {
+      jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
 
-    it('should not check permissions for other users', async () => {});
+      await expect(
+        service.checkUserPermission(
+          validUserId,
+          invalidCompanyId,
+          validPermissionName,
+        ),
+      ).rejects.toThrow(InvalidUUIDError);
+      expect(
+        companyRoleAndPermissionDbQueryBuilder.buildFindFirstUserCompanyRoleWithPermission,
+      ).not.toHaveBeenCalled();
+      expect(prismaClient.userCompanyRole.findFirst).not.toHaveBeenCalled();
+    });
 
-    it('should not check permissions for other companies', async () => {});
+    it('should call the companyRoleAndPermissionDbQueryBuilder with the correct user ID, company ID, and permission name', async () => {
+      const queryBuilderReturn = {
+        where: {
+          userId: validUserId,
+          companyId: validCompanyId,
+          role: {
+            permissions: {
+              some: {
+                name: validPermissionName,
+              },
+            },
+          },
+        },
+      } as unknown as Prisma.UserCompanyRoleFindFirstArgs;
+      const queryBuilderSpy = jest
+        .spyOn(
+          companyRoleAndPermissionDbQueryBuilder,
+          'buildFindFirstUserCompanyRoleWithPermission',
+        )
+        .mockReturnValue(queryBuilderReturn);
+
+      await service.checkUserPermission(
+        validUserId,
+        validCompanyId,
+        validPermissionName,
+      );
+
+      expect(queryBuilderSpy).toHaveBeenCalledWith(
+        validUserId,
+        validCompanyId,
+        validPermissionName,
+      );
+    });
+
+    it('should call the prismaClient.userCompanyRole.findFirst method with the query returned by the companyRoleAndPermissionDbQueryBuilder', async () => {
+      const queryBuilderReturn = {
+        where: {
+          userId: validUserId,
+          companyId: validCompanyId,
+          role: {
+            permissions: {
+              some: {
+                name: validPermissionName,
+              },
+            },
+          },
+        },
+      } as unknown as Prisma.UserCompanyRoleFindFirstArgs;
+      jest
+        .spyOn(
+          companyRoleAndPermissionDbQueryBuilder,
+          'buildFindFirstUserCompanyRoleWithPermission',
+        )
+        .mockReturnValue(queryBuilderReturn);
+
+      await service.checkUserPermission(
+        validUserId,
+        validCompanyId,
+        validPermissionName,
+      );
+
+      expect(prismaClient.userCompanyRole.findFirst).toHaveBeenCalledWith(
+        queryBuilderReturn,
+      );
+    });
+
+    it('should throw an error if the prismaClient.userCompanyRole.findFirst method throws an error', async () => {
+      const queryBuilderReturn = {
+        where: {
+          userId: validUserId,
+          companyId: validCompanyId,
+          role: {
+            permissions: {
+              some: {
+                name: validPermissionName,
+              },
+            },
+          },
+        },
+      } as unknown as Prisma.UserCompanyRoleFindFirstArgs;
+      jest
+        .spyOn(
+          companyRoleAndPermissionDbQueryBuilder,
+          'buildFindFirstUserCompanyRoleWithPermission',
+        )
+        .mockReturnValue(queryBuilderReturn);
+      jest
+        .spyOn(prismaClient.userCompanyRole, 'findFirst')
+        .mockRejectedValue(new Error('Database error'));
+
+      await expect(
+        service.checkUserPermission(
+          validUserId,
+          validCompanyId,
+          validPermissionName,
+        ),
+      ).rejects.toThrow('Database error');
+    });
   });
 
   describe('retrieveSelectUserPermissions', () => {
-    it('should return a set of permissions that the user has', async () => {});
+    const validUserId = 'valid-user-uuid';
+    const validCompanyId = 'valid-company-uuid';
+    const validPermissions = [
+      $Enums.PermissionName.ManageBilling,
+      $Enums.PermissionName.ManageCompanyRoles,
+    ];
+    const invalidUserId = 'invalid-user-uuid';
+    const invalidCompanyId = 'invalid-company-uuid';
 
-    it('should return an empty set if the user does not have any of the specified permissions', async () => {});
+    it('should return a set of permissions that the user has', async () => {
+      const userCompanyRolesWithPermissions = [
+        {
+          role: {
+            permissions: [
+              { name: $Enums.PermissionName.ManageBilling },
+              { name: $Enums.PermissionName.ManageCompanyRoles },
+            ],
+          },
+        },
+      ];
+      jest
+        .spyOn(prismaClient.userCompanyRole, 'findMany')
+        .mockResolvedValue(userCompanyRolesWithPermissions as any);
 
-    it('should throw an error if the user ID is empty', async () => {});
+      const result = await service.retrieveSelectUserPermissions(
+        validUserId,
+        validCompanyId,
+        validPermissions,
+      );
 
-    it('should throw an error if the user ID is not a valid UUID', async () => {});
+      expect(result).toEqual(new Set(validPermissions));
+    });
 
-    it('should throw an error if the company ID is empty', async () => {});
+    it('should return an empty set if the user does not have any of the specified permissions', async () => {
+      jest
+        .spyOn(prismaClient.userCompanyRole, 'findMany')
+        .mockResolvedValue([]);
 
-    it('should throw an error if the company ID is not a valid UUID', async () => {});
+      const result = await service.retrieveSelectUserPermissions(
+        validUserId,
+        validCompanyId,
+        validPermissions,
+      );
 
-    it('should throw an error if the permissions array is empty', async () => {});
+      expect(result).toEqual(new Set());
+    });
 
-    it('should throw an error if any of the permission names are empty', async () => {});
+    it('should throw an error if the user ID is empty', async () => {
+      jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
 
-    it('should throw an error if any of the permission names are not valid enum values', async () => {});
+      await expect(
+        service.retrieveSelectUserPermissions(
+          '',
+          validCompanyId,
+          validPermissions,
+        ),
+      ).rejects.toThrow(InvalidUUIDError);
+      expect(prismaClient.userCompanyRole.findMany).not.toHaveBeenCalled();
+    });
 
-    it('should call the prismaClient.userCompanyRole.findMany method with the correct query', async () => {});
+    it('should throw an error if the user ID is not a valid UUID', async () => {
+      jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
 
-    it('should throw an error if the prismaClient.userCompanyRole.findMany method throws an error', async () => {});
+      await expect(
+        service.retrieveSelectUserPermissions(
+          invalidUserId,
+          validCompanyId,
+          validPermissions,
+        ),
+      ).rejects.toThrow(InvalidUUIDError);
+      expect(prismaClient.userCompanyRole.findMany).not.toHaveBeenCalled();
+    });
 
-    it('should return a set containing only the specified permissions that the user has', async () => {});
+    it('should throw an error if the company ID is empty', async () => {
+      jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
 
-    it('should not include duplicate permissions in the returned set', async () => {});
+      await expect(
+        service.retrieveSelectUserPermissions(
+          validUserId,
+          '',
+          validPermissions,
+        ),
+      ).rejects.toThrow(InvalidUUIDError);
+      expect(prismaClient.userCompanyRole.findMany).not.toHaveBeenCalled();
+    });
 
-    it('should not include permissions that the user does not have', async () => {});
+    it('should throw an error if the company ID is not a valid UUID', async () => {
+      jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
 
-    it('should not include permissions from other users', async () => {});
+      await expect(
+        service.retrieveSelectUserPermissions(
+          validUserId,
+          invalidCompanyId,
+          validPermissions,
+        ),
+      ).rejects.toThrow(InvalidUUIDError);
+      expect(prismaClient.userCompanyRole.findMany).not.toHaveBeenCalled();
+    });
 
-    it('should not include permissions from other companies', async () => {});
+    it('should throw an error if the permissions array is empty', async () => {
+      await expect(
+        service.retrieveSelectUserPermissions(validUserId, validCompanyId, []),
+      ).rejects.toThrow('cannot send empty array');
+      expect(prismaClient.userCompanyRole.findMany).not.toHaveBeenCalled();
+    });
 
-    it('should handle the case when the user has multiple roles with overlapping permissions', async () => {});
+    it('should call the prismaClient.userCompanyRole.findMany method with the correct query', async () => {
+      const expectedQuery = {
+        where: {
+          userId: validUserId,
+          companyId: validCompanyId,
+          role: {
+            permissions: {
+              some: {
+                name: {
+                  in: validPermissions,
+                },
+              },
+            },
+          },
+        },
+        select: {
+          role: {
+            select: {
+              permissions: {
+                where: {
+                  name: {
+                    in: validPermissions,
+                  },
+                },
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      };
+      jest
+        .spyOn(prismaClient.userCompanyRole, 'findMany')
+        .mockResolvedValue([]);
+
+      await service.retrieveSelectUserPermissions(
+        validUserId,
+        validCompanyId,
+        validPermissions,
+      );
+
+      expect(prismaClient.userCompanyRole.findMany).toHaveBeenCalledWith(
+        expectedQuery,
+      );
+    });
+
+    it('should throw an error if the prismaClient.userCompanyRole.findMany method throws an error', async () => {
+      jest
+        .spyOn(prismaClient.userCompanyRole, 'findMany')
+        .mockRejectedValue(new Error('Database error'));
+
+      await expect(
+        service.retrieveSelectUserPermissions(
+          validUserId,
+          validCompanyId,
+          validPermissions,
+        ),
+      ).rejects.toThrow('Database error');
+    });
+
+    it('should return a set containing only the specified permissions that the user has', async () => {
+      const userCompanyRolesWithPermissions = [
+        {
+          role: {
+            permissions: [{ name: $Enums.PermissionName.ManageBilling }],
+          },
+        },
+      ];
+      jest
+        .spyOn(prismaClient.userCompanyRole, 'findMany')
+        .mockResolvedValue(userCompanyRolesWithPermissions as any);
+
+      const result = await service.retrieveSelectUserPermissions(
+        validUserId,
+        validCompanyId,
+        validPermissions,
+      );
+
+      expect(result).toEqual(new Set([$Enums.PermissionName.ManageBilling]));
+    });
+
+    it('should not include duplicate permissions in the returned set', async () => {
+      const userCompanyRolesWithPermissions = [
+        {
+          role: {
+            permissions: [
+              { name: $Enums.PermissionName.ManageBilling },
+              { name: $Enums.PermissionName.ManageBilling },
+            ],
+          },
+        },
+      ];
+      jest
+        .spyOn(prismaClient.userCompanyRole, 'findMany')
+        .mockResolvedValue(userCompanyRolesWithPermissions as any);
+
+      const result = await service.retrieveSelectUserPermissions(
+        validUserId,
+        validCompanyId,
+        [$Enums.PermissionName.ManageBilling],
+      );
+
+      expect(result).toEqual(new Set([$Enums.PermissionName.ManageBilling]));
+    });
   });
 });

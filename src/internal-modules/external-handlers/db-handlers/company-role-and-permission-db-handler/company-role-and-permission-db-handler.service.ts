@@ -8,6 +8,9 @@ import {
   IBuildCreateCompanyRoleArgs,
   IBuildUpdateCompanyRoleArgs,
 } from './interfaces/query-builder-args.interface';
+import uuidUtils from '../../../../utility/functions/is_uuid';
+import { InvalidUUIDError } from '../../../../common/errors/invalid_uuid.error';
+import { ERROR_CODE } from '../../../../common/codes/error-codes';
 
 @Injectable()
 export class CompanyRoleAndPermissionDbHandlerService
@@ -23,6 +26,10 @@ export class CompanyRoleAndPermissionDbHandlerService
     companyId: string,
     creatorId: string,
   ): Promise<boolean> {
+    // Validate input & allow caller to handle
+    if (![companyId, creatorId].every((input) => uuidUtils.isUUID(input))) {
+      throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
+    }
     try {
       // Get system roles with permissions
       const systemRolesWithPermissions: ({
@@ -72,6 +79,14 @@ export class CompanyRoleAndPermissionDbHandlerService
     }
   }
   async createRole(input: IBuildCreateCompanyRoleArgs) {
+    if (
+      ![input.companyId, input.creatorId].every((input) =>
+        uuidUtils.isUUID(input),
+      )
+    ) {
+      throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
+    }
+
     await this.prismaClient.role.create(
       this.companyRoleAndPermissionDbQueryBuilder.buildCreateCompanyRoleQuery(
         input,
@@ -79,12 +94,18 @@ export class CompanyRoleAndPermissionDbHandlerService
     );
   }
   async retrieveRole(id: string) {
+    if (!uuidUtils.isUUID(id)) {
+      throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
+    }
     const role = await this.prismaClient.role.findUnique(
       this.companyRoleAndPermissionDbQueryBuilder.buildRetrieveRoleQuery(id),
     );
     return role;
   }
   async editRole(id: string, updates: IBuildUpdateCompanyRoleArgs) {
+    if (!uuidUtils.isUUID(id)) {
+      throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
+    }
     await this.prismaClient.role.update(
       this.companyRoleAndPermissionDbQueryBuilder.buildUpdateCompanyRoleQuery(
         id,
@@ -93,6 +114,14 @@ export class CompanyRoleAndPermissionDbHandlerService
     );
   }
   async deleteRoles(ids: string[], companyId: string) {
+    if (!ids.every((input) => uuidUtils.isUUID(input))) {
+      throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
+    }
+
+    if (ids.length === 0) {
+      throw new Error('ids array may not be empty');
+    }
+
     let res;
     if (ids.length === 1) {
       res = await this.prismaClient.role.delete(
@@ -117,6 +146,17 @@ export class CompanyRoleAndPermissionDbHandlerService
     companyId: string,
     creatorId: string,
   ) {
+    if (
+      ![...roleIds, userId, companyId, creatorId].every((input) =>
+        uuidUtils.isUUID(input),
+      )
+    ) {
+      throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
+    }
+    if (roleIds.length === 0) {
+      throw new Error('role ids array may not be empty');
+    }
+
     const res = await this.prismaClient.userCompanyRole.createMany(
       this.companyRoleAndPermissionDbQueryBuilder.buildCreateManyCompanyUserRolesQuery(
         roleIds,
@@ -132,6 +172,15 @@ export class CompanyRoleAndPermissionDbHandlerService
     userId: string,
     companyId: string,
   ) {
+    if (
+      ![...roleIds, userId, companyId].every((input) => uuidUtils.isUUID(input))
+    ) {
+      throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
+    }
+    if (roleIds.length === 0) {
+      throw new Error('role ids array may not be empty');
+    }
+
     const res = await this.prismaClient.userCompanyRole.deleteMany(
       this.companyRoleAndPermissionDbQueryBuilder.buildDeleteManyCompanyUserRolesQuery(
         roleIds,
@@ -146,6 +195,9 @@ export class CompanyRoleAndPermissionDbHandlerService
     companyId: string,
     permissionName: $Enums.PermissionName,
   ): Promise<boolean> {
+    if (![userId, companyId].every((input) => uuidUtils.isUUID(input))) {
+      throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
+    }
     const record = await this.prismaClient.userCompanyRole.findFirst(
       this.companyRoleAndPermissionDbQueryBuilder.buildFindFirstUserCompanyRoleWithPermission(
         userId,
@@ -160,6 +212,13 @@ export class CompanyRoleAndPermissionDbHandlerService
     companyId: string,
     permissions: $Enums.PermissionName[],
   ): Promise<Set<$Enums.PermissionName>> {
+    if (![userId, companyId].every((input) => uuidUtils.isUUID(input))) {
+      throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
+    }
+    if (permissions.length === 0) {
+      throw new Error('cannot send empty array');
+    }
+
     const userCompanyRolesWithPermissions =
       await this.prismaClient.userCompanyRole.findMany({
         where: {
