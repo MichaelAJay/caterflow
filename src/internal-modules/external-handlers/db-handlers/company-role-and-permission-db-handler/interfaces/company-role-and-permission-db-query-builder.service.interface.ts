@@ -26,6 +26,9 @@ export interface ICompanyRoleAndPermissionDbQueryBuilder {
     input: IBuildCreateCompanyRoleArgs,
   ): Prisma.RoleCreateArgs;
   buildRetrieveRoleQuery(id: string): Prisma.RoleFindUniqueArgs;
+  /**
+   * When a permission id is marked both for addition to the role and removal from the role, the permission will be removed.
+   */
   buildUpdateCompanyRoleQuery(
     id: string,
     updates: IBuildUpdateCompanyRoleArgs,
