@@ -68,13 +68,22 @@ export class CompanyRoleAndPermissionDbQueryBuilderService
     const data: Prisma.RoleUncheckedUpdateInput = roleUpdates;
 
     if (permissions) {
-      data.permissions = {};
       const { add, remove } = permissions;
-      if (add) {
-        data.permissions.connect = add.map((id) => ({ id }));
-      }
-      if (remove) {
-        data.permissions.disconnect = remove.map((id) => ({ id }));
+      const uniqueConnectIds = [...new Set(add || [])];
+      const uniqueDisconnectIds = [...new Set(remove || [])];
+
+      if (uniqueConnectIds.length > 0 || uniqueDisconnectIds.length > 0) {
+        data.permissions = {};
+
+        if (uniqueConnectIds.length > 0) {
+          data.permissions.connect = uniqueConnectIds.map((id) => ({ id }));
+        }
+
+        if (uniqueDisconnectIds.length > 0) {
+          data.permissions.disconnect = uniqueDisconnectIds.map((id) => ({
+            id,
+          }));
+        }
       }
     }
 

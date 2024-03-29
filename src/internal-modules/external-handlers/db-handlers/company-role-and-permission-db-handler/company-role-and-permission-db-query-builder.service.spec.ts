@@ -1,7 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CompanyRoleAndPermissionDbQueryBuilderService } from './company-role-and-permission-db-query-builder.service';
 import { $Enums, Prisma } from '@prisma/client';
-import { IBuildCreateCompanyRoleArgs } from './interfaces/query-builder-args.interface';
+import {
+  IBuildCreateCompanyRoleArgs,
+  IBuildUpdateCompanyRoleArgs,
+} from './interfaces/query-builder-args.interface';
 
 describe('CompanyRoleAndPermissionDbQueryBuilderService', () => {
   let service: CompanyRoleAndPermissionDbQueryBuilderService;
@@ -620,49 +623,436 @@ describe('CompanyRoleAndPermissionDbQueryBuilderService', () => {
     });
   });
   describe('buildUpdateCompanyRoleQuery', () => {
-    it('should update the role with the provided roleUpdates', () => {});
+    const mockId = 'role-id';
 
-    it('should add permissions when add permissions are provided', () => {});
+    // it('should return correct query statement based on name and description in input', () => {
+    //   const roleUpdates: IBuildUpdateCompanyRoleArgs = {
+    //     name: 'Updated Role',
+    //     description: 'Updated description',
+    //   };
 
-    it('should remove permissions when remove permissions are provided', () => {});
+    //   const result = service.buildUpdateCompanyRoleQuery(mockId, roleUpdates);
 
-    it('should add and remove permissions when both add and remove permissions are provided', () => {});
+    //   expect(result).toEqual({
+    //     where: { id: mockId },
+    //     data: {
+    //       name: roleUpdates.name,
+    //       description: roleUpdates.description,
+    //     },
+    //   });
+    // });
 
-    it('should not include permissions in the update query when permissions are not provided', () => {});
+    // it('should add permissions when add permissions are provided', () => {
+    //   const permissionsToAdd = [1, 2, 3];
+    //   const updates: IBuildUpdateCompanyRoleArgs = {
+    //     permissions: {
+    //       add: permissionsToAdd,
+    //     },
+    //   };
 
-    it('should return the correct Prisma.RoleUpdateArgs object', () => {});
+    //   const result = service.buildUpdateCompanyRoleQuery(mockId, updates);
 
-    it('should handle an empty updates object', () => {});
+    //   expect(result).toEqual({
+    //     where: { id: mockId },
+    //     data: {
+    //       permissions: {
+    //         connect: permissionsToAdd.map((id) => ({ id })),
+    //       },
+    //     },
+    //   });
+    // });
 
-    it('should handle updates with only permissions', () => {});
+    // it('should remove permissions when remove permissions are provided', () => {
+    //   const permissionsToRemove = [4, 5, 6];
+    //   const updates: IBuildUpdateCompanyRoleArgs = {
+    //     permissions: {
+    //       remove: permissionsToRemove,
+    //     },
+    //   };
 
-    it('should handle updates with only roleUpdates', () => {});
+    //   const result = service.buildUpdateCompanyRoleQuery(mockId, updates);
 
-    it('should handle an empty add permissions array', () => {});
+    //   expect(result).toEqual({
+    //     where: { id: mockId },
+    //     data: {
+    //       permissions: {
+    //         disconnect: permissionsToRemove.map((id) => ({ id })),
+    //       },
+    //     },
+    //   });
+    // });
 
-    it('should handle an empty remove permissions array', () => {});
+    // it('should add and remove permissions when both add and remove permissions are provided', () => {
+    //   const permissionsToAdd = [1, 2, 3];
+    //   const permissionsToRemove = [4, 5, 6];
+    //   const updates: IBuildUpdateCompanyRoleArgs = {
+    //     permissions: {
+    //       add: permissionsToAdd,
+    //       remove: permissionsToRemove,
+    //     },
+    //   };
 
-    it('should handle an empty add and remove permissions array', () => {});
+    //   const result = service.buildUpdateCompanyRoleQuery(mockId, updates);
 
-    it('should handle a large number of add permissions', () => {});
+    //   expect(result).toEqual({
+    //     where: { id: mockId },
+    //     data: {
+    //       permissions: {
+    //         connect: permissionsToAdd.map((id) => ({ id })),
+    //         disconnect: permissionsToRemove.map((id) => ({ id })),
+    //       },
+    //     },
+    //   });
+    // });
 
-    it('should handle a large number of remove permissions', () => {});
+    // it('should not include permissions in the update query when permissions are not provided', () => {
+    //   const updates: IBuildUpdateCompanyRoleArgs = {
+    //     name: 'Updated Role',
+    //     description: 'Updated description',
+    //   };
 
-    it('should handle a large number of add and remove permissions', () => {});
+    //   const result = service.buildUpdateCompanyRoleQuery(mockId, updates);
 
-    it('should handle a very long id', () => {});
+    //   expect(result).toEqual({
+    //     where: { id: mockId },
+    //     data: {
+    //       name: updates.name,
+    //       description: updates.description,
+    //     },
+    //   });
+    //   expect(result.data).not.toHaveProperty('permissions');
+    // });
 
-    it('should handle special characters in the id', () => {});
+    // it('should return the correct Prisma.RoleUpdateArgs object', () => {
+    //   const updates: IBuildUpdateCompanyRoleArgs = {
+    //     name: 'Updated Role',
+    //     description: 'Updated description',
+    //     permissions: {
+    //       add: [1, 2, 3],
+    //       remove: [4, 5, 6],
+    //     },
+    //   };
 
-    it('should handle special characters in the permission ids', () => {});
+    //   const result = service.buildUpdateCompanyRoleQuery(mockId, updates);
 
-    it('should handle duplicate permission ids in the add permissions array', () => {});
+    //   expect(result).toMatchObject({
+    //     where: { id: mockId },
+    //     data: {
+    //       name: updates.name,
+    //       description: updates.description,
+    //       permissions: {
+    //         connect: updates.permissions?.add?.map((id) => ({ id })),
+    //         disconnect: updates.permissions?.remove?.map((id) => ({ id })),
+    //       },
+    //     },
+    //   } as Prisma.RoleUpdateArgs);
+    // });
 
-    it('should handle duplicate permission ids in the remove permissions array', () => {});
+    // it('should handle an empty updates object', () => {
+    //   const updates: IBuildUpdateCompanyRoleArgs = {};
 
-    it('should handle duplicate permission ids in both add and remove permissions arrays', () => {});
+    //   const result = service.buildUpdateCompanyRoleQuery(mockId, updates);
 
-    it('should handle a permission id that appears in both add and remove permissions arrays', () => {});
+    //   expect(result).toEqual({
+    //     where: { id: mockId },
+    //     data: {},
+    //   });
+    // });
+
+    // it('should handle updates with only permissions', () => {
+    //   const updates: IBuildUpdateCompanyRoleArgs = {
+    //     permissions: {
+    //       add: [1, 2, 3],
+    //       remove: [4, 5, 6],
+    //     },
+    //   };
+
+    //   const result = service.buildUpdateCompanyRoleQuery(mockId, updates);
+
+    //   expect(result).toEqual({
+    //     where: { id: mockId },
+    //     data: {
+    //       permissions: {
+    //         connect: updates.permissions?.add?.map((id) => ({ id })),
+    //         disconnect: updates.permissions?.remove?.map((id) => ({ id })),
+    //       },
+    //     },
+    //   });
+    // });
+
+    // it('should handle updates with only roleUpdates', () => {
+    //   const updates: IBuildUpdateCompanyRoleArgs = {
+    //     name: 'Updated Role',
+    //     description: 'Updated description',
+    //   };
+
+    //   const result = service.buildUpdateCompanyRoleQuery(mockId, updates);
+
+    //   expect(result).toEqual({
+    //     where: { id: mockId },
+    //     data: {
+    //       name: updates.name,
+    //       description: updates.description,
+    //     },
+    //   });
+    // });
+
+    // it('should handle an empty add permissions array', () => {
+    //   const updates: IBuildUpdateCompanyRoleArgs = {
+    //     permissions: {
+    //       add: [],
+    //       remove: [4, 5, 6],
+    //     },
+    //   };
+
+    //   const result = service.buildUpdateCompanyRoleQuery(mockId, updates);
+
+    //   expect(result).toEqual({
+    //     where: { id: mockId },
+    //     data: {
+    //       permissions: {
+    //         disconnect: updates.permissions?.remove?.map((id) => ({ id })),
+    //       },
+    //     },
+    //   });
+    // });
+
+    // it('should handle an empty remove permissions array', () => {
+    //   const updates: IBuildUpdateCompanyRoleArgs = {
+    //     permissions: {
+    //       add: [1, 2, 3],
+    //       remove: [],
+    //     },
+    //   };
+
+    //   const result = service.buildUpdateCompanyRoleQuery(mockId, updates);
+
+    //   expect(result).toEqual({
+    //     where: { id: mockId },
+    //     data: {
+    //       permissions: {
+    //         connect: updates.permissions?.add?.map((id) => ({ id })),
+    //       },
+    //     },
+    //   });
+    // });
+
+    // it('should handle an empty add and remove permissions array', () => {
+    //   const updates: IBuildUpdateCompanyRoleArgs = {
+    //     permissions: {
+    //       add: [],
+    //       remove: [],
+    //     },
+    //   };
+
+    //   const result = service.buildUpdateCompanyRoleQuery(mockId, updates);
+
+    //   expect(result).toEqual({
+    //     where: { id: mockId },
+    //     data: {},
+    //   });
+    // });
+
+    // it('should handle a large number of add permissions', () => {
+    //   const largeAddPermissions = Array.from(
+    //     { length: 1000 },
+    //     (_, index) => index + 1,
+    //   );
+    //   const updates: IBuildUpdateCompanyRoleArgs = {
+    //     permissions: {
+    //       add: largeAddPermissions,
+    //     },
+    //   };
+
+    //   const result = service.buildUpdateCompanyRoleQuery(mockId, updates);
+
+    //   expect(result).toEqual({
+    //     where: { id: mockId },
+    //     data: {
+    //       permissions: {
+    //         connect: updates.permissions?.add?.map((id) => ({ id })),
+    //       },
+    //     },
+    //   });
+    // });
+
+    // it('should handle a large number of remove permissions', () => {
+    //   const largeRemovePermissions = Array.from(
+    //     { length: 1000 },
+    //     (_, index) => index + 1,
+    //   );
+    //   const updates: IBuildUpdateCompanyRoleArgs = {
+    //     permissions: {
+    //       remove: largeRemovePermissions,
+    //     },
+    //   };
+
+    //   const result = service.buildUpdateCompanyRoleQuery(mockId, updates);
+
+    //   expect(result).toEqual({
+    //     where: { id: mockId },
+    //     data: {
+    //       permissions: {
+    //         disconnect: updates.permissions?.remove?.map((id) => ({ id })),
+    //       },
+    //     },
+    //   });
+    // });
+
+    // it('should handle a large number of add and remove permissions', () => {
+    //   const largeAddPermissions = Array.from(
+    //     { length: 1000 },
+    //     (_, index) => index + 1,
+    //   );
+    //   const largeRemovePermissions = Array.from(
+    //     { length: 1000 },
+    //     (_, index) => index + 1001,
+    //   );
+    //   const updates: IBuildUpdateCompanyRoleArgs = {
+    //     permissions: {
+    //       add: largeAddPermissions,
+    //       remove: largeRemovePermissions,
+    //     },
+    //   };
+
+    //   const result = service.buildUpdateCompanyRoleQuery(mockId, updates);
+
+    //   expect(result).toEqual({
+    //     where: { id: mockId },
+    //     data: {
+    //       permissions: {
+    //         connect: updates.permissions?.add?.map((id) => ({ id })),
+    //         disconnect: updates.permissions?.remove?.map((id) => ({ id })),
+    //       },
+    //     },
+    //   });
+    // });
+
+    // it('should handle a very long id', () => {
+    //   const longId = 'a'.repeat(1000);
+    //   const updates: IBuildUpdateCompanyRoleArgs = {
+    //     name: 'Updated Role',
+    //     description: 'Updated description',
+    //   };
+
+    //   const result = service.buildUpdateCompanyRoleQuery(longId, updates);
+
+    //   expect(result).toEqual({
+    //     where: { id: longId },
+    //     data: {
+    //       name: updates.name,
+    //       description: updates.description,
+    //     },
+    //   });
+    // });
+
+    // it('should handle special characters in the id', () => {
+    //   const specialCharacterId = '!@#$%^&*()_+{}[]|:;"<>,.?/~`';
+    //   const updates: IBuildUpdateCompanyRoleArgs = {
+    //     name: 'Updated Role',
+    //     description: 'Updated description',
+    //   };
+
+    //   const result = service.buildUpdateCompanyRoleQuery(
+    //     specialCharacterId,
+    //     updates,
+    //   );
+
+    //   expect(result).toEqual({
+    //     where: { id: specialCharacterId },
+    //     data: {
+    //       name: updates.name,
+    //       description: updates.description,
+    //     },
+    //   });
+    // });
+
+    it('should handle duplicate permission ids in the add permissions array', () => {
+      const duplicateAddPermissionIds = [1, 2, 3, 2, 3, 4];
+      const updates: IBuildUpdateCompanyRoleArgs = {
+        permissions: {
+          add: duplicateAddPermissionIds,
+        },
+      };
+
+      const dedupedAddPermissionIds = [...new Set(duplicateAddPermissionIds)];
+
+      const result = service.buildUpdateCompanyRoleQuery(mockId, updates);
+
+      expect(result).toEqual({
+        where: { id: mockId },
+        data: {
+          permissions: {
+            connect: dedupedAddPermissionIds.map((id) => ({ id })),
+          },
+        },
+      });
+    });
+
+    // it('should handle duplicate permission ids in the remove permissions array', () => {
+    //   const duplicateRemovePermissionIds = [4, 5, 6, 5, 6, 7];
+    //   const updates: IBuildUpdateCompanyRoleArgs = {
+    //     permissions: {
+    //       remove: duplicateRemovePermissionIds,
+    //     },
+    //   };
+
+    //   const result = service.buildUpdateCompanyRoleQuery(mockId, updates);
+
+    //   expect(result).toEqual({
+    //     where: { id: mockId },
+    //     data: {
+    //       permissions: {
+    //         disconnect: updates.permissions?.remove?.map((id) => ({ id })),
+    //       },
+    //     },
+    //   });
+    // });
+
+    // it('should handle duplicate permission ids in both add and remove permissions arrays', () => {
+    //   const duplicateAddPermissionIds = [1, 2, 3, 2, 3, 4];
+    //   const duplicateRemovePermissionIds = [4, 5, 6, 5, 6, 7];
+    //   const updates: IBuildUpdateCompanyRoleArgs = {
+    //     permissions: {
+    //       add: duplicateAddPermissionIds,
+    //       remove: duplicateRemovePermissionIds,
+    //     },
+    //   };
+
+    //   const result = service.buildUpdateCompanyRoleQuery(mockId, updates);
+
+    //   expect(result).toEqual({
+    //     where: { id: mockId },
+    //     data: {
+    //       permissions: {
+    //         connect: updates.permissions?.add?.map((id) => ({ id })),
+    //         disconnect: updates.permissions?.remove?.map((id) => ({ id })),
+    //       },
+    //     },
+    //   });
+    // });
+
+    // it('should handle a permission id that appears in both add and remove permissions arrays', () => {
+    //   const overlappingPermissionIds = [1, 2, 3];
+    //   const updates: IBuildUpdateCompanyRoleArgs = {
+    //     permissions: {
+    //       add: overlappingPermissionIds,
+    //       remove: overlappingPermissionIds,
+    //     },
+    //   };
+
+    //   const result = service.buildUpdateCompanyRoleQuery(mockId, updates);
+
+    //   expect(result).toEqual({
+    //     where: { id: mockId },
+    //     data: {
+    //       permissions: {
+    //         connect: updates.permissions?.add?.map((id) => ({ id })),
+    //         disconnect: updates.permissions?.remove?.map((id) => ({ id })),
+    //       },
+    //     },
+    //   });
+    // });
   });
   describe('buildDeleteCompanyRoleQuery', () => {});
   describe('buildDeleteManyCompanyRolesQuery', () => {});
