@@ -5,7 +5,13 @@ import {
 } from './query-builder-args.interface';
 
 export interface ICompanyRoleAndPermissionDbHandler {
-  initializeRoles: (companyId: string, creatorId: string) => Promise<any>;
+  /**
+   * Create initial set of roles and assign creator as owner
+   */
+  initializeRolesAndAssignOwner: (
+    companyId: string,
+    creatorId: string,
+  ) => Promise<any>;
   /**
    * @TODO ensure name is a valid, non-empty string in request validation step
    */

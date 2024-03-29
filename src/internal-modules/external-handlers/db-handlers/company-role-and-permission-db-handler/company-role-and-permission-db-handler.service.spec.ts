@@ -129,7 +129,7 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
         .mockReturnValue(roleCreateArgs);
 
       // Act
-      const result = await service.initializeRoles(companyId, creatorId);
+      const result = await service.initializeRolesAndAssignOwnerRole(companyId, creatorId);
 
       // Assert
       expect(result).toBe(true);
@@ -153,7 +153,7 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
 
       const spy = jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
       await expect(
-        service.initializeRoles(companyId, creatorId),
+        service.initializeRolesAndAssignOwnerRole(companyId, creatorId),
       ).rejects.toThrow(InvalidUUIDError);
 
       expect(spy).toHaveBeenCalledTimes(1);
@@ -166,7 +166,7 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
 
       const spy = jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
       await expect(
-        service.initializeRoles(companyId, creatorId),
+        service.initializeRolesAndAssignOwnerRole(companyId, creatorId),
       ).rejects.toThrow(InvalidUUIDError);
 
       expect(spy).toHaveBeenCalledTimes(1);
@@ -182,7 +182,7 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
         .mockReturnValueOnce(true)
         .mockReturnValueOnce(false);
       await expect(
-        service.initializeRoles(companyId, creatorId),
+        service.initializeRolesAndAssignOwnerRole(companyId, creatorId),
       ).rejects.toThrow(InvalidUUIDError);
 
       expect(spy).toHaveBeenCalledTimes(2);
@@ -199,7 +199,7 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
         .mockReturnValueOnce(true)
         .mockReturnValueOnce(false);
       await expect(
-        service.initializeRoles(companyId, creatorId),
+        service.initializeRolesAndAssignOwnerRole(companyId, creatorId),
       ).rejects.toThrow(InvalidUUIDError);
 
       expect(spy).toHaveBeenCalledTimes(2);
@@ -260,7 +260,7 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
         .mockReturnValue(roleCreateArgs);
 
       // Act
-      await service.initializeRoles(companyId, creatorId);
+      await service.initializeRolesAndAssignOwnerRole(companyId, creatorId);
 
       // Assert
       expect(mockPrismaClientService.role.findMany).toHaveBeenCalledWith({
@@ -322,7 +322,7 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
         .mockReturnValue(roleCreateArgs);
 
       // Act
-      await service.initializeRoles(companyId, creatorId);
+      await service.initializeRolesAndAssignOwnerRole(companyId, creatorId);
 
       // Assert
       expect(
@@ -383,7 +383,7 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
         .mockReturnValue(roleCreateArgs);
 
       // Act
-      await service.initializeRoles(companyId, creatorId);
+      await service.initializeRolesAndAssignOwnerRole(companyId, creatorId);
 
       // Assert
       expect(mockPrismaClientService.$transaction).toHaveBeenCalledWith(
@@ -446,7 +446,7 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
         .mockReturnValue(roleCreateArgs);
 
       // Act
-      await service.initializeRoles(companyId, creatorId);
+      await service.initializeRolesAndAssignOwnerRole(companyId, creatorId);
 
       // Assert
       expect(mockPrismaClientService.$transaction).toHaveBeenCalledWith(
@@ -476,7 +476,7 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
         .mockReturnValue([]);
 
       // Act
-      const result = await service.initializeRoles(companyId, creatorId);
+      const result = await service.initializeRolesAndAssignOwnerRole(companyId, creatorId);
 
       // Assert
       expect(result).toBe(false);
@@ -497,7 +497,7 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
         .mockRejectedValue(error);
 
       // Act & Assert
-      const result = await service.initializeRoles(companyId, creatorId);
+      const result = await service.initializeRolesAndAssignOwnerRole(companyId, creatorId);
 
       expect(result).toBe(false);
       expect(mockLogService.error).toHaveBeenCalledWith(
@@ -570,7 +570,7 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
         .mockRejectedValue(error);
 
       // Act & Assert
-      const result = await service.initializeRoles(companyId, creatorId);
+      const result = await service.initializeRolesAndAssignOwnerRole(companyId, creatorId);
       expect(result).toBe(false);
       expect(mockLogService.error).toHaveBeenCalledWith(
         error.message,
@@ -621,7 +621,7 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
         .mockRejectedValue(error);
 
       // Act & Assert
-      await service.initializeRoles(companyId, creatorId);
+      await service.initializeRolesAndAssignOwnerRole(companyId, creatorId);
       expect(mockLogService.error).toHaveBeenCalledWith(
         error.message,
         error.stack ? error.stack : 'Stack trace unavailable',
@@ -673,7 +673,7 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
         .mockReturnValue([]);
 
       // Act
-      await service.initializeRoles(companyId, creatorId);
+      await service.initializeRolesAndAssignOwnerRole(companyId, creatorId);
 
       // Assert
       expect(mockPrismaClientService.$transaction).not.toHaveBeenCalled();
