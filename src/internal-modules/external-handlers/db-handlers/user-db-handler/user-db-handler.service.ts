@@ -41,7 +41,7 @@ export class UserDbHandlerService implements IUserDbHandler {
 
   async retrieveUserByExternalAuthUID(externalAuthUID: string): Promise<any> {
     const result = await this.prismaClient.user.findUnique(
-      this.userQueryBuilder.buildFindUniqueUserWhereClause({
+      this.userQueryBuilder.buildRetrieveUniqueUserQuery({
         extAuthUID: externalAuthUID,
       }),
     );

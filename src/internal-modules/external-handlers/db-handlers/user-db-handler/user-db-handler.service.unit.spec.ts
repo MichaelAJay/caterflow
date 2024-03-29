@@ -169,7 +169,7 @@ describe('UserDbHandlerService', () => {
     it('should retrieve an existing user by externalAuthUID and return it', async () => {
       const queryBuilderReturn = { where: queryArg };
       const queryBuilderSpy = jest
-        .spyOn(userQueryBuilder, 'buildFindUniqueUserWhereClause')
+        .spyOn(userQueryBuilder, 'buildRetrieveUniqueUserQuery')
         .mockReturnValue(queryBuilderReturn);
       const findUniqueUserSpy = jest
         .spyOn(prismaClient.user, 'findUnique')
@@ -184,7 +184,7 @@ describe('UserDbHandlerService', () => {
     it('should return null if existing user not found', async () => {
       const queryBuilderReturn = { where: queryArg };
       jest
-        .spyOn(userQueryBuilder, 'buildFindUniqueUserWhereClause')
+        .spyOn(userQueryBuilder, 'buildRetrieveUniqueUserQuery')
         .mockReturnValue(queryBuilderReturn);
       jest.spyOn(prismaClient.user, 'findUnique').mockResolvedValue(null);
 
@@ -195,7 +195,7 @@ describe('UserDbHandlerService', () => {
     it('should propagate any unspecified error thrown by the db client', async () => {
       const queryBuilderReturn = { where: queryArg };
       jest
-        .spyOn(userQueryBuilder, 'buildFindUniqueUserWhereClause')
+        .spyOn(userQueryBuilder, 'buildRetrieveUniqueUserQuery')
         .mockReturnValue(queryBuilderReturn);
       jest
         .spyOn(prismaClient.user, 'findUnique')

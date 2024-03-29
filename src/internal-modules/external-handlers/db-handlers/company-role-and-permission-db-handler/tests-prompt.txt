@@ -1,0 +1,61 @@
+You are an expert TypeScript developer, with extensive experience writing unit tests which utilize the NestJS test module framework.
+Further, you have great experience with the Prisma ORM.
+
+Below is a method to test and the beforeEach Jest hook used in the test module.
+```
+  async createRole(input: IBuildCreateCompanyRoleArgs) {
+    if (
+      ![input.companyId, input.creatorId].every((input) =>
+        uuidUtils.isUUID(input),
+      )
+    ) {
+      throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
+    }
+    await this.prismaClient.role.create(
+      this.companyRoleAndPermissionDbQueryBuilder.buildCreateCompanyRoleQuery(
+        input,
+      ),
+    );
+  }
+
+  type IBuildCreateCompanyRoleArgs = {
+    name: string;
+    description: string;
+    companyId: string;
+    creatorId: string;
+  }
+
+    beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        CompanyRoleAndPermissionDbHandlerService,
+        {
+          provide: CompanyRoleAndPermissionDbQueryBuilderService,
+          useValue: mockCompanyRoleAndPermissionDbQueryBuilder,
+        },
+        {
+          provide: PrismaClientService,
+          useValue: mockPrismaClientService,
+        },
+        { provide: LogService, useValue: mockLogService },
+      ],
+    }).compile();
+
+    service = module.get<CompanyRoleAndPermissionDbHandlerService>(
+      CompanyRoleAndPermissionDbHandlerService,
+    );
+    companyRoleAndPermissionDbQueryBuilder =
+      module.get<CompanyRoleAndPermissionDbQueryBuilderService>(
+        CompanyRoleAndPermissionDbQueryBuilderService,
+      );
+    prismaClient = module.get<PrismaClientService>(PrismaClientService);
+    logService = module.get<LogService>(LogService);
+
+    jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(true);
+  });
+
+  afterEach(() => jest.clearAllMocks())
+
+Please create tests for the following test stubs, provided and numbered below.
+For every test, if an error is thrown, ensure that tests further in the method execution are not called.
+Ensure that methods are called with the correct arguments.

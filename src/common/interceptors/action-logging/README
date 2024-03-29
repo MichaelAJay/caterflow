@@ -1,0 +1,9 @@
+This interceptor may be added at the route level to routes which have a deterministic need
+to create UserSystemAction records (either one or many).
+
+As an example, adding a user would take a deterministic set of UserSystemActions.
+
+This interceptor may not be added to routes whose system actions may not be determined solely by the specified route.
+
+As an example:
+If a user removes a Role from a company, then all Users with that role will have it removed from their Role list. But the set of Users to have this role removed would not be known at the request level. For these cases, UserSystemAction records must be created at the service level.

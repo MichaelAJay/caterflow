@@ -6,7 +6,7 @@ import { LogService } from '../log/log.service';
 
 @Injectable()
 export class CacheService implements ICacheService {
-  defaultTTLInMS: number;
+  private defaultTTLInMS: number;
 
   constructor(
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
