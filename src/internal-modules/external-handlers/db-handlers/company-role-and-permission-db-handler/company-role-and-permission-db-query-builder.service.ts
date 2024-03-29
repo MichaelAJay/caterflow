@@ -110,7 +110,7 @@ export class CompanyRoleAndPermissionDbQueryBuilderService
     return {
       where: {
         companyId,
-        id: { in: ids },
+        id: { in: [...new Set(ids)] },
       },
     };
   }
@@ -121,7 +121,12 @@ export class CompanyRoleAndPermissionDbQueryBuilderService
     creatorId: string,
   ): Prisma.UserCompanyRoleCreateManyArgs {
     return {
-      data: roleIds.map((roleId) => ({ roleId, userId, companyId, creatorId })),
+      data: roleIds.map((roleId) => ({
+        roleId,
+        userId,
+        companyId,
+        creatorId,
+      })),
       skipDuplicates: true,
     };
   }
@@ -134,7 +139,7 @@ export class CompanyRoleAndPermissionDbQueryBuilderService
       where: {
         userId,
         companyId,
-        roleId: { in: roleIds },
+        roleId: { in: [...new Set(roleIds)] },
       },
     };
   }
