@@ -72,11 +72,16 @@ export class CompanyRoleAndPermissionDbQueryBuilderService
       const uniqueConnectIds = [...new Set(add || [])];
       const uniqueDisconnectIds = [...new Set(remove || [])];
 
-      if (uniqueConnectIds.length > 0 || uniqueDisconnectIds.length > 0) {
+      // Filter out permissionIds that exist in both arrays
+      const filteredConnectIds = uniqueConnectIds.filter(
+        (id) => !uniqueDisconnectIds.includes(id),
+      );
+
+      if (filteredConnectIds.length > 0 || uniqueDisconnectIds.length > 0) {
         data.permissions = {};
 
-        if (uniqueConnectIds.length > 0) {
-          data.permissions.connect = uniqueConnectIds.map((id) => ({ id }));
+        if (filteredConnectIds.length > 0) {
+          data.permissions.connect = filteredConnectIds.map((id) => ({ id }));
         }
 
         if (uniqueDisconnectIds.length > 0) {
