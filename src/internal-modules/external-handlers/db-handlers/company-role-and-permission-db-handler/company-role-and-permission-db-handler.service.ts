@@ -32,6 +32,8 @@ export class CompanyRoleAndPermissionDbHandlerService
     }
     try {
       // Get system roles with permissions
+
+      // Could improve data shape by only including name, description, isEditable, and permission name
       const systemRolesWithPermissions: ({
         permissions: {
           id: number;
