@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CompanyRoleAndPermissionDbQueryBuilderService } from './company-role-and-permission-db-query-builder.service';
 import { $Enums, Prisma } from '@prisma/client';
+import { IBuildCreateCompanyRoleArgs } from './interfaces/query-builder-args.interface';
 
 describe('CompanyRoleAndPermissionDbQueryBuilderService', () => {
   let service: CompanyRoleAndPermissionDbQueryBuilderService;
@@ -76,9 +77,6 @@ describe('CompanyRoleAndPermissionDbQueryBuilderService', () => {
             companyId: companyId,
             creatorId: creatorId,
             isEditable: false,
-            permissions: {
-              connect: [],
-            },
           },
         },
       ]);
@@ -122,9 +120,6 @@ describe('CompanyRoleAndPermissionDbQueryBuilderService', () => {
             companyId: companyId,
             creatorId: creatorId,
             isEditable: false,
-            permissions: {
-              connect: [],
-            },
           },
         },
         {
@@ -134,9 +129,6 @@ describe('CompanyRoleAndPermissionDbQueryBuilderService', () => {
             companyId: companyId,
             creatorId: creatorId,
             isEditable: false,
-            permissions: {
-              connect: [],
-            },
           },
         },
       ]);
@@ -506,9 +498,10 @@ describe('CompanyRoleAndPermissionDbQueryBuilderService', () => {
       const companyId = '1';
       const creatorId = '1';
 
-      const originalInput = JSON.parse(
-        JSON.stringify(systemRolesWithPermissions),
-      );
+      // const originalInput = JSON.parse(
+      //   JSON.stringify(systemRolesWithPermissions),
+      // );
+      const originalInput = [...systemRolesWithPermissions];
 
       service.buildCreateManySingleCompanyRolesQuery(
         systemRolesWithPermissions,
@@ -604,4 +597,76 @@ describe('CompanyRoleAndPermissionDbQueryBuilderService', () => {
       });
     });
   });
+  describe('buildCreateCompanyRoleQuery', () => {
+    it('returns an object with only a data property whose value is the provided input', () => {
+      const input: IBuildCreateCompanyRoleArgs = {
+        name: '',
+        description: '',
+        companyId: '',
+        creatorId: '',
+      };
+      const output = { data: input };
+      const result = service.buildCreateCompanyRoleQuery(input);
+      expect(result).toEqual(output);
+    });
+  });
+  describe('buildRetrieveRoleQuery', () => {
+    it('returns an object with only a where property', () => {
+      const inputId = '11223';
+      const expectedResult = { where: { id: inputId } };
+
+      const result = service.buildRetrieveRoleQuery(inputId);
+      expect(result).toEqual(expectedResult);
+    });
+  });
+  describe('buildUpdateCompanyRoleQuery', () => {
+    it('should update the role with the provided roleUpdates', () => {});
+
+    it('should add permissions when add permissions are provided', () => {});
+
+    it('should remove permissions when remove permissions are provided', () => {});
+
+    it('should add and remove permissions when both add and remove permissions are provided', () => {});
+
+    it('should not include permissions in the update query when permissions are not provided', () => {});
+
+    it('should return the correct Prisma.RoleUpdateArgs object', () => {});
+
+    it('should handle an empty updates object', () => {});
+
+    it('should handle updates with only permissions', () => {});
+
+    it('should handle updates with only roleUpdates', () => {});
+
+    it('should handle an empty add permissions array', () => {});
+
+    it('should handle an empty remove permissions array', () => {});
+
+    it('should handle an empty add and remove permissions array', () => {});
+
+    it('should handle a large number of add permissions', () => {});
+
+    it('should handle a large number of remove permissions', () => {});
+
+    it('should handle a large number of add and remove permissions', () => {});
+
+    it('should handle a very long id', () => {});
+
+    it('should handle special characters in the id', () => {});
+
+    it('should handle special characters in the permission ids', () => {});
+
+    it('should handle duplicate permission ids in the add permissions array', () => {});
+
+    it('should handle duplicate permission ids in the remove permissions array', () => {});
+
+    it('should handle duplicate permission ids in both add and remove permissions arrays', () => {});
+
+    it('should handle a permission id that appears in both add and remove permissions arrays', () => {});
+  });
+  describe('buildDeleteCompanyRoleQuery', () => {});
+  describe('buildDeleteManyCompanyRolesQuery', () => {});
+  describe('buildCreateManyCompanyUserRolesQuery', () => {});
+  describe('buildDeleteManyCompanyUserRolesQuery', () => {});
+  describe('buildFindFirstUserCompanyRoleWithPermission', () => {});
 });

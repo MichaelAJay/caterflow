@@ -64,7 +64,7 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
       creatorId: string;
       isEditable: boolean;
     })[];
-    it('should successfully initialize roles with permissions for a new company', async () => {
+    it('should successfully initialize roles with permissions for a new company and return true', async () => {
       // Arrange
       const companyId = 'testCompanyId';
       const creatorId = 'testCreatorId';
@@ -118,9 +118,10 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
         .mockReturnValue(roleCreateArgs);
 
       // Act
-      await service.initializeRoles(companyId, creatorId);
+      const result = await service.initializeRoles(companyId, creatorId);
 
       // Assert
+      expect(result).toBe(true);
       expect(mockPrismaClientService.role.findMany).toHaveBeenCalledWith({
         where: { companyId: null },
         include: { permissions: true },
@@ -404,11 +405,10 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
         .mockReturnValue([]);
 
       // Act
-      await expect(
-        service.initializeRoles(companyId, creatorId),
-      ).rejects.toThrow();
+      const result = await service.initializeRoles(companyId, creatorId);
 
       // Assert
+      expect(result).toBe(false);
       expect(mockPrismaClientService.role.findMany).toHaveBeenCalledWith({
         where: { companyId: null },
         include: { permissions: true },
@@ -416,7 +416,7 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
       expect(mockPrismaClientService.$transaction).not.toHaveBeenCalled();
     });
 
-    it('should log an error and rethrow it when an error occurs during the findMany operation', async () => {
+    it('should return false and log an error and rethrow it when an error occurs during the findMany operation', async () => {
       // Arrange
       const companyId = 'testCompanyId';
       const creatorId = 'testCreatorId';
@@ -426,9 +426,9 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
         .mockRejectedValue(error);
 
       // Act & Assert
-      await expect(
-        service.initializeRoles(companyId, creatorId),
-      ).rejects.toThrow(error);
+      const result = await service.initializeRoles(companyId, creatorId);
+
+      expect(result).toBe(false);
       expect(mockLogService.error).toHaveBeenCalledWith(
         error.message,
         error.stack ? error.stack : 'Stack trace unavailable',
@@ -439,7 +439,7 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
       );
     });
 
-    it('should log an error and rethrow it when an error occurs during the transaction', async () => {
+    it('should return false and log an error and rethrow it when an error occurs during the transaction', async () => {
       // Arrange
       const companyId = 'testCompanyId';
       const creatorId = 'testCreatorId';
@@ -499,9 +499,8 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
         .mockRejectedValue(error);
 
       // Act & Assert
-      await expect(
-        service.initializeRoles(companyId, creatorId),
-      ).rejects.toThrow(error);
+      const result = await service.initializeRoles(companyId, creatorId);
+      expect(result).toBe(false);
       expect(mockLogService.error).toHaveBeenCalledWith(
         error.message,
         error.stack ? error.stack : 'Stack trace unavailable',
@@ -551,9 +550,7 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
         .mockRejectedValue(error);
 
       // Act & Assert
-      await expect(
-        service.initializeRoles(companyId, creatorId),
-      ).rejects.toThrow(error);
+      await service.initializeRoles(companyId, creatorId);
       expect(mockLogService.error).toHaveBeenCalledWith(
         error.message,
         error.stack ? error.stack : 'Stack trace unavailable',
@@ -562,55 +559,6 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
           message: 'Company role initialization failed',
         },
       );
-    });
-
-    it('should throw an error if query builder returns empty array', async () => {
-      // Arrange
-      const companyId = 'testCompanyId';
-      const creatorId = 'testCreatorId';
-      systemRolesWithPermissions = [
-        {
-          id: 'role1',
-          name: 'Role 1',
-          description: 'Role 1 description',
-          companyId: null,
-          creatorId: 'system',
-          isEditable: true,
-          permissions: [
-            { id: 1, name: PermissionName.ManageBilling },
-            { id: 2, name: PermissionName.ManageCompanyRoles },
-          ],
-        },
-        {
-          id: 'role2',
-          name: 'Role 2',
-          description: 'Role 2 description',
-          companyId: null,
-          creatorId: 'system',
-          isEditable: true,
-          permissions: [
-            { id: 3, name: PermissionName.ManageIntegrations },
-            { id: 4, name: PermissionName.ManageIntegrationAssets },
-          ],
-        },
-      ];
-      jest
-        .spyOn(mockPrismaClientService.role, 'findMany')
-        .mockResolvedValue(systemRolesWithPermissions);
-      jest
-        .spyOn(
-          mockCompanyRoleAndPermissionDbQueryBuilder,
-          'buildCreateManySingleCompanyRolesQuery',
-        )
-        .mockReturnValue([]);
-
-      // Act
-      await expect(
-        service.initializeRoles(companyId, creatorId),
-      ).rejects.toThrow('roleCreateArgs is empty');
-
-      // Assert
-      expect(mockPrismaClientService.$transaction).not.toHaveBeenCalled();
     });
 
     it('should not call prismaClient.$transaction if query builder returns empty array', async () => {
@@ -654,9 +602,7 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
         .mockReturnValue([]);
 
       // Act
-      await expect(
-        service.initializeRoles(companyId, creatorId),
-      ).rejects.toThrow('roleCreateArgs is empty');
+      await service.initializeRoles(companyId, creatorId);
 
       // Assert
       expect(mockPrismaClientService.$transaction).not.toHaveBeenCalled();

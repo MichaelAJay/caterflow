@@ -6,7 +6,7 @@ export const mockCompanyRoleAndPermissionDbHandler: ICompanyRoleAndPermissionDbH
     createRole: jest.fn(),
     editRole: jest.fn(),
     deleteRole: jest.fn(),
-    assignRolesToUser: jest.fn(),
-    unassignRolesToUser: jest.fn(),
+    addRolesToUser: jest.fn(),
+    removeRolesFromUser: jest.fn(),
     checkUserPermission: jest.fn(),
   };

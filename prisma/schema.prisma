@@ -132,7 +132,7 @@ model User {
   company                  CateringCompany?          @relation(name: "company_users", fields: [companyId], references: [id], onDelete: Cascade)
   ownerOf                  CateringCompany?          @relation("owner")
   userCompanyRoles         UserCompanyRole[]         @relation("user")
-  createdUsercompanyRoles  UserCompanyRole[]         @relation("creator")
+  createdUserCompanyRoles  UserCompanyRole[]         @relation("creator")
   createdRoles             Role[]
   createdIntegrations      CompanyIntegration[]
   createdIntegrationAssets CompanyIntegrationAsset[] @relation("creator")
@@ -144,7 +144,6 @@ model User {
 }
 
 model UserCompanyRole {
-  id        String @id @default(uuid())
   roleId    String @map("role_id")
   userId    String @map("user_id")
   companyId String @map("company_id")
@@ -155,7 +154,7 @@ model UserCompanyRole {
   company CateringCompany @relation(fields: [companyId], references: [id], onDelete: Cascade)
   addedBy User            @relation("creator", fields: [creatorId], references: [id])
 
-  @@unique([roleId, userId])
+  @@id([roleId, userId])
   @@index([userId])
   @@index([companyId])
   @@map("user_company_roles")
