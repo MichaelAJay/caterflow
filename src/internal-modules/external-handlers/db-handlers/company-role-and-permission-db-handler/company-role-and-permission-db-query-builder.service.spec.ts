@@ -999,13 +999,17 @@ describe('CompanyRoleAndPermissionDbQueryBuilderService', () => {
         },
       };
 
+      const dedupedRemovePermissionIds = [
+        ...new Set(duplicateRemovePermissionIds),
+      ];
+
       const result = service.buildUpdateCompanyRoleQuery(mockId, updates);
 
       expect(result).toEqual({
         where: { id: mockId },
         data: {
           permissions: {
-            disconnect: updates.permissions?.remove?.map((id) => ({ id })),
+            disconnect: dedupedRemovePermissionIds.map((id) => ({ id })),
           },
         },
       });
@@ -1022,9 +1026,12 @@ describe('CompanyRoleAndPermissionDbQueryBuilderService', () => {
       };
 
       const dedupedAddPermissionIds = [...new Set(duplicateAddPermissionIds)];
+      const dedupedRemovePermissionIds = [
+        ...new Set(duplicateRemovePermissionIds),
+      ];
 
       const filteredConnectIds = dedupedAddPermissionIds.filter(
-        (id) => !updates.permissions?.remove?.includes(id),
+        (id) => !dedupedRemovePermissionIds.includes(id),
       );
 
       const result = service.buildUpdateCompanyRoleQuery(mockId, updates);
@@ -1034,7 +1041,7 @@ describe('CompanyRoleAndPermissionDbQueryBuilderService', () => {
         data: {
           permissions: {
             connect: filteredConnectIds.map((id) => ({ id })),
-            disconnect: updates.permissions?.remove?.map((id) => ({
+            disconnect: dedupedRemovePermissionIds.map((id) => ({
               id,
             })),
           },
