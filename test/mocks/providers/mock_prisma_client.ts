@@ -17,6 +17,7 @@ export const mockPrismaClientService = {
     update: jest.fn(),
   },
   userCompanyRole: {
+    create: jest.fn(),
     createMany: jest.fn(),
     deleteMany: jest.fn(),
     findFirst: jest.fn(),

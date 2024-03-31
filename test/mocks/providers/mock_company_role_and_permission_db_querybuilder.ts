@@ -11,4 +11,5 @@ export const mockCompanyRoleAndPermissionDbQueryBuilder: ICompanyRoleAndPermissi
     buildCreateManyCompanyUserRolesQuery: jest.fn(),
     buildDeleteManyCompanyUserRolesQuery: jest.fn(),
     buildFindFirstUserCompanyRoleWithPermission: jest.fn(),
+    buildCreateUserCompanyRoleQuery: jest.fn(),
   };

@@ -2,11 +2,13 @@ import { ICompanyRoleAndPermissionDbHandler } from 'src/internal-modules/externa
 
 export const mockCompanyRoleAndPermissionDbHandler: ICompanyRoleAndPermissionDbHandler =
   {
-    initializeRolesAndAssignOwnerRole: jest.fn(),
+    initializeRolesAndAssignOwner: jest.fn(),
     createRole: jest.fn(),
     editRole: jest.fn(),
-    deleteRole: jest.fn(),
+    deleteRoles: jest.fn(),
     addRolesToUser: jest.fn(),
     removeRolesFromUser: jest.fn(),
     checkUserPermission: jest.fn(),
+    retrieveRole: jest.fn(),
+    retrieveSelectUserPermissions: jest.fn(),
   };
