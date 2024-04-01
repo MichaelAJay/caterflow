@@ -3,13 +3,18 @@ import {
   Body,
   ConflictException,
   Controller,
+  Get,
+  NotImplementedException,
   Post,
   Req,
 } from '@nestjs/common';
 import { CateringCompanyService } from '../../internal-modules/catering-company/catering-company.service';
 import { validateCreateCateringCompanyRequestBody } from './validators/post.caterer';
 import { ICateringCompanyController } from './interfaces/catering-company.controller.interface';
-import { AuthenticatedRequest } from '../interfaces/authenticated-request.interface';
+import {
+  AuthenticatedRequest,
+  AuthenticatedRequestForCompanyUser,
+} from '../interfaces/authenticated-request.interface';
 import { BypassCateringCompanyRequirement } from '../../common/decorators/bypass-company-requirement.decorator';
 import { ERROR_CODE } from '../../common/codes/error-codes';
 import { SUCCESS_CODE } from '../../common/codes/success-codes';
@@ -49,5 +54,26 @@ export class CateringCompanyController implements ICateringCompanyController {
       message: 'Your company details were successfully added!',
       code: SUCCESS_CODE.CompanyCreated,
     };
+  }
+
+  @Get('users')
+  async getUsers() {
+    throw new NotImplementedException('Not implemented');
+  }
+
+  @Get('roles')
+  async getRoles() {
+    throw new NotImplementedException('Not implemented');
+  }
+
+  @Get('integrations')
+  async getIntegrations(@Req() req: AuthenticatedRequestForCompanyUser) {
+    console.log(req.companyId);
+    throw new NotImplementedException('Not implemented');
+  }
+
+  @Get('integration-assets')
+  async getIntegrationAssets() {
+    throw new NotImplementedException('Not implemented');
   }
 }
