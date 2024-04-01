@@ -31,7 +31,7 @@ model CateringCompany {
 model CompanyIntegration {
   id           String           @id @default(uuid())
   companyId    String           @map("company_id")
-  templateId   String           @map("template_id")
+  templateId   Int              @map("template_id")
   event        IntegrationEvent
   isConfigured Boolean          @default(false) @map("is_configured")
   isTested     Boolean          @default(false) @map("is_tested")
@@ -52,7 +52,7 @@ model CompanyIntegration {
 model CompanyIntegrationAsset {
   id                       String               @id @default(uuid())
   companyId                String               @map("company_id")
-  integrationRequirementId String               @map("integration_requirement_id")
+  integrationRequirementId Int                  @map("integration_requirement_id")
   type                     IntegrationAssetType
   system                   ExternalSystem?
   creatorId                String               @map("creator_id")
@@ -68,7 +68,7 @@ model CompanyIntegrationAsset {
 }
 
 model IntegrationRequirement {
-  id     String               @id @default(uuid())
+  id     Int                  @id @default(autoincrement())
   type   IntegrationAssetType
   system ExternalSystem?
   data   Json
@@ -80,8 +80,10 @@ model IntegrationRequirement {
 }
 
 model IntegrationTemplate {
-  id           String           @id @default(uuid())
+  id           Int              @id @default(autoincrement())
   event        IntegrationEvent
+  srcSystem    ExternalSystem   @map("src_system")
+  srcEntity    ExternalEntity   @map("src_entity")
   targetSystem ExternalSystem   @map("target_system")
   targetEntity ExternalEntity   @map("target_entity")
 
