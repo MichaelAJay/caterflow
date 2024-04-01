@@ -22,6 +22,8 @@ model CateringCompany {
   owner             User                      @relation("owner", fields: [ownerId], references: [id])
   integrations      CompanyIntegration[]
   integrationAssets CompanyIntegrationAsset[]
+  menus             CompanyMenu[]
+  stores            CompanyStore[]
   roles             Role[]
   userCompanyRoles  UserCompanyRole[]
 
@@ -34,10 +36,10 @@ model CompanyIntegration {
   templateId   Int              @map("template_id")
   event        IntegrationEvent
   isConfigured Boolean          @default(false) @map("is_configured")
-  isTested     Boolean          @default(false) @map("is_tested")
-  isActive     Boolean          @default(false) @map("is_active")
-  creatorId    String           @map("creator_id")
-  createdAt    DateTime         @default(now()) @map("created_at")
+
+  isActive  Boolean  @default(false) @map("is_active")
+  creatorId String   @map("creator_id")
+  createdAt DateTime @default(now()) @map("created_at")
 
   company  CateringCompany           @relation(fields: [companyId], references: [id], onDelete: Cascade)
   template IntegrationTemplate       @relation(fields: [templateId], references: [id])
@@ -52,26 +54,55 @@ model CompanyIntegration {
 model CompanyIntegrationAsset {
   id                       String               @id @default(uuid())
   companyId                String               @map("company_id")
+  menuId                   Int?                 @map("menu_id")
   integrationRequirementId Int                  @map("integration_requirement_id")
   type                     IntegrationAssetType
   system                   ExternalSystem?
+  isTested                 Boolean              @default(false) @map("is_tested")
+  data                     Json
   creatorId                String               @map("creator_id")
 
   company                CateringCompany        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  menu                   CompanyMenu?           @relation(fields: [menuId], references: [id], onDelete: Cascade)
   integrationRequirement IntegrationRequirement @relation(fields: [integrationRequirementId], references: [id])
   integrations           CompanyIntegration[]
   creator                User                   @relation("creator", fields: [creatorId], references: [id])
+  CompanyStore           CompanyStore?          @relation(fields: [companyStoreId], references: [id])
+  companyStoreId         String?
 
-  @@unique([companyId, integrationRequirementId], name: "assetRequirementUnique", map: "asset_requirement_unique")
+  @@unique([menuId, integrationRequirementId], name: "assetRequirementUnique", map: "asset_requirement_unique")
   @@index([companyId])
   @@map("company_integration_assets")
 }
 
+model CompanyMenu {
+  id            Int     @id @default(autoincrement())
+  companyId     String  @map("company_id")
+  ezCaterMenuId String? @map("ezcater_menu_id")
+
+  company CateringCompany           @relation(fields: [companyId], references: [id])
+  assets  CompanyIntegrationAsset[]
+
+  @@map("company_menus")
+}
+
+model CompanyStore {
+  id        String @id @default(uuid())
+  companyId String @map("company_id")
+  name      String
+
+  company CateringCompany           @relation(fields: [companyId], references: [id])
+  assets  CompanyIntegrationAsset[]
+
+  @@map("company_stores")
+}
+
 model IntegrationRequirement {
-  id     Int                  @id @default(autoincrement())
+  id     Int                         @id @default(autoincrement())
   type   IntegrationAssetType
   system ExternalSystem?
   data   Json
+  level  IntegrationRequirementLevel
 
   templates IntegrationTemplate[]
   assets    CompanyIntegrationAsset[]
@@ -194,12 +225,18 @@ enum IntegrationEvent {
   ezCaterOrderReceived
 }
 
+enum IntegrationRequirementLevel {
+  Company
+  Menu
+}
+
 enum PermissionName {
   ManageBilling
   ManageCompanyRoles
   ManageIntegrations
   ManageIntegrationAssets
   ManageRoleAssignments
+  ViewMessages
 }
 
 enum SystemAction {

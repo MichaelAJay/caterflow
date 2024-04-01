@@ -11,6 +11,7 @@ const ALL_PERMISSIONS: $Enums.PermissionName[] = [
   'ManageIntegrationAssets',
   'ManageIntegrations',
   'ManageRoleAssignments',
+  'ViewMessages',
 ];
 
 @Injectable()

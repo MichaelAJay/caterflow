@@ -1,0 +1,58 @@
+An ezCater Order (ECO) comes in (ezCaterOrderReceived event)
+{
+    menu: MENU_ID,
+    items: [...menuItems]
+}
+
+The system looks for events belonging to the company which should be run on ezCaterOrderReceived.
+
+It finds a CompanyIntegration record.
+The CompanyIntegration record is joined by CompanyIntegrationAssets, each of which is (optionally) joined by a menu.
+
+The 'DataMap' asset whose menu's ezCaterId corresponds to the incoming order's menu would be the data map selected.
+
+To ensure a single datamap for the order, we must ensure uniqueness on the pair [menuId, integrationRequirementId].
+We ensure uniqueness of the PK on the menu, and thus we can ensure that for every menu, every company integration asset satisfies exactly one integration requirement.
+And further, if menuId is null, we ensure uniqueness on integrationRequirementId & null menuId.
+
+This is the desired behavior. To see why, imagine both types of requirement level:
+1) Company - there should only be one CompanyIntegrationAsset that satisfies the integration requirement id PER COMPANY - menuId is null.
+Attempting to add a second asset of the same type will violate the uniqueness constraint.
+
+2) Menu - there should be up to as many CompanyIntegrationAssets as the company has menus - one asset per menu.
+
+Now - let's think about what happens when an order comes in, it looks for a company integration asset, and can't find it.
+
+How would this situation arise? My system has not adequately communicated the need for the asset to the user.
+
+To mitigate this issue, for every company integration, every company integration asset necessary for the integration must be found and marked as tested (previously).
+To determine the necessary company integration assets, we must retrieve the company integration's template, joined with its requirements.
+{
+    ...company integration,
+    assets: [
+        {
+            ...,
+            requirementId,
+            menu: { ezCaterId: string | null } | null
+        },
+        ...
+    ],
+    template: {
+        ...,
+        requirements: [{ id }, ...]
+    }
+}
+
+For every requirement "r" in template.requirements:
+If r.level = 'Company', there must be a matching asset with a null menu
+If r.level = 'Menu', there must be an asset with a NON-null menu whose ezCaterIdMenuId corresponds to the incoming order's menu.
+
+If the above is NOT found to be true, then a message should be logged for the company
+
+
+It is associated with a MENU. In my system, a menu may or may not be associated with a store, or any other company entities.
+
+But what is for certain is that, for the integration to work, the ezCater Menu must have a data map.
+
+Invariant: ezCater Menu must have a CompanyIntegrationAsset (DataMap) which references the menu
+Invariant: 
