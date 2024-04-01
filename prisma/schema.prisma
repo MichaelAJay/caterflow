@@ -22,6 +22,7 @@ model CateringCompany {
   owner             User                      @relation("owner", fields: [ownerId], references: [id])
   integrations      CompanyIntegration[]
   integrationAssets CompanyIntegrationAsset[]
+  issues            CompanyIssue[]
   menus             CompanyMenu[]
   stores            CompanyStore[]
   roles             Role[]
@@ -75,6 +76,20 @@ model CompanyIntegrationAsset {
   @@map("company_integration_assets")
 }
 
+model CompanyIssue {
+  id         String    @id @default(uuid())
+  companyId  String    @map("company_id")
+  message    String
+  timestamp  DateTime  @default(now())
+  resolved   Boolean   @default(false)
+  resolvedAt DateTime?
+
+  company CateringCompany @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
+  @@map("company_issues")
+}
+
 model CompanyMenu {
   id            Int     @id @default(autoincrement())
   companyId     String  @map("company_id")
@@ -83,6 +98,7 @@ model CompanyMenu {
   company CateringCompany           @relation(fields: [companyId], references: [id])
   assets  CompanyIntegrationAsset[]
 
+  @@index([companyId])
   @@map("company_menus")
 }
 
@@ -94,6 +110,7 @@ model CompanyStore {
   company CateringCompany           @relation(fields: [companyId], references: [id])
   assets  CompanyIntegrationAsset[]
 
+  @@index([companyId])
   @@map("company_stores")
 }
 

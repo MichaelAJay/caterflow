@@ -14,6 +14,8 @@ import { InternalCacheModule } from './system/modules/cache/cache.module';
 import { LoggingInterceptor } from './common/interceptors/logging/logging.interceptor';
 import { AllExceptionsFilter } from './common/filters/all-exceptions/all-exceptions.filter';
 import { PermissionGuard } from './common/guards/permission/permission.guard';
+import { CompanyRoleAndPermissionDbHandlerModule } from './internal-modules/external-handlers/db-handlers/company-role-and-permission-db-handler/company-role-and-permission-db-handler.module';
+import { DataAccessModule } from './internal-modules/external-handlers/data-access/data-access.module';
 
 @Module({
   imports: [
@@ -27,6 +29,8 @@ import { PermissionGuard } from './common/guards/permission/permission.guard';
     UserApiModule,
     UserModule,
     GuardModule,
+    CompanyRoleAndPermissionDbHandlerModule,
+    DataAccessModule,
   ],
   controllers: [AppController],
   providers: [

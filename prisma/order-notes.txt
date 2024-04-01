@@ -47,7 +47,7 @@ For every requirement "r" in template.requirements:
 If r.level = 'Company', there must be a matching asset with a null menu
 If r.level = 'Menu', there must be an asset with a NON-null menu whose ezCaterIdMenuId corresponds to the incoming order's menu.
 
-If the above is NOT found to be true, then a message should be logged for the company
+If the above is NOT found to be true, then a message should be logged for the company.
 
 
 It is associated with a MENU. In my system, a menu may or may not be associated with a store, or any other company entities.
