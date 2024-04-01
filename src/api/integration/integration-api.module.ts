@@ -2,6 +2,6 @@ import { Module } from '@nestjs/common';
 import { IntegrationController } from './integration.controller';
 
 @Module({
-  controllers: [IntegrationController]
+  controllers: [IntegrationController],
 })
-export class IntegrationModule {}
+export class IntegrationAPIModule {}
