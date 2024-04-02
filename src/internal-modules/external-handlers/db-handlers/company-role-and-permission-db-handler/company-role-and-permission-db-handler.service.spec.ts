@@ -58,7 +58,7 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
     expect(logService).toBeDefined();
   });
 
-  describe('initializeRoles', () => {
+  describe('initializeRolesAndAssignOwner', () => {
     const validCompanyId = '00000000-0000-4000-8000-000000000000';
     const validCreatorId = '11111111-1111-4111-8111-111111111111';
 
@@ -75,6 +75,17 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
       creatorId: string;
       isEditable: boolean;
     })[];
+
+    /**
+     * Happy path:
+     * prismaClient.role.findMany
+     * companyRoleAndPermissionDbQueryBuilder.buildCreateManySingleCompanyRolesQuery
+     * prismaClient.$transaction
+     *  prismaClient.role.create
+     * prismaClient.userCompanyRole.create
+     *  companyRoleAndPermissionDbQueryBuilder.buildCreateUserCompanyRoleQuery
+     */
+
     it('should successfully initialize roles with permissions for a new company and return true', async () => {
       // Arrange
       const companyId = validCompanyId;
@@ -199,6 +210,35 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
         validCreatorId,
         validCompanyId,
       );
+      expect(prismaClient.userCompanyRole.create).toHaveBeenCalledWith(
+        createUserCompanyRoleQueryReturn,
+      );
+    });
+
+    it('should not call log service if InvalidUUIDError is thrown', async () => {
+      jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
+
+      await expect(
+        service.initializeRolesAndAssignOwner('', ''),
+      ).rejects.toThrow(InvalidUUIDError);
+
+      expect(logService.error).not.toHaveBeenCalled();
+    });
+
+    it('should not call any other mehtods if InvalidUUIDError is thrown', async () => {
+      jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
+
+      await expect(
+        service.initializeRolesAndAssignOwner('', ''),
+      ).rejects.toThrow(InvalidUUIDError);
+
+      expect(prismaClient.role.findMany).not.toHaveBeenCalled();
+      expect(
+        companyRoleAndPermissionDbQueryBuilder.buildCreateManySingleCompanyRolesQuery,
+      ).not.toHaveBeenCalled();
+      expect(prismaClient.$transaction).not.toHaveBeenCalled();
+      expect(prismaClient.role.create).not.toHaveBeenCalled();
+      expect(prismaClient.userCompanyRole.create).not.toHaveBeenCalled();
     });
 
     it('should throw invalid uuid error if companyId is empty and only call isUUID once with companyId', async () => {
@@ -568,6 +608,12 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
           message: 'Company role initialization failed',
         },
       );
+      expect(
+        companyRoleAndPermissionDbQueryBuilder.buildCreateManySingleCompanyRolesQuery,
+      ).not.toHaveBeenCalled();
+      expect(prismaClient.$transaction).not.toHaveBeenCalled();
+      expect(prismaClient.role.create).not.toHaveBeenCalled();
+      expect(prismaClient.userCompanyRole.create).not.toHaveBeenCalled();
     });
 
     it('should return false and log an error and rethrow it when an error occurs during the transaction', async () => {
@@ -643,6 +689,7 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
           message: 'Company role initialization failed',
         },
       );
+      expect(prismaClient.userCompanyRole.create).not.toHaveBeenCalled();
     });
 
     it('should return false and log an error and rethrow it when an error occurs during userCompanyRole.create', async () => {
