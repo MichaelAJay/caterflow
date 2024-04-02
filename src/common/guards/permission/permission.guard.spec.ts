@@ -91,7 +91,7 @@ describe('PermissionGuard', () => {
       expect(dataAccessService.retrieveAndCache).not.toHaveBeenCalled();
     });
 
-    it('should deny access when user is missing companyId', async () => {
+    it('should return false when user is missing companyId', async () => {
       jest.spyOn(reflector, 'get').mockReturnValueOnce(['ManageBilling']);
       jest
         .spyOn(context.switchToHttp(), 'getRequest')
@@ -101,7 +101,7 @@ describe('PermissionGuard', () => {
       expect(dataAccessService.retrieveAndCache).not.toHaveBeenCalled();
     });
 
-    it('should call dataAccessservice.retrieveAndCache if request is properly formed', async () => {
+    it('should call dataAccessService.retrieveAndCache if request is properly formed', async () => {
       jest.spyOn(reflector, 'get').mockReturnValueOnce(['ManageBilling']);
       jest
         .spyOn(context.switchToHttp(), 'getRequest')
@@ -110,7 +110,7 @@ describe('PermissionGuard', () => {
       expect(dataAccessService.retrieveAndCache).toHaveBeenCalled();
     });
 
-    it('should allow access when user has all required permissions', async () => {
+    it('should return true when user has all required permissions', async () => {
       jest
         .spyOn(reflector, 'get')
         .mockReturnValueOnce(['ManageBilling', 'ManageCompanyRoles']);
@@ -126,7 +126,7 @@ describe('PermissionGuard', () => {
       expect(canActivate).toBe(true);
     });
 
-    it('should deny access when user is missing required permissions', async () => {
+    it('should return false when user has some but not all required permissions', async () => {
       jest
         .spyOn(reflector, 'get')
         .mockReturnValueOnce(['ManageBilling', 'ManageCompanyRoles']);
