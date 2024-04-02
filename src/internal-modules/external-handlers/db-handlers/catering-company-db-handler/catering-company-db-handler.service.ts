@@ -55,6 +55,14 @@ export class CateringCompanyDbHandlerService
         },
       },
     });
+
+    // (records as CompanyIntegrationListItem[]).map(({ template }) => {
+    //   const { srcSystem, srcEntity, targetSystem, targetEntity } = template;
+    //   return {
+    //     src: `${srcSystem} ${srcEntity}`,
+    //     target: `${targetSystem} ${targetEntity}`,
+    //   };
+    // });
     return records;
   }
 }
