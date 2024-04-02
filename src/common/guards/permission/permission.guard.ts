@@ -3,7 +3,7 @@ import { Reflector } from '@nestjs/core';
 import { $Enums } from '@prisma/client';
 import { AuthenticatedRequest } from '../../../api/interfaces/authenticated-request.interface';
 import { DataAccessService } from '../../../internal-modules/external-handlers/data-access/data-access.service';
-import { CompanyRoleAndPermissionDbHandlerService } from 'src/internal-modules/external-handlers/db-handlers/company-role-and-permission-db-handler/company-role-and-permission-db-handler.service';
+import { CompanyRoleAndPermissionDbHandlerService } from '../../../internal-modules/external-handlers/db-handlers/company-role-and-permission-db-handler/company-role-and-permission-db-handler.service';
 
 const ALL_PERMISSIONS: $Enums.PermissionName[] = [
   'ManageBilling',
