@@ -5,14 +5,18 @@ import { AuthenticatedRequest } from '../../../api/interfaces/authenticated-requ
 import { DataAccessService } from '../../../internal-modules/external-handlers/data-access/data-access.service';
 import { CompanyRoleAndPermissionDbHandlerService } from '../../../internal-modules/external-handlers/db-handlers/company-role-and-permission-db-handler/company-role-and-permission-db-handler.service';
 
-const ALL_PERMISSIONS: $Enums.PermissionName[] = [
-  'ManageBilling',
-  'ManageCompanyRoles',
-  'ManageIntegrationAssets',
-  'ManageIntegrations',
-  'ManageRoleAssignments',
-  'ViewMessages',
-];
+const FULL_PERMISSIONS: Record<$Enums.PermissionName, string> = {
+  ManageBilling: 'Manage Billing',
+  ManageCompanyRoles: 'Manage Company Roles',
+  ManageIntegrations: 'Manage Integrations',
+  ManageIntegrationAssets: 'Manage Integration Assets',
+  ManageRoleAssignments: 'Manage Role Assignments',
+  ViewMessages: 'View Messages',
+};
+
+export const ALL_PERMISSIONS = Object.keys(
+  FULL_PERMISSIONS,
+) as $Enums.PermissionName[];
 
 @Injectable()
 export class PermissionGuard implements CanActivate {
