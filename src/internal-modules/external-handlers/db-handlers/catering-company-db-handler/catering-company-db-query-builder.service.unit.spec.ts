@@ -49,10 +49,11 @@ describe('CateringCompanyDbQueryBuilderService', () => {
     it('should include isConfigured in WHERE clause when provided', () => {
       const companyId = 'abc123';
       const query: IBuildRetrieveIntegrationListArgs = { isConfigured: true };
-      const result = service.buildRetrieveCompanyIntegrationsListWhereClause(
-        companyId,
-        query,
-      );
+      const result =
+        queryBuilderUtilities.buildRetrieveCompanyIntegrationsListWhereClause(
+          companyId,
+          query,
+        );
 
       expect(result).toEqual({ companyId, isConfigured: true });
     });
@@ -60,10 +61,11 @@ describe('CateringCompanyDbQueryBuilderService', () => {
     it('should include isActive in WHERE clause when provided', () => {
       const companyId = 'abc123';
       const query: IBuildRetrieveIntegrationListArgs = { isActive: false };
-      const result = service.buildRetrieveCompanyIntegrationsListWhereClause(
-        companyId,
-        query,
-      );
+      const result =
+        queryBuilderUtilities.buildRetrieveCompanyIntegrationsListWhereClause(
+          companyId,
+          query,
+        );
 
       expect(result).toEqual({ companyId, isActive: false });
     });
@@ -72,10 +74,11 @@ describe('CateringCompanyDbQueryBuilderService', () => {
       const companyId = 'abc123';
       const createdSince = new Date('2023-01-01');
       const query: IBuildRetrieveIntegrationListArgs = { createdSince };
-      const result = service.buildRetrieveCompanyIntegrationsListWhereClause(
-        companyId,
-        query,
-      );
+      const result =
+        queryBuilderUtilities.buildRetrieveCompanyIntegrationsListWhereClause(
+          companyId,
+          query,
+        );
 
       expect(result).toEqual({ companyId, createdAt: { gte: createdSince } });
     });
@@ -85,10 +88,11 @@ describe('CateringCompanyDbQueryBuilderService', () => {
       const query: IBuildRetrieveIntegrationListArgs = {
         templateSrcSystem: 'ezCater',
       };
-      const result = service.buildRetrieveCompanyIntegrationsListWhereClause(
-        companyId,
-        query,
-      );
+      const result =
+        queryBuilderUtilities.buildRetrieveCompanyIntegrationsListWhereClause(
+          companyId,
+          query,
+        );
 
       expect(result).toEqual({
         companyId,
@@ -101,10 +105,11 @@ describe('CateringCompanyDbQueryBuilderService', () => {
       const query: IBuildRetrieveIntegrationListArgs = {
         templateTargetSystem: 'Nutshell',
       };
-      const result = service.buildRetrieveCompanyIntegrationsListWhereClause(
-        companyId,
-        query,
-      );
+      const result =
+        queryBuilderUtilities.buildRetrieveCompanyIntegrationsListWhereClause(
+          companyId,
+          query,
+        );
 
       expect(result).toEqual({
         companyId,
@@ -118,10 +123,11 @@ describe('CateringCompanyDbQueryBuilderService', () => {
         templateSrcSystem: 'ezCater',
         templateTargetSystem: 'Nutshell',
       };
-      const result = service.buildRetrieveCompanyIntegrationsListWhereClause(
-        companyId,
-        query,
-      );
+      const result =
+        queryBuilderUtilities.buildRetrieveCompanyIntegrationsListWhereClause(
+          companyId,
+          query,
+        );
 
       expect(result).toEqual({
         companyId,
@@ -142,10 +148,11 @@ describe('CateringCompanyDbQueryBuilderService', () => {
         templateSrcSystem: 'ezCater',
         templateTargetSystem: 'Nutshell',
       };
-      const result = service.buildRetrieveCompanyIntegrationsListWhereClause(
-        companyId,
-        query,
-      );
+      const result =
+        queryBuilderUtilities.buildRetrieveCompanyIntegrationsListWhereClause(
+          companyId,
+          query,
+        );
 
       expect(result).toEqual({
         companyId,
