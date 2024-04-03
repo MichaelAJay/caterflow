@@ -6,7 +6,7 @@ import {
   IBuildCreateCateringCompanyArgs,
   IBuildRetrieveIntegrationListArgs,
 } from './interfaces/query-builder-args.interfaces';
-import { CompanyIntegrationListItem } from 'src/common/types/company-integration-list-item.type';
+import queryBuilderUtilities from './utilities/query-builder-utilities';
 
 @Injectable()
 export class CateringCompanyDbQueryBuilderService
@@ -20,51 +20,36 @@ export class CateringCompanyDbQueryBuilderService
     };
   }
 
-  buildRetrieveCompanyIntegrationsListWhereClause(
+  buildRetrieveCompanyIntegrationsListQueryWithoutInclude(
     companyId: string,
-    query?: IBuildRetrieveIntegrationListArgs,
-  ): Prisma.CompanyIntegrationWhereInput {
-    const input: Prisma.CompanyIntegrationWhereInput = {
-      companyId,
+    queryInput?: IBuildRetrieveIntegrationListArgs,
+  ): Omit<Prisma.CompanyIntegrationFindManyArgs, 'include'> {
+    const PG_NUM = queryInput && queryInput.pg ? queryInput.pg : 1;
+    const PER_PAGE = queryInput && queryInput.perPage ? queryInput.perPage : 10;
+
+    const query: Omit<Prisma.CompanyIntegrationFindManyArgs, 'include'> = {
+      where:
+        queryBuilderUtilities.buildRetrieveCompanyIntegrationsListWhereClause(
+          companyId,
+          queryInput,
+        ),
+      take: PER_PAGE,
     };
 
-    if (query) {
-      const {
-        isConfigured,
-        isActive,
-        createdSince,
-        templateSrcSystem,
-        templateTargetSystem,
-      } = query;
+    if (PG_NUM > 1) {
+      query.skip = (PG_NUM - 1) * PER_PAGE;
+    }
 
-      if (typeof isConfigured === 'boolean') {
-        input.isConfigured = isConfigured;
-      }
-
-      if (typeof isActive === 'boolean') {
-        input.isActive = isActive;
-      }
-
-      if (createdSince) {
-        input.createdAt = { gte: createdSince };
-      }
-      const templateConditions: Prisma.CompanyIntegrationWhereInput[] = [];
-
-      if (templateSrcSystem) {
-        templateConditions.push({ template: { srcSystem: templateSrcSystem } });
-      }
-
-      if (templateTargetSystem) {
-        templateConditions.push({
-          template: { targetSystem: templateTargetSystem },
-        });
-      }
-
-      if (templateConditions.length > 0) {
-        input.AND = templateConditions;
+    if (queryInput) {
+      const { sort } = queryInput;
+      if (sort) {
+        query.orderBy =
+          queryBuilderUtilities.buildRetrieveCompanyIntegrationsListSortClause(
+            sort,
+          );
       }
     }
 
-    return input;
+    return query;
   }
 }

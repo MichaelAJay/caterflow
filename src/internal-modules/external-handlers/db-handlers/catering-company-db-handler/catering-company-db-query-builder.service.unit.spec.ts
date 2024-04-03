@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CateringCompanyDbQueryBuilderService } from './catering-company-db-query-builder.service';
 import { IBuildRetrieveIntegrationListArgs } from './interfaces/query-builder-args.interfaces';
+import queryBuilderUtilities from './utilities/query-builder-utilities';
 
 describe('CateringCompanyDbQueryBuilderService', () => {
   let service: CateringCompanyDbQueryBuilderService;
@@ -38,7 +39,9 @@ describe('CateringCompanyDbQueryBuilderService', () => {
     it('should return WHERE clause with companyId only when no query is provided', () => {
       const companyId = 'abc123';
       const result =
-        service.buildRetrieveCompanyIntegrationsListWhereClause(companyId);
+        queryBuilderUtilities.buildRetrieveCompanyIntegrationsListWhereClause(
+          companyId,
+        );
 
       expect(result).toEqual({ companyId });
     });

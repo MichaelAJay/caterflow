@@ -8,8 +8,8 @@ export interface ICateringCompanyDbQueryBuilder {
   buildCreateCateringCompanyQuery(
     input: IBuildCreateCateringCompanyArgs,
   ): Prisma.CateringCompanyCreateArgs;
-  buildRetrieveCompanyIntegrationsListWhereClause(
+  buildRetrieveCompanyIntegrationsListQueryWithoutInclude(
     companyId: string,
-    query?: IBuildRetrieveIntegrationListArgs,
-  ): Prisma.CompanyIntegrationWhereInput;
+    queryInput?: IBuildRetrieveIntegrationListArgs,
+  ): Omit<Prisma.CompanyIntegrationFindManyArgs, 'include'>;
 }
