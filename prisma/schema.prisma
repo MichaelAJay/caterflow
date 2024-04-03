@@ -37,10 +37,9 @@ model CompanyIntegration {
   templateId   Int              @map("template_id")
   event        IntegrationEvent
   isConfigured Boolean          @default(false) @map("is_configured")
-
-  isActive  Boolean  @default(false) @map("is_active")
-  creatorId String   @map("creator_id")
-  createdAt DateTime @default(now()) @map("created_at")
+  isActive     Boolean          @default(false) @map("is_active")
+  creatorId    String           @map("creator_id")
+  createdAt    DateTime         @default(now()) @map("created_at")
 
   company  CateringCompany           @relation(fields: [companyId], references: [id], onDelete: Cascade)
   template IntegrationTemplate       @relation(fields: [templateId], references: [id])
