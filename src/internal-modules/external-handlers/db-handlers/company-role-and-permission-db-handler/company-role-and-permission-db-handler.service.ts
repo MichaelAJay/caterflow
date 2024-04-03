@@ -8,7 +8,7 @@ import {
   IBuildCreateCompanyRoleArgs,
   IBuildUpdateCompanyRoleArgs,
 } from './interfaces/query-builder-args.interface';
-import uuidUtils from '../../../../utility/functions/is_uuid';
+import uuidUtils from '../../../../utility/functions/uuid-utils';
 import { InvalidUUIDError } from '../../../../common/errors/invalid_uuid.error';
 import { ERROR_CODE } from '../../../../common/codes/error-codes';
 

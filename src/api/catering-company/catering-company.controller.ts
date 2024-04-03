@@ -6,6 +6,7 @@ import {
   Get,
   NotImplementedException,
   Post,
+  Query,
   Req,
 } from '@nestjs/common';
 import { CateringCompanyService } from '../../internal-modules/catering-company/catering-company.service';
@@ -18,6 +19,7 @@ import {
 import { BypassCateringCompanyRequirement } from '../../common/decorators/bypass-company-requirement.decorator';
 import { ERROR_CODE } from '../../common/codes/error-codes';
 import { SUCCESS_CODE } from '../../common/codes/success-codes';
+import { IBuildRetrieveIntegrationListArgs } from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
 
 @Controller('caterer')
 export class CateringCompanyController implements ICateringCompanyController {
@@ -67,9 +69,14 @@ export class CateringCompanyController implements ICateringCompanyController {
   }
 
   @Get('integrations')
-  async getIntegrations(@Req() req: AuthenticatedRequestForCompanyUser) {
-    console.log(req.companyId);
-    throw new NotImplementedException('Not implemented');
+  async getIntegrations(
+    @Req() req: AuthenticatedRequestForCompanyUser,
+    @Query() query: IBuildRetrieveIntegrationListArgs,
+  ) {
+    return this.cateringCompanyService.retrieveIntegrationsList(
+      req.companyId,
+      Object.keys(query).length > 0 ? query : undefined,
+    );
   }
 
   @Get('integration-assets')

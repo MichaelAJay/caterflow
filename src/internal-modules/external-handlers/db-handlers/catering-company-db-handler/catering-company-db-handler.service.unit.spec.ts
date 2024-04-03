@@ -5,7 +5,7 @@ import { PrismaClientService } from '../../../../external-modules/prisma-client/
 import { mockCateringCompanyDbQueryBuilderService } from '../../../../../test/mocks/providers/mock_catering_company_db_querybuilder';
 import { mockPrismaClientService } from '../../../../../test/mocks/providers/mock_prisma_client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
-import uuidUtils from '../../../../utility/functions/is_uuid';
+import uuidUtils from '../../../../utility/functions/uuid-utils';
 import { $Enums } from '@prisma/client';
 import { CompanyIntegrationListItem } from '../../../../common/types/company-integration-list-item.type';
 import { InvalidUUIDError } from '../../../../common/errors/invalid_uuid.error';

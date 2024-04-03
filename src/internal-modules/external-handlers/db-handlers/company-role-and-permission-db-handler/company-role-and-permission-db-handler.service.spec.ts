@@ -7,7 +7,7 @@ import { mockPrismaClientService } from '../../../../../test/mocks/providers/moc
 import { LogService } from '../../../../system/modules/log/log.service';
 import { mockLogService } from '../../../../../test/mocks/providers/mock_log_service';
 import { $Enums, PermissionName, Prisma } from '@prisma/client';
-import uuidUtils from '../../../../utility/functions/is_uuid';
+import uuidUtils from '../../../../utility/functions/uuid-utils';
 import { InvalidUUIDError } from '../../../../common/errors/invalid_uuid.error';
 import {
   IBuildCreateCompanyRoleArgs,

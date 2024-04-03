@@ -4,9 +4,10 @@ import { CateringCompanyDbQueryBuilderService } from './catering-company-db-quer
 import { PrismaClientService } from '../../../../external-modules/prisma-client/prisma-client.service';
 import { CateringCompany } from '@prisma/client';
 import { CompanyIntegrationListItem } from '../../../../common/types/company-integration-list-item.type';
-import uuidUtils from '../../../../utility/functions/is_uuid';
+import uuidUtils from '../../../../utility/functions/uuid-utils';
 import { InvalidUUIDError } from '../../../../common/errors/invalid_uuid.error';
 import { ERROR_CODE } from '../../../../common/codes/error-codes';
+import { IBuildRetrieveIntegrationListArgs } from './interfaces/query-builder-args.interfaces';
 
 @Injectable()
 export class CateringCompanyDbHandlerService
@@ -37,6 +38,7 @@ export class CateringCompanyDbHandlerService
 
   async retrieveCompanyIntegrationsList(
     companyId: string,
+    query?: IBuildRetrieveIntegrationListArgs,
   ): Promise<CompanyIntegrationListItem[]> {
     if (!uuidUtils.isUUID(companyId)) {
       throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
@@ -55,14 +57,21 @@ export class CateringCompanyDbHandlerService
         },
       },
     });
-
-    // (records as CompanyIntegrationListItem[]).map(({ template }) => {
-    //   const { srcSystem, srcEntity, targetSystem, targetEntity } = template;
-    //   return {
-    //     src: `${srcSystem} ${srcEntity}`,
-    //     target: `${targetSystem} ${targetEntity}`,
-    //   };
-    // });
     return records;
+  }
+
+  async countCompanyIntegrations(companyId: string): Promise<number> {
+    if (!uuidUtils.isUUID(companyId)) {
+      throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
+    }
+
+    // const ct = await this.prismaClient.companyIntegration.count({
+    //   where: { companyId, template: {} },
+    // });
+    const ct = await this.prismaClient.companyIntegration.count({
+      where: { companyId },
+    });
+
+    return ct;
   }
 }
