@@ -6,7 +6,7 @@ import {
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { validateGetIntegrationsListQuery } from '../../validators/get.integration-lists';
 import dateUtils from '../../../../utility/functions/date-utils';
-import { IBuildRetrieveIntegrationListArgs } from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
+import { IBuildRetrieveIntegrationListArgs } from '../../../../internal-modules/external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
 
 @Injectable()
 export class GetIntegrationsValidatorTransformerMiddleware
