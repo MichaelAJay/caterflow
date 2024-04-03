@@ -13,6 +13,7 @@ import {
   CompanyIntegrationListItem,
   CompanyIntegrationOutputItem,
 } from '../../common/types/company-integration-list-item.type';
+import { IBuildRetrieveIntegrationListArgs } from '../external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
 
 describe('CateringCompanyService', () => {
   let service: CateringCompanyService;
@@ -194,11 +195,20 @@ describe('CateringCompanyService', () => {
         .mockReturnValue(mockMappedIntegrations);
     });
 
-    it('should call cateringCompanyDbHandler.retrieveCompanyIntegrationsList with the correct companyId', async () => {
+    it('should call cateringCompanyDbHandler.retrieveCompanyIntegrationsList with the correct companyId and pass through undefined query', async () => {
       await service.retrieveIntegrationsList(companyId);
       expect(
         cateringCompanyDbHandler.retrieveCompanyIntegrationsList,
-      ).toHaveBeenCalledWith(companyId);
+      ).toHaveBeenCalledWith(companyId, undefined);
+    });
+
+    it('should call cateringCompanyDbHandler.retrieveCompanyIntegrationsList with the correct companyId and pass through defined query', async () => {
+      const query: IBuildRetrieveIntegrationListArgs = { pg: 1 };
+
+      await service.retrieveIntegrationsList(companyId, query);
+      expect(
+        cateringCompanyDbHandler.retrieveCompanyIntegrationsList,
+      ).toHaveBeenCalledWith(companyId, query);
     });
 
     it('should call companyMapper.mapCompanyIntegrationListForOutput with the retrieved integration records', async () => {
