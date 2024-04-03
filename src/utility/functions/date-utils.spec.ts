@@ -72,3 +72,64 @@ describe('transformCreatedSinceToDate', () => {
     expect(result).toEqual(expectedDate);
   });
 });
+
+describe('getDaysInMonth', () => {
+  it('returns the correct number of days for January', () => {
+    expect(dateUtils.getDaysInMonth(2023, 0)).toBe(31);
+  });
+
+  it('returns the correct number of days for February in a non-leap year', () => {
+    expect(dateUtils.getDaysInMonth(2023, 1)).toBe(28);
+  });
+
+  it('returns the correct number of days for February in a leap year', () => {
+    expect(dateUtils.getDaysInMonth(2024, 1)).toBe(29);
+  });
+
+  it('returns the correct number of days for March', () => {
+    expect(dateUtils.getDaysInMonth(2023, 2)).toBe(31);
+  });
+
+  it('returns the correct number of days for April', () => {
+    expect(dateUtils.getDaysInMonth(2023, 3)).toBe(30);
+  });
+
+  it('returns the correct number of days for May', () => {
+    expect(dateUtils.getDaysInMonth(2023, 4)).toBe(31);
+  });
+
+  it('returns the correct number of days for June', () => {
+    expect(dateUtils.getDaysInMonth(2023, 5)).toBe(30);
+  });
+
+  it('returns the correct number of days for July', () => {
+    expect(dateUtils.getDaysInMonth(2023, 6)).toBe(31);
+  });
+
+  it('returns the correct number of days for August', () => {
+    expect(dateUtils.getDaysInMonth(2023, 7)).toBe(31);
+  });
+
+  it('returns the correct number of days for September', () => {
+    expect(dateUtils.getDaysInMonth(2023, 8)).toBe(30);
+  });
+
+  it('returns the correct number of days for October', () => {
+    expect(dateUtils.getDaysInMonth(2023, 9)).toBe(31);
+  });
+
+  it('returns the correct number of days for November', () => {
+    expect(dateUtils.getDaysInMonth(2023, 10)).toBe(30);
+  });
+
+  it('returns the correct number of days for December', () => {
+    expect(dateUtils.getDaysInMonth(2023, 11)).toBe(31);
+  });
+
+  it('returns the correct number of days for February in different leap years', () => {
+    expect(dateUtils.getDaysInMonth(2000, 1)).toBe(29);
+    expect(dateUtils.getDaysInMonth(2004, 1)).toBe(29);
+    expect(dateUtils.getDaysInMonth(2100, 1)).toBe(28);
+    expect(dateUtils.getDaysInMonth(2400, 1)).toBe(29);
+  });
+});
