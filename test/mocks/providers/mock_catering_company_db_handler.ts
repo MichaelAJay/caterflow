@@ -3,4 +3,5 @@ import { ICateringCompanyDbHandler } from 'src/internal-modules/external-handler
 export const mockCateringCompanyDbHandlerService: ICateringCompanyDbHandler = {
   createCateringCompany: jest.fn(),
   retrieveCompanyIntegrationsList: jest.fn(),
+  countCompanyIntegrations: jest.fn(),
 };

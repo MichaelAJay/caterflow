@@ -3,4 +3,5 @@ import { ICateringCompanyDbQueryBuilder } from 'src/internal-modules/external-ha
 export const mockCateringCompanyDbQueryBuilderService: ICateringCompanyDbQueryBuilder =
   {
     buildCreateCateringCompanyQuery: jest.fn(),
+    buildRetrieveCompanyIntegrationsListWhereClause: jest.fn(),
   };
