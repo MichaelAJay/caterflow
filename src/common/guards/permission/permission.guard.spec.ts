@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CompanyRoleAndPermissionDbHandlerService } from '../../../internal-modules/external-handlers/db-handlers/company-role-and-permission-db-handler/company-role-and-permission-db-handler.service';
-import { ALL_PERMISSIONS, PermissionGuard } from './permission.guard';
+import { PermissionGuard } from './permission.guard';
 import { Reflector } from '@nestjs/core';
 import { mockCompanyRoleAndPermissionDbHandler } from '../../../../test/mocks/providers/mock_company_role_and_permission_db_handler';
 import { DataAccessService } from '../../../internal-modules/external-handlers/data-access/data-access.service';
