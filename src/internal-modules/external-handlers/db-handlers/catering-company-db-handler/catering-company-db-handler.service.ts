@@ -45,7 +45,11 @@ export class CateringCompanyDbHandlerService
     }
 
     const records = await this.prismaClient.companyIntegration.findMany({
-      where: { companyId },
+      where:
+        this.cateringCompanyDbQueryBuilder.buildRetrieveCompanyIntegrationsListWhereClause(
+          companyId,
+          query,
+        ),
       include: {
         template: {
           select: {

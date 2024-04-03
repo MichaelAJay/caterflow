@@ -160,81 +160,105 @@ describe('CateringCompanyDbHandlerService', () => {
         .mockResolvedValue(mockIntegrationRecords);
     });
 
-    it('should return company integration records when given a valid company ID', async () => {
-      const result =
-        await service.retrieveCompanyIntegrationsList(mockCompanyId);
+    describe('query undefined', () => {
+      it('should return company integration records when given a valid company ID', async () => {
+        const whereClause = { companyId: mockCompanyId };
+        jest
+          .spyOn(
+            cateringCompanyDbQueryBuilder,
+            'buildRetrieveCompanyIntegrationsListWhereClause',
+          )
+          .mockReturnValue(whereClause);
 
-      expect(prismaClient.companyIntegration.findMany).toHaveBeenCalledWith({
-        where: { companyId: mockCompanyId },
-        include: {
-          template: {
-            select: {
-              srcSystem: true,
-              srcEntity: true,
-              targetSystem: true,
-              targetEntity: true,
+        const result = await service.retrieveCompanyIntegrationsList(
+          mockCompanyId,
+          undefined,
+        );
+
+        expect(prismaClient.companyIntegration.findMany).toHaveBeenCalledWith({
+          where: { companyId: mockCompanyId },
+          include: {
+            template: {
+              select: {
+                srcSystem: true,
+                srcEntity: true,
+                targetSystem: true,
+                targetEntity: true,
+              },
             },
           },
-        },
+        });
+        expect(result).toEqual(mockIntegrationRecords);
       });
-      expect(result).toEqual(mockIntegrationRecords);
-    });
 
-    it('should throw an InvalidUUIDError when given an invalid company ID', async () => {
-      const invalidCompanyId = 'invalid-uuid';
-      jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
+      it('should throw an InvalidUUIDError when given an invalid company ID', async () => {
+        const invalidCompanyId = 'invalid-uuid';
+        jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
 
-      await expect(
-        service.retrieveCompanyIntegrationsList(invalidCompanyId),
-      ).rejects.toThrow(InvalidUUIDError);
-      expect(prismaClient.companyIntegration.findMany).not.toHaveBeenCalled();
-    });
+        await expect(
+          service.retrieveCompanyIntegrationsList(invalidCompanyId, undefined),
+        ).rejects.toThrow(InvalidUUIDError);
+        expect(prismaClient.companyIntegration.findMany).not.toHaveBeenCalled();
+      });
 
-    it('should return an empty array when no integration records are found for the given company ID', async () => {
-      jest
-        .spyOn(prismaClient.companyIntegration, 'findMany')
-        .mockResolvedValue([]);
+      it('should return an empty array when no integration records are found for the given company ID', async () => {
+        const whereClause = { companyId: mockCompanyId };
+        jest
+          .spyOn(
+            cateringCompanyDbQueryBuilder,
+            'buildRetrieveCompanyIntegrationsListWhereClause',
+          )
+          .mockReturnValue(whereClause);
 
-      const result =
-        await service.retrieveCompanyIntegrationsList(mockCompanyId);
+        jest
+          .spyOn(prismaClient.companyIntegration, 'findMany')
+          .mockResolvedValue([]);
 
-      expect(prismaClient.companyIntegration.findMany).toHaveBeenCalledWith({
-        where: { companyId: mockCompanyId },
-        include: {
-          template: {
-            select: {
-              srcSystem: true,
-              srcEntity: true,
-              targetSystem: true,
-              targetEntity: true,
+        const result = await service.retrieveCompanyIntegrationsList(
+          mockCompanyId,
+          undefined,
+        );
+
+        expect(prismaClient.companyIntegration.findMany).toHaveBeenCalledWith({
+          where: whereClause,
+          include: {
+            template: {
+              select: {
+                srcSystem: true,
+                srcEntity: true,
+                targetSystem: true,
+                targetEntity: true,
+              },
             },
           },
-        },
+        });
+        expect(result).toEqual([]);
       });
-      expect(result).toEqual([]);
-    });
 
-    it('should throw an error when the Prisma query fails', async () => {
-      const errorMessage = 'Prisma query failed';
+      it('should throw an error when the Prisma query fails', async () => {
+        const errorMessage = 'Prisma query failed';
 
-      jest
-        .spyOn(prismaClient.companyIntegration, 'findMany')
-        .mockRejectedValue(new Error(errorMessage));
+        jest
+          .spyOn(prismaClient.companyIntegration, 'findMany')
+          .mockRejectedValue(new Error(errorMessage));
 
-      await expect(
-        service.retrieveCompanyIntegrationsList(mockCompanyId),
-      ).rejects.toThrow(errorMessage);
-    });
+        await expect(
+          service.retrieveCompanyIntegrationsList(mockCompanyId, undefined),
+        ).rejects.toThrow(errorMessage);
+      });
 
-    it('should return integration records with the correct template details', async () => {
-      const result =
-        await service.retrieveCompanyIntegrationsList(mockCompanyId);
+      it('should return integration records with the correct template details', async () => {
+        const result = await service.retrieveCompanyIntegrationsList(
+          mockCompanyId,
+          undefined,
+        );
 
-      expect(result[0].template).toEqual({
-        srcSystem: $Enums.ExternalSystem.ezCater,
-        srcEntity: $Enums.ExternalEntity.Order,
-        targetSystem: $Enums.ExternalSystem.Nutshell,
-        targetEntity: $Enums.ExternalEntity.Lead,
+        expect(result[0].template).toEqual({
+          srcSystem: $Enums.ExternalSystem.ezCater,
+          srcEntity: $Enums.ExternalEntity.Order,
+          targetSystem: $Enums.ExternalSystem.Nutshell,
+          targetEntity: $Enums.ExternalEntity.Lead,
+        });
       });
     });
   });
