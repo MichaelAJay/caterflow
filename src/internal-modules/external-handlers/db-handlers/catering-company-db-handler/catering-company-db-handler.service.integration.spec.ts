@@ -42,37 +42,34 @@ describe('CateringCompanyDbHandlerService', () => {
     expect(service).toBeDefined();
   });
 
-  // describe('createCateringCompany', () => {
-  //   const cateringCompanyData = {
-  //     name: 'Test CateringCompany',
-  //     ownerId: 'a056125b-92da-43cb-87ce-62f49530d3ad',
-  //   };
-  //   const createdCateringCompany = {
-  //     ...cateringCompanyData,
-  //     id: 'generatedId',
-  //     isActive: false,
-  //     createdAt: new Date(),
-  //     updatedAt: new Date(),
-  //   };
+  describe('createCateringCompany', () => {
+    const cateringCompanyData = {
+      name: 'Test CateringCompany',
+      ownerId: 'a056125b-92da-43cb-87ce-62f49530d3ad',
+    };
+    const createdCateringCompany = {
+      ...cateringCompanyData,
+      id: 'generatedId',
+      isActive: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
 
-  //   it('should create a cateringCompany and return it if ownerId references an existing user not referenced in another cateringCompany record', async () => {
-  //     // jest
-  //     //   .spyOn(cateringCompanyDbQueryBuilder, 'buildCreateCateringCompanyQuery')
-  //     //   .mockReturnValue({ data: cateringCompanyData });
-  //     jest
-  //       .spyOn(prismaClient.cateringCompany, 'create')
-  //       .mockResolvedValue(createdCateringCompany);
+    it('should create a cateringCompany and return it if ownerId references an existing user not referenced in another cateringCompany record', async () => {
+      jest
+        .spyOn(prismaClient.cateringCompany, 'create')
+        .mockResolvedValue(createdCateringCompany);
 
-  //     const result = await service.createCateringCompany(
-  //       cateringCompanyData.name,
-  //       cateringCompanyData.ownerId,
-  //     );
-  //     expect(result).toEqual(createdCateringCompany);
-  //     expect(prismaClient.cateringCompany.create).toHaveBeenCalledWith({
-  //       data: cateringCompanyData,
-  //     });
-  //   });
-  // });
+      const result = await service.createCateringCompany(
+        cateringCompanyData.name,
+        cateringCompanyData.ownerId,
+      );
+      expect(result).toEqual(createdCateringCompany);
+      expect(prismaClient.cateringCompany.create).toHaveBeenCalledWith({
+        data: cateringCompanyData,
+      });
+    });
+  });
 
   describe('retrieveCompanyIntegrationsList', () => {
     const mockCompanyId = '5bc2f8f1-5317-48c2-aa54-3dc9f6e6a540';
@@ -102,67 +99,63 @@ describe('CateringCompanyDbHandlerService', () => {
         .mockResolvedValue(mockIntegrationRecords);
     });
 
-    // describe('query undefined', () => {
-    //   it('should return company integration records when given a valid company ID', async () => {
-    //     const queryMinusInclude = {
-    //       where: { companyId: mockCompanyId },
-    //       take: 10,
-    //     };
+    describe('query undefined', () => {
+      it('should return company integration records when given a valid company ID', async () => {
+        const queryMinusInclude = {
+          where: { companyId: mockCompanyId },
+          take: 10,
+        };
 
-    //     jest.spyOn(prismaClient.companyIntegration, 'findMany');
+        const result = await service.retrieveCompanyIntegrationsList(
+          mockCompanyId,
+          undefined,
+        );
 
-    //     const result = await service.retrieveCompanyIntegrationsList(
-    //       mockCompanyId,
-    //       undefined,
-    //     );
+        expect(prismaClient.companyIntegration.findMany).toHaveBeenCalledWith({
+          ...queryMinusInclude,
+          include: {
+            template: {
+              select: {
+                srcSystem: true,
+                srcEntity: true,
+                targetSystem: true,
+                targetEntity: true,
+              },
+            },
+          },
+        });
+        expect(result).toEqual(mockIntegrationRecords);
+      });
 
-    //     expect(prismaClient.companyIntegration.findMany).toHaveBeenCalledWith({
-    //       ...queryMinusInclude,
-    //       include: {
-    //         template: {
-    //           select: {
-    //             srcSystem: true,
-    //             srcEntity: true,
-    //             targetSystem: true,
-    //             targetEntity: true,
-    //           },
-    //         },
-    //       },
-    //     });
-    //     expect(result).toEqual(mockIntegrationRecords);
-    //   });
+      it('should call prismaClient.companyIntegration.findMany with "include"', async () => {
+        await service.retrieveCompanyIntegrationsList(mockCompanyId, undefined);
 
-    //   it('should call prismaClient.companyIntegration.findMany with "include"', async () => {
-    //     jest.spyOn(prismaClient.companyIntegration, 'findMany');
+        expect(prismaClient.companyIntegration.findMany).toHaveBeenCalledWith(
+          expect.objectContaining({ include: expect.anything() }),
+        );
+      });
 
-    //     await service.retrieveCompanyIntegrationsList(mockCompanyId, undefined);
+      it('should call prismaClient.companyIntegration.findMany with default "take"', async () => {
+        jest.spyOn(prismaClient.companyIntegration, 'findMany');
 
-    //     expect(prismaClient.companyIntegration.findMany).toHaveBeenCalledWith(
-    //       expect.objectContaining({ include: expect.anything() }),
-    //     );
-    //   });
+        await service.retrieveCompanyIntegrationsList(mockCompanyId, undefined);
 
-    //   it('should call prismaClient.companyIntegration.findMany with default "take"', async () => {
-    //     jest.spyOn(prismaClient.companyIntegration, 'findMany');
+        expect(prismaClient.companyIntegration.findMany).toHaveBeenCalledWith(
+          expect.objectContaining({
+            take: 10,
+          }),
+        );
+      });
 
-    //     await service.retrieveCompanyIntegrationsList(mockCompanyId, undefined);
+      it('should throw an InvalidUUIDError when given an invalid company ID', async () => {
+        const invalidCompanyId = 'invalid-uuid';
 
-    //     expect(prismaClient.companyIntegration.findMany).toHaveBeenCalledWith(
-    //       expect.objectContaining({
-    //         take: 10,
-    //       }),
-    //     );
-    //   });
-
-    //   it('should throw an InvalidUUIDError when given an invalid company ID', async () => {
-    //     const invalidCompanyId = 'invalid-uuid';
-
-    //     await expect(
-    //       service.retrieveCompanyIntegrationsList(invalidCompanyId, undefined),
-    //     ).rejects.toThrow(InvalidUUIDError);
-    //     expect(prismaClient.companyIntegration.findMany).not.toHaveBeenCalled();
-    //   });
-    // });
+        await expect(
+          service.retrieveCompanyIntegrationsList(invalidCompanyId, undefined),
+        ).rejects.toThrow(InvalidUUIDError);
+        expect(prismaClient.companyIntegration.findMany).not.toHaveBeenCalled();
+      });
+    });
 
     describe('query defined - prismaClient.companyIntegrations.findMany input focus', () => {
       const validCompanyId = '356fbd4a-160d-45b4-9809-9956fc135284';
