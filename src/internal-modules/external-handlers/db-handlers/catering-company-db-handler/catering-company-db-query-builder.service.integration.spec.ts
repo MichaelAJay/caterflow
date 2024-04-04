@@ -25,10 +25,8 @@ describe('CateringCompanyDbQueryBuilderService', () => {
   });
 
   describe('buildRetrievecompanyIntegrationsListQueryWithoutInclude', () => {
-    const DEFAULT_PG_NUM = 1;
     const DEFAULT_PER_PAGE = 10;
 
-    // passing
     it('should return WHERE clause with companyId only when no query is provided', () => {
       const companyId = 'abc123';
       const query = undefined;
@@ -42,7 +40,6 @@ describe('CateringCompanyDbQueryBuilderService', () => {
       expect(result).toEqual({ where: { companyId }, take: DEFAULT_PER_PAGE });
     });
 
-    // passing
     it('should include isConfigured in WHERE clause when provided', () => {
       const companyId = 'abc123';
       const query: IBuildRetrieveIntegrationListArgs = { isConfigured: true };
@@ -58,7 +55,6 @@ describe('CateringCompanyDbQueryBuilderService', () => {
       });
     });
 
-    // passing
     it('should include isActive in WHERE clause when provided', () => {
       const companyId = 'abc123';
       const query: IBuildRetrieveIntegrationListArgs = { isActive: false };
@@ -74,7 +70,6 @@ describe('CateringCompanyDbQueryBuilderService', () => {
       });
     });
 
-    // passing
     it('should include createdSince in WHERE clause when provided', () => {
       const companyId = 'abc123';
       const createdSince = new Date('2023-01-01');
@@ -91,94 +86,87 @@ describe('CateringCompanyDbQueryBuilderService', () => {
       });
     });
 
-    // // TODO: Write test after refactor
-    // it('should include template srcSystem condition in WHERE clause when provided', () => {
-    //   const companyId = 'abc123';
-    //   const query: IBuildRetrieveIntegrationListArgs = {
-    //     templateSrcSystem: 'ezCater',
-    //   };
-    //   const result =
-    //     queryBuilderUtilities.buildRetrieveCompanyIntegrationsListWhereClause(
-    //       companyId,
-    //       query,
-    //     );
+    it('should include template srcSystem condition in WHERE clause when provided', () => {
+      const companyId = 'abc123';
+      const query: IBuildRetrieveIntegrationListArgs = {
+        templateSrcSystem: 'ezCater',
+      };
+      const result =
+        queryBuilderUtilities.buildRetrieveCompanyIntegrationsListWhereClause(
+          companyId,
+          query,
+        );
 
-    //   expect(result).toEqual({
-    //     companyId,
-    //     AND: [{ template: { srcSystem: 'ezCater' } }],
-    //   });
-    // });
+      expect(result).toEqual({
+        companyId,
+        template: { AND: [{ srcSystem: 'ezCater' }] },
+      });
+    });
 
-    // // TODO: Write test after refactor
-    // it('should include template targetSystem condition in WHERE clause when provided', () => {
-    //   const companyId = 'abc123';
-    //   const query: IBuildRetrieveIntegrationListArgs = {
-    //     templateTargetSystem: 'Nutshell',
-    //   };
-    //   const result =
-    //     queryBuilderUtilities.buildRetrieveCompanyIntegrationsListWhereClause(
-    //       companyId,
-    //       query,
-    //     );
+    it('should include template targetSystem condition in WHERE clause when provided', () => {
+      const companyId = 'abc123';
+      const query: IBuildRetrieveIntegrationListArgs = {
+        templateTargetSystem: 'Nutshell',
+      };
+      const result =
+        queryBuilderUtilities.buildRetrieveCompanyIntegrationsListWhereClause(
+          companyId,
+          query,
+        );
 
-    //   expect(result).toEqual({
-    //     companyId,
-    //     AND: [{ template: { targetSystem: 'Nutshell' } }],
-    //   });
-    // });
+      expect(result).toEqual({
+        companyId,
+        template: { AND: [{ targetSystem: 'Nutshell' }] },
+      });
+    });
 
-    // // TODO: Write test after refactor
-    // it('should include both template srcSystem and targetSystem conditions in WHERE clause when provided', () => {
-    //   const companyId = 'abc123';
-    //   const query: IBuildRetrieveIntegrationListArgs = {
-    //     templateSrcSystem: 'ezCater',
-    //     templateTargetSystem: 'Nutshell',
-    //   };
-    //   const result =
-    //     queryBuilderUtilities.buildRetrieveCompanyIntegrationsListWhereClause(
-    //       companyId,
-    //       query,
-    //     );
+    it('should include both template srcSystem and targetSystem conditions in WHERE clause when provided', () => {
+      const companyId = 'abc123';
+      const query: IBuildRetrieveIntegrationListArgs = {
+        templateSrcSystem: 'ezCater',
+        templateTargetSystem: 'Nutshell',
+      };
+      const result =
+        queryBuilderUtilities.buildRetrieveCompanyIntegrationsListWhereClause(
+          companyId,
+          query,
+        );
 
-    //   expect(result).toEqual({
-    //     companyId,
-    //     AND: [
-    //       { template: { srcSystem: 'ezCater' } },
-    //       { template: { targetSystem: 'Nutshell' } },
-    //     ],
-    //   });
-    // });
+      expect(result).toEqual({
+        companyId,
+        template: {
+          AND: [{ srcSystem: 'ezCater' }, { targetSystem: 'Nutshell' }],
+        },
+      });
+    });
 
-    // // TODO: Write test after refactor
-    // it('should include all provided query parameters in WHERE clause', () => {
-    //   const companyId = 'abc123';
-    //   const createdSince = new Date('2023-01-01');
-    //   const query: IBuildRetrieveIntegrationListArgs = {
-    //     isConfigured: true,
-    //     isActive: true,
-    //     createdSince,
-    //     templateSrcSystem: 'ezCater',
-    //     templateTargetSystem: 'Nutshell',
-    //   };
-    //   const result =
-    //     queryBuilderUtilities.buildRetrieveCompanyIntegrationsListWhereClause(
-    //       companyId,
-    //       query,
-    //     );
+    it('should include all provided query parameters in WHERE clause', () => {
+      const companyId = 'abc123';
+      const createdSince = new Date('2023-01-01');
+      const query: IBuildRetrieveIntegrationListArgs = {
+        isConfigured: true,
+        isActive: true,
+        createdSince,
+        templateSrcSystem: 'ezCater',
+        templateTargetSystem: 'Nutshell',
+      };
+      const result =
+        queryBuilderUtilities.buildRetrieveCompanyIntegrationsListWhereClause(
+          companyId,
+          query,
+        );
 
-    //   expect(result).toEqual({
-    //     companyId,
-    //     isConfigured: true,
-    //     isActive: true,
-    //     createdAt: { gte: createdSince },
-    //     AND: [
-    //       { template: { srcSystem: 'ezCater' } },
-    //       { template: { targetSystem: 'Nutshell' } },
-    //     ],
-    //   });
-    // });
+      expect(result).toEqual({
+        companyId,
+        isConfigured: true,
+        isActive: true,
+        createdAt: { gte: createdSince },
+        template: {
+          AND: [{ srcSystem: 'ezCater' }, { targetSystem: 'Nutshell' }],
+        },
+      });
+    });
 
-    // passing
     it('should include valid ORDERBY clause if query.sort is defined', () => {
       const companyId = 'abc123';
 
