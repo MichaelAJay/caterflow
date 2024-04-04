@@ -76,9 +76,9 @@ describe('queryBuilderUtilities', () => {
           companyId,
           args,
         );
-      expect(result.AND).toContainEqual({ template: { srcSystem: 'SystemA' } });
+      expect(result.AND).toContainEqual({ template: { srcSystem: 'ezCater' } });
       expect(result.AND).toContainEqual({
-        template: { targetSystem: 'SystemB' },
+        template: { targetSystem: 'Nutshell' },
       });
     });
 
@@ -102,8 +102,8 @@ describe('queryBuilderUtilities', () => {
         isActive: true,
         createdAt: { gte: new Date('2020-01-01') },
         AND: [
-          { template: { srcSystem: 'SystemA' } },
-          { template: { targetSystem: 'SystemB' } },
+          { template: { srcSystem: 'ezCater' } },
+          { template: { targetSystem: 'Nutshell' } },
         ],
       });
     });

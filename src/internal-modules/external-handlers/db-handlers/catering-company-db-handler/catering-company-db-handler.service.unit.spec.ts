@@ -162,13 +162,13 @@ describe('CateringCompanyDbHandlerService', () => {
 
     describe('query undefined', () => {
       it('should return company integration records when given a valid company ID', async () => {
-        const whereClause = { companyId: mockCompanyId };
+        const queryMinusInclude = { where: { companyId: mockCompanyId } };
         jest
           .spyOn(
             cateringCompanyDbQueryBuilder,
-            'buildRetrieveCompanyIntegrationsListWhereClause',
+            'buildRetrieveCompanyIntegrationsListQueryWithoutInclude',
           )
-          .mockReturnValue(whereClause);
+          .mockReturnValue(queryMinusInclude);
 
         const result = await service.retrieveCompanyIntegrationsList(
           mockCompanyId,
@@ -176,7 +176,7 @@ describe('CateringCompanyDbHandlerService', () => {
         );
 
         expect(prismaClient.companyIntegration.findMany).toHaveBeenCalledWith({
-          where: { companyId: mockCompanyId },
+          ...queryMinusInclude,
           include: {
             template: {
               select: {
@@ -202,13 +202,13 @@ describe('CateringCompanyDbHandlerService', () => {
       });
 
       it('should return an empty array when no integration records are found for the given company ID', async () => {
-        const whereClause = { companyId: mockCompanyId };
+        const queryMinusInclude = { where: { companyId: mockCompanyId } };
         jest
           .spyOn(
             cateringCompanyDbQueryBuilder,
-            'buildRetrieveCompanyIntegrationsListWhereClause',
+            'buildRetrieveCompanyIntegrationsListQueryWithoutInclude',
           )
-          .mockReturnValue(whereClause);
+          .mockReturnValue(queryMinusInclude);
 
         jest
           .spyOn(prismaClient.companyIntegration, 'findMany')
@@ -220,7 +220,7 @@ describe('CateringCompanyDbHandlerService', () => {
         );
 
         expect(prismaClient.companyIntegration.findMany).toHaveBeenCalledWith({
-          where: whereClause,
+          ...queryMinusInclude,
           include: {
             template: {
               select: {
@@ -261,5 +261,7 @@ describe('CateringCompanyDbHandlerService', () => {
         });
       });
     });
+
+    describe('query defined', () => {});
   });
 });
