@@ -6,9 +6,10 @@ import { mockCateringCompanyDbQueryBuilderService } from '../../../../../test/mo
 import { mockPrismaClientService } from '../../../../../test/mocks/providers/mock_prisma_client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import uuidUtils from '../../../../utility/functions/uuid-utils';
-import { $Enums } from '@prisma/client';
+import { $Enums, Prisma } from '@prisma/client';
 import { CompanyIntegrationListItem } from '../../../../common/types/company-integration-list-item.type';
 import { InvalidUUIDError } from '../../../../common/errors/invalid_uuid.error';
+import { IBuildRetrieveIntegrationListArgs } from './interfaces/query-builder-args.interfaces';
 
 describe('CateringCompanyDbHandlerService', () => {
   let service: CateringCompanyDbHandlerService;
@@ -262,6 +263,66 @@ describe('CateringCompanyDbHandlerService', () => {
       });
     });
 
-    describe('query defined', () => {});
+    describe('query defined', () => {
+      const validCompanyId = 'valid-id';
+      const PG_NUM = 2;
+      const PER_PAGE = 10;
+      const IS_ACTIVE = false;
+
+      const queryInput: IBuildRetrieveIntegrationListArgs = {
+        pg: PG_NUM,
+        perPage: PER_PAGE,
+        isActive: IS_ACTIVE,
+      };
+      const queryBuilderOutput: Omit<
+        Prisma.CompanyIntegrationFindManyArgs,
+        'include'
+      > = {
+        where: { companyId: validCompanyId, isActive: IS_ACTIVE },
+        take: PER_PAGE,
+        skip: (PG_NUM - 1) * PER_PAGE,
+      };
+
+      it('should call query builder with query', async () => {
+        const spy = jest
+          .spyOn(
+            cateringCompanyDbQueryBuilder,
+            'buildRetrieveCompanyIntegrationsListQueryWithoutInclude',
+          )
+          .mockReturnValue(queryBuilderOutput);
+
+        await service.retrieveCompanyIntegrationsList(
+          validCompanyId,
+          queryInput,
+        );
+        expect(spy).toHaveBeenCalledWith(validCompanyId, queryInput);
+      });
+      it('should include full return from query builder in call to prisma client', async () => {
+        jest
+          .spyOn(
+            cateringCompanyDbQueryBuilder,
+            'buildRetrieveCompanyIntegrationsListQueryWithoutInclude',
+          )
+          .mockReturnValue(queryBuilderOutput);
+
+        await service.retrieveCompanyIntegrationsList(
+          validCompanyId,
+          queryInput,
+        );
+        expect(prismaClient.companyIntegration.findMany).toHaveBeenCalledWith({
+          ...queryBuilderOutput,
+          include: {
+            template: {
+              select: {
+                srcSystem: true,
+                srcEntity: true,
+                targetSystem: true,
+                targetEntity: true,
+              },
+            },
+          },
+        });
+      });
+    });
   });
 });
