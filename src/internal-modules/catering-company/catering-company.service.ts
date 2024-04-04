@@ -39,6 +39,8 @@ export class CateringCompanyService implements ICateringCompanyService {
         query,
       );
 
-    return this.companyMapper.mapCompanyIntegrationListForOutput(records);
+    const mappedList =
+      this.companyMapper.mapCompanyIntegrationListForOutput(records);
+    return mappedList;
   }
 }
