@@ -226,7 +226,7 @@ describe('CateringCompanyDbHandlerService', () => {
           }),
         );
       });
-      it('it calls with correct "skip" if "pg" is greater than 1 and "perPage" is undefined', async () => {
+      it('calls with correct "skip" if "pg" is greater than 1 and "perPage" is undefined', async () => {
         query = { pg: 2 };
 
         const DEFAULT_PER_PAGE = 10;
@@ -252,7 +252,7 @@ describe('CateringCompanyDbHandlerService', () => {
           }),
         );
       });
-      it('it calls with "where.isConfigured" if "isConfigured" is included and true', async () => {
+      it('calls with "where.isConfigured" if "isConfigured" is included and true', async () => {
         const isConfigured = true;
         query = { isConfigured };
 
@@ -263,7 +263,7 @@ describe('CateringCompanyDbHandlerService', () => {
           }),
         );
       });
-      it('it calls with "where.isConfigured" if "isConfigured" is included and false', async () => {
+      it('calls with "where.isConfigured" if "isConfigured" is included and false', async () => {
         const isConfigured = false;
         query = { isConfigured };
 
@@ -287,7 +287,7 @@ describe('CateringCompanyDbHandlerService', () => {
           }),
         );
       });
-      it('it calls with "where.isActive" if "isActive" is included and true', async () => {
+      it('calls with "where.isActive" if "isActive" is included and true', async () => {
         const isActive = true;
         query = { isActive };
 
@@ -298,7 +298,7 @@ describe('CateringCompanyDbHandlerService', () => {
           }),
         );
       });
-      it('it calls with "where.isActive" if "isActive" is included and false', async () => {
+      it('calls with "where.isActive" if "isActive" is included and false', async () => {
         const isActive = false;
         query = { isActive };
 
