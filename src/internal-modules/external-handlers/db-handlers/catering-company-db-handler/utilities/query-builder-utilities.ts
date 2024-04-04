@@ -30,20 +30,20 @@ const queryBuilderUtilities = {
       if (createdSince) {
         input.createdAt = { gte: createdSince };
       }
-      const templateConditions: Prisma.CompanyIntegrationWhereInput[] = [];
+      const templateConditions: Prisma.IntegrationTemplateWhereInput[] = [];
 
       if (templateSrcSystem) {
-        templateConditions.push({ template: { srcSystem: templateSrcSystem } });
+        templateConditions.push({ srcSystem: templateSrcSystem });
       }
 
       if (templateTargetSystem) {
-        templateConditions.push({
-          template: { targetSystem: templateTargetSystem },
-        });
+        templateConditions.push({ targetSystem: templateTargetSystem });
       }
 
       if (templateConditions.length > 0) {
-        input.AND = templateConditions;
+        input.template = {
+          AND: templateConditions,
+        };
       }
     }
 
