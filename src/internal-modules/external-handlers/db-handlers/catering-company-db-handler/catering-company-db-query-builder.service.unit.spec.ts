@@ -2,6 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { CateringCompanyDbQueryBuilderService } from './catering-company-db-query-builder.service';
 import { IBuildRetrieveIntegrationListArgs } from './interfaces/query-builder-args.interfaces';
 import queryBuilderUtilities from './utilities/query-builder-utilities';
+import { Prisma } from '@prisma/client';
+
+jest.mock('./utilities/query-builder-utilities');
 
 describe('CateringCompanyDbQueryBuilderService', () => {
   let service: CateringCompanyDbQueryBuilderService;
@@ -35,135 +38,283 @@ describe('CateringCompanyDbQueryBuilderService', () => {
     });
   });
 
-  describe('buildRetrieveCompanyIntegrationsListWhereClause', () => {
-    it('should return WHERE clause with companyId only when no query is provided', () => {
-      const companyId = 'abc123';
-      const result =
-        queryBuilderUtilities.buildRetrieveCompanyIntegrationsListWhereClause(
-          companyId,
-        );
-
-      expect(result).toEqual({ companyId });
-    });
-
-    it('should include isConfigured in WHERE clause when provided', () => {
+  describe('buildRetrieveCompanyIntegrationsListQueryWithoutInclude', () => {
+    it('calls query builder where clause utility with the correct arguments', () => {
       const companyId = 'abc123';
       const query: IBuildRetrieveIntegrationListArgs = { isConfigured: true };
-      const result =
-        queryBuilderUtilities.buildRetrieveCompanyIntegrationsListWhereClause(
-          companyId,
-          query,
-        );
 
-      expect(result).toEqual({ companyId, isConfigured: true });
-    });
-
-    it('should include isActive in WHERE clause when provided', () => {
-      const companyId = 'abc123';
-      const query: IBuildRetrieveIntegrationListArgs = { isActive: false };
-      const result =
-        queryBuilderUtilities.buildRetrieveCompanyIntegrationsListWhereClause(
-          companyId,
-          query,
-        );
-
-      expect(result).toEqual({ companyId, isActive: false });
-    });
-
-    it('should include createdSince in WHERE clause when provided', () => {
-      const companyId = 'abc123';
-      const createdSince = new Date('2023-01-01');
-      const query: IBuildRetrieveIntegrationListArgs = { createdSince };
-      const result =
-        queryBuilderUtilities.buildRetrieveCompanyIntegrationsListWhereClause(
-          companyId,
-          query,
-        );
-
-      expect(result).toEqual({ companyId, createdAt: { gte: createdSince } });
-    });
-
-    it('should include template srcSystem condition in WHERE clause when provided', () => {
-      const companyId = 'abc123';
-      const query: IBuildRetrieveIntegrationListArgs = {
-        templateSrcSystem: 'ezCater',
-      };
-      const result =
-        queryBuilderUtilities.buildRetrieveCompanyIntegrationsListWhereClause(
-          companyId,
-          query,
-        );
-
-      expect(result).toEqual({
-        companyId,
-        AND: [{ template: { srcSystem: 'ezCater' } }],
-      });
-    });
-
-    it('should include template targetSystem condition in WHERE clause when provided', () => {
-      const companyId = 'abc123';
-      const query: IBuildRetrieveIntegrationListArgs = {
-        templateTargetSystem: 'Nutshell',
-      };
-      const result =
-        queryBuilderUtilities.buildRetrieveCompanyIntegrationsListWhereClause(
-          companyId,
-          query,
-        );
-
-      expect(result).toEqual({
-        companyId,
-        AND: [{ template: { targetSystem: 'Nutshell' } }],
-      });
-    });
-
-    it('should include both template srcSystem and targetSystem conditions in WHERE clause when provided', () => {
-      const companyId = 'abc123';
-      const query: IBuildRetrieveIntegrationListArgs = {
-        templateSrcSystem: 'ezCater',
-        templateTargetSystem: 'Nutshell',
-      };
-      const result =
-        queryBuilderUtilities.buildRetrieveCompanyIntegrationsListWhereClause(
-          companyId,
-          query,
-        );
-
-      expect(result).toEqual({
-        companyId,
-        AND: [
-          { template: { srcSystem: 'ezCater' } },
-          { template: { targetSystem: 'Nutshell' } },
-        ],
-      });
-    });
-
-    it('should include all provided query parameters in WHERE clause', () => {
-      const companyId = 'abc123';
-      const createdSince = new Date('2023-01-01');
-      const query: IBuildRetrieveIntegrationListArgs = {
-        isConfigured: true,
-        isActive: true,
-        createdSince,
-        templateSrcSystem: 'ezCater',
-        templateTargetSystem: 'Nutshell',
-      };
-      const result =
-        queryBuilderUtilities.buildRetrieveCompanyIntegrationsListWhereClause(
-          companyId,
-          query,
-        );
-
-      expect(result).toEqual({
+      const utilityWhereClauseReturn: Prisma.CompanyIntegrationWhereInput = {
         companyId,
         isConfigured: true,
+      };
+
+      const spy = jest
+        .spyOn(
+          queryBuilderUtilities,
+          'buildRetrieveCompanyIntegrationsListWhereClause',
+        )
+        .mockReturnValue(utilityWhereClauseReturn);
+
+      service.buildRetrieveCompanyIntegrationsListQueryWithoutInclude(
+        companyId,
+        query,
+      );
+
+      expect(spy).toHaveBeenCalledWith(companyId, query);
+    });
+    it('returns an object with where and default take properties if queryInput is undefined', () => {
+      const companyId = 'abc123';
+      const utilityWhereClauseReturn: Prisma.CompanyIntegrationWhereInput = {
+        companyId,
+      };
+      jest
+        .spyOn(
+          queryBuilderUtilities,
+          'buildRetrieveCompanyIntegrationsListWhereClause',
+        )
+        .mockReturnValue(utilityWhereClauseReturn);
+
+      const result =
+        service.buildRetrieveCompanyIntegrationsListQueryWithoutInclude(
+          companyId,
+          undefined,
+        );
+
+      expect(result).toHaveProperty('where');
+      expect(result).toHaveProperty('take');
+    });
+    it('returns an object with where and take properties if queryInput is defined', () => {
+      const companyId = 'abc123';
+      const query: IBuildRetrieveIntegrationListArgs = { isConfigured: true };
+      const utilityWhereClauseReturn: Prisma.CompanyIntegrationWhereInput = {
+        companyId,
+        isConfigured: true,
+      };
+      jest
+        .spyOn(
+          queryBuilderUtilities,
+          'buildRetrieveCompanyIntegrationsListWhereClause',
+        )
+        .mockReturnValue(utilityWhereClauseReturn);
+
+      const result =
+        service.buildRetrieveCompanyIntegrationsListQueryWithoutInclude(
+          companyId,
+          query,
+        );
+
+      expect(result).toHaveProperty('where');
+      expect(result).toHaveProperty('take');
+    });
+    it('returns an object with default "take" if query is undefined', () => {
+      const companyId = 'abc123';
+      const query: IBuildRetrieveIntegrationListArgs | undefined = undefined;
+      const utilityWhereClauseReturn: Prisma.CompanyIntegrationWhereInput = {
+        companyId,
+      };
+      jest
+        .spyOn(
+          queryBuilderUtilities,
+          'buildRetrieveCompanyIntegrationsListWhereClause',
+        )
+        .mockReturnValue(utilityWhereClauseReturn);
+
+      const result =
+        service.buildRetrieveCompanyIntegrationsListQueryWithoutInclude(
+          companyId,
+          query,
+        );
+      expect(result).toHaveProperty('take', 10);
+    });
+    it('returns an object with default "take" if query.perPage is not included', () => {
+      const companyId = 'abc123';
+      const query: IBuildRetrieveIntegrationListArgs = { isActive: true };
+      const utilityWhereClauseReturn: Prisma.CompanyIntegrationWhereInput = {
+        companyId,
         isActive: true,
-        createdAt: { gte: createdSince },
-        AND: [
-          { template: { srcSystem: 'ezCater' } },
-          { template: { targetSystem: 'Nutshell' } },
-        ],
-      });
+      };
+      jest
+        .spyOn(
+          queryBuilderUtilities,
+          'buildRetrieveCompanyIntegrationsListWhereClause',
+        )
+        .mockReturnValue(utilityWhereClauseReturn);
+
+      const result =
+        service.buildRetrieveCompanyIntegrationsListQueryWithoutInclude(
+          companyId,
+          query,
+        );
+      expect(result).toHaveProperty('take', 10);
+    });
+    it('returns an object without "skip" if query is undefined', () => {
+      const companyId = 'abc123';
+      const query: IBuildRetrieveIntegrationListArgs | undefined = undefined;
+      const utilityWhereClauseReturn: Prisma.CompanyIntegrationWhereInput = {
+        companyId,
+      };
+      jest
+        .spyOn(
+          queryBuilderUtilities,
+          'buildRetrieveCompanyIntegrationsListWhereClause',
+        )
+        .mockReturnValue(utilityWhereClauseReturn);
+      const result =
+        service.buildRetrieveCompanyIntegrationsListQueryWithoutInclude(
+          companyId,
+          query,
+        );
+      expect(result).not.toHaveProperty('skip');
+    });
+    it('returns an object without "skip" if query.pg is not included', () => {
+      const companyId = 'abc123';
+      const query: IBuildRetrieveIntegrationListArgs = { isActive: true };
+      const utilityWhereClauseReturn: Prisma.CompanyIntegrationWhereInput = {
+        companyId,
+        isActive: true,
+      };
+      jest
+        .spyOn(
+          queryBuilderUtilities,
+          'buildRetrieveCompanyIntegrationsListWhereClause',
+        )
+        .mockReturnValue(utilityWhereClauseReturn);
+      const result =
+        service.buildRetrieveCompanyIntegrationsListQueryWithoutInclude(
+          companyId,
+          query,
+        );
+      expect(query).not.toHaveProperty('pg');
+      expect(result).not.toHaveProperty('skip');
+    });
+    it('returns an object without "skip" if query.pg is 1', () => {
+      const companyId = 'abc123';
+      const query: IBuildRetrieveIntegrationListArgs = { pg: 1 };
+      const utilityWhereClauseReturn: Prisma.CompanyIntegrationWhereInput = {
+        companyId,
+      };
+      jest
+        .spyOn(
+          queryBuilderUtilities,
+          'buildRetrieveCompanyIntegrationsListWhereClause',
+        )
+        .mockReturnValue(utilityWhereClauseReturn);
+      const result =
+        service.buildRetrieveCompanyIntegrationsListQueryWithoutInclude(
+          companyId,
+          query,
+        );
+      expect(query).toHaveProperty('pg', 1);
+      expect(result).not.toHaveProperty('skip');
+    });
+    it('returns an object with "skip" if query.pg is greater than 1', () => {
+      const companyId = 'abc123';
+      const query: IBuildRetrieveIntegrationListArgs = { pg: 2 };
+      const utilityWhereClauseReturn: Prisma.CompanyIntegrationWhereInput = {
+        companyId,
+      };
+      jest
+        .spyOn(
+          queryBuilderUtilities,
+          'buildRetrieveCompanyIntegrationsListWhereClause',
+        )
+        .mockReturnValue(utilityWhereClauseReturn);
+      const result =
+        service.buildRetrieveCompanyIntegrationsListQueryWithoutInclude(
+          companyId,
+          query,
+        );
+      expect(query).toHaveProperty('pg');
+      expect(query.pg).toBeGreaterThan(1);
+      expect(result).toHaveProperty('skip');
+    });
+    it('returns an object without "orderBy" if query is undefined', () => {
+      const companyId = 'abc123';
+      const utilityWhereClauseReturn: Prisma.CompanyIntegrationWhereInput = {
+        companyId,
+      };
+      jest
+        .spyOn(
+          queryBuilderUtilities,
+          'buildRetrieveCompanyIntegrationsListWhereClause',
+        )
+        .mockReturnValue(utilityWhereClauseReturn);
+      const result =
+        service.buildRetrieveCompanyIntegrationsListQueryWithoutInclude(
+          companyId,
+          undefined,
+        );
+      expect(result).not.toHaveProperty('orderBy');
+    });
+    it('returns an object without "orderBy" if query.sort is undefined', () => {
+      const companyId = 'abc123';
+      const query: IBuildRetrieveIntegrationListArgs = { pg: 2 };
+      const utilityWhereClauseReturn: Prisma.CompanyIntegrationWhereInput = {
+        companyId,
+      };
+      jest
+        .spyOn(
+          queryBuilderUtilities,
+          'buildRetrieveCompanyIntegrationsListWhereClause',
+        )
+        .mockReturnValue(utilityWhereClauseReturn);
+
+      const result =
+        service.buildRetrieveCompanyIntegrationsListQueryWithoutInclude(
+          companyId,
+          query,
+        );
+      expect(result).not.toHaveProperty('orderBy');
+    });
+    it('returns an object without "orderBy" if query.sort is defined', () => {
+      const companyId = 'abc123';
+      const query: IBuildRetrieveIntegrationListArgs = { sort: 'created_asc' };
+      const utilityWhereClauseReturn: Prisma.CompanyIntegrationWhereInput = {
+        companyId,
+      };
+      jest
+        .spyOn(
+          queryBuilderUtilities,
+          'buildRetrieveCompanyIntegrationsListWhereClause',
+        )
+        .mockReturnValue(utilityWhereClauseReturn);
+
+      const result =
+        service.buildRetrieveCompanyIntegrationsListQueryWithoutInclude(
+          companyId,
+          query,
+        );
+      expect(result).toHaveProperty('orderBy');
+    });
+    it('returns an object with "where", "take", "orderBy" and "skip" if query.pg is greater than 1 and query.sort is defined', () => {
+      const companyId = 'abc123';
+      const query: IBuildRetrieveIntegrationListArgs = {
+        pg: 2,
+        sort: 'created_asc',
+      };
+      const utilityWhereClauseReturn: Prisma.CompanyIntegrationWhereInput = {
+        companyId,
+      };
+      jest
+        .spyOn(
+          queryBuilderUtilities,
+          'buildRetrieveCompanyIntegrationsListWhereClause',
+        )
+        .mockReturnValue(utilityWhereClauseReturn);
+      const result =
+        service.buildRetrieveCompanyIntegrationsListQueryWithoutInclude(
+          companyId,
+          query,
+        );
+
+      expect(query).toHaveProperty('pg');
+      expect(query.pg).toBeGreaterThan(1);
+      expect(query).toHaveProperty('sort');
+      expect(['created_asc', 'created_desc']).toContain(query.sort);
+      expect(result).toHaveProperty('where');
+      expect(result).toHaveProperty('take');
+      expect(result).toHaveProperty('orderBy');
+      expect(result).toHaveProperty('skip');
     });
   });
 });
