@@ -17,3 +17,10 @@ export interface AuthenticatedRequest extends FastifyRequest {
     companyId: string | null;
   };
 }
+
+export type AuthenticatedRequestForCompanyUser = Omit<
+  AuthenticatedRequest,
+  'companyId'
+> & {
+  companyId: string;
+};

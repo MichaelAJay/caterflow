@@ -5,6 +5,11 @@ import { PrismaClientService } from '../../../../external-modules/prisma-client/
 import { mockCateringCompanyDbQueryBuilderService } from '../../../../../test/mocks/providers/mock_catering_company_db_querybuilder';
 import { mockPrismaClientService } from '../../../../../test/mocks/providers/mock_prisma_client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import uuidUtils from '../../../../utility/functions/uuid-utils';
+import { $Enums, Prisma } from '@prisma/client';
+import { CompanyIntegrationListItem } from '../../../../common/types/company-integration-list-item.type';
+import { InvalidUUIDError } from '../../../../common/errors/invalid_uuid.error';
+import { IBuildRetrieveIntegrationListArgs } from './interfaces/query-builder-args.interfaces';
 
 describe('CateringCompanyDbHandlerService', () => {
   let service: CateringCompanyDbHandlerService;
@@ -31,6 +36,9 @@ describe('CateringCompanyDbHandlerService', () => {
         CateringCompanyDbQueryBuilderService,
       );
     prismaClient = module.get<PrismaClientService>(PrismaClientService);
+
+    // Default mock return "true" - change in tests as required
+    jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(true);
   });
 
   afterEach(() => {
@@ -122,6 +130,199 @@ describe('CateringCompanyDbHandlerService', () => {
         expect(error).toBeInstanceOf(PrismaClientKnownRequestError);
         expect(error.code).toBe('P2003');
       }
+    });
+  });
+
+  describe('retrieveCompanyIntegrationsList', () => {
+    const mockCompanyId = '123e4567-e89b-12d3-a456-426655440000';
+    const mockIntegrationRecords: CompanyIntegrationListItem[] = [
+      {
+        id: '1',
+        companyId: mockCompanyId,
+        templateId: 1,
+        event: $Enums.IntegrationEvent.ezCaterOrderReceived,
+        isConfigured: true,
+        isActive: true,
+        createdAt: new Date(),
+        creatorId: '',
+        template: {
+          srcSystem: $Enums.ExternalSystem.ezCater,
+          srcEntity: $Enums.ExternalEntity.Order,
+          targetSystem: $Enums.ExternalSystem.Nutshell,
+          targetEntity: $Enums.ExternalEntity.Lead,
+        },
+      },
+      // Add more mock integration records as needed
+    ];
+
+    beforeEach(() => {
+      jest
+        .spyOn(prismaClient.companyIntegration, 'findMany')
+        .mockResolvedValue(mockIntegrationRecords);
+    });
+
+    describe('query undefined', () => {
+      it('should return company integration records when given a valid company ID', async () => {
+        const queryMinusInclude = { where: { companyId: mockCompanyId } };
+        jest
+          .spyOn(
+            cateringCompanyDbQueryBuilder,
+            'buildRetrieveCompanyIntegrationsListQueryWithoutInclude',
+          )
+          .mockReturnValue(queryMinusInclude);
+
+        const result = await service.retrieveCompanyIntegrationsList(
+          mockCompanyId,
+          undefined,
+        );
+
+        expect(prismaClient.companyIntegration.findMany).toHaveBeenCalledWith({
+          ...queryMinusInclude,
+          include: {
+            template: {
+              select: {
+                srcSystem: true,
+                srcEntity: true,
+                targetSystem: true,
+                targetEntity: true,
+              },
+            },
+          },
+        });
+        expect(result).toEqual(mockIntegrationRecords);
+      });
+
+      it('should throw an InvalidUUIDError when given an invalid company ID', async () => {
+        const invalidCompanyId = 'invalid-uuid';
+        jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
+
+        await expect(
+          service.retrieveCompanyIntegrationsList(invalidCompanyId, undefined),
+        ).rejects.toThrow(InvalidUUIDError);
+        expect(prismaClient.companyIntegration.findMany).not.toHaveBeenCalled();
+      });
+
+      it('should return an empty array when no integration records are found for the given company ID', async () => {
+        const queryMinusInclude = { where: { companyId: mockCompanyId } };
+        jest
+          .spyOn(
+            cateringCompanyDbQueryBuilder,
+            'buildRetrieveCompanyIntegrationsListQueryWithoutInclude',
+          )
+          .mockReturnValue(queryMinusInclude);
+
+        jest
+          .spyOn(prismaClient.companyIntegration, 'findMany')
+          .mockResolvedValue([]);
+
+        const result = await service.retrieveCompanyIntegrationsList(
+          mockCompanyId,
+          undefined,
+        );
+
+        expect(prismaClient.companyIntegration.findMany).toHaveBeenCalledWith({
+          ...queryMinusInclude,
+          include: {
+            template: {
+              select: {
+                srcSystem: true,
+                srcEntity: true,
+                targetSystem: true,
+                targetEntity: true,
+              },
+            },
+          },
+        });
+        expect(result).toEqual([]);
+      });
+
+      it('should throw an error when the Prisma query fails', async () => {
+        const errorMessage = 'Prisma query failed';
+
+        jest
+          .spyOn(prismaClient.companyIntegration, 'findMany')
+          .mockRejectedValue(new Error(errorMessage));
+
+        await expect(
+          service.retrieveCompanyIntegrationsList(mockCompanyId, undefined),
+        ).rejects.toThrow(errorMessage);
+      });
+
+      it('should return integration records with the correct template details', async () => {
+        const result = await service.retrieveCompanyIntegrationsList(
+          mockCompanyId,
+          undefined,
+        );
+
+        expect(result[0].template).toEqual({
+          srcSystem: $Enums.ExternalSystem.ezCater,
+          srcEntity: $Enums.ExternalEntity.Order,
+          targetSystem: $Enums.ExternalSystem.Nutshell,
+          targetEntity: $Enums.ExternalEntity.Lead,
+        });
+      });
+    });
+
+    describe('query defined', () => {
+      const validCompanyId = 'valid-id';
+      const PG_NUM = 2;
+      const PER_PAGE = 10;
+      const IS_ACTIVE = false;
+
+      const queryInput: IBuildRetrieveIntegrationListArgs = {
+        pg: PG_NUM,
+        perPage: PER_PAGE,
+        isActive: IS_ACTIVE,
+      };
+      const queryBuilderOutput: Omit<
+        Prisma.CompanyIntegrationFindManyArgs,
+        'include'
+      > = {
+        where: { companyId: validCompanyId, isActive: IS_ACTIVE },
+        take: PER_PAGE,
+        skip: (PG_NUM - 1) * PER_PAGE,
+      };
+
+      it('should call query builder with query', async () => {
+        const spy = jest
+          .spyOn(
+            cateringCompanyDbQueryBuilder,
+            'buildRetrieveCompanyIntegrationsListQueryWithoutInclude',
+          )
+          .mockReturnValue(queryBuilderOutput);
+
+        await service.retrieveCompanyIntegrationsList(
+          validCompanyId,
+          queryInput,
+        );
+        expect(spy).toHaveBeenCalledWith(validCompanyId, queryInput);
+      });
+      it('should include full return from query builder in call to prisma client', async () => {
+        jest
+          .spyOn(
+            cateringCompanyDbQueryBuilder,
+            'buildRetrieveCompanyIntegrationsListQueryWithoutInclude',
+          )
+          .mockReturnValue(queryBuilderOutput);
+
+        await service.retrieveCompanyIntegrationsList(
+          validCompanyId,
+          queryInput,
+        );
+        expect(prismaClient.companyIntegration.findMany).toHaveBeenCalledWith({
+          ...queryBuilderOutput,
+          include: {
+            template: {
+              select: {
+                srcSystem: true,
+                srcEntity: true,
+                targetSystem: true,
+                targetEntity: true,
+              },
+            },
+          },
+        });
+      });
     });
   });
 });

@@ -2,4 +2,5 @@ import { ICateringCompanyService } from 'src/internal-modules/catering-company/i
 
 export const mockCateringCompanyService: ICateringCompanyService = {
   createCateringCompany: jest.fn(),
+  retrieveIntegrationsList: jest.fn(),
 };

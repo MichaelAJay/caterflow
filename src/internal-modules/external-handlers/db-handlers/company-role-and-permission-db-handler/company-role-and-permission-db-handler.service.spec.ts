@@ -7,7 +7,7 @@ import { mockPrismaClientService } from '../../../../../test/mocks/providers/moc
 import { LogService } from '../../../../system/modules/log/log.service';
 import { mockLogService } from '../../../../../test/mocks/providers/mock_log_service';
 import { $Enums, PermissionName, Prisma } from '@prisma/client';
-import uuidUtils from '../../../../utility/functions/is_uuid';
+import uuidUtils from '../../../../utility/functions/uuid-utils';
 import { InvalidUUIDError } from '../../../../common/errors/invalid_uuid.error';
 import {
   IBuildCreateCompanyRoleArgs,
@@ -58,7 +58,7 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
     expect(logService).toBeDefined();
   });
 
-  describe('initializeRoles', () => {
+  describe('initializeRolesAndAssignOwner', () => {
     const validCompanyId = '00000000-0000-4000-8000-000000000000';
     const validCreatorId = '11111111-1111-4111-8111-111111111111';
 
@@ -75,6 +75,17 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
       creatorId: string;
       isEditable: boolean;
     })[];
+
+    /**
+     * Happy path:
+     * prismaClient.role.findMany
+     * companyRoleAndPermissionDbQueryBuilder.buildCreateManySingleCompanyRolesQuery
+     * prismaClient.$transaction
+     *  prismaClient.role.create
+     * prismaClient.userCompanyRole.create
+     *  companyRoleAndPermissionDbQueryBuilder.buildCreateUserCompanyRoleQuery
+     */
+
     it('should successfully initialize roles with permissions for a new company and return true', async () => {
       // Arrange
       const companyId = validCompanyId;
@@ -128,8 +139,57 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
         )
         .mockReturnValue(roleCreateArgs);
 
+      const ownerRecord = {
+        id: '1',
+        name: 'Owner',
+        description: '',
+        companyId: null,
+        creatorId: '1',
+        isEditable: true,
+      };
+      const mockTransactionReturn = [
+        ownerRecord,
+        {
+          id: '2',
+          name: 'Super Administrator',
+          description: '',
+          companyId: null,
+          creatorId: '1',
+          isEditable: true,
+        },
+        {
+          id: '3',
+          name: 'Administrator',
+          description: '',
+          companyId: null,
+          creatorId: '1',
+          isEditable: true,
+        },
+      ];
+      jest
+        .spyOn(prismaClient, '$transaction')
+        .mockResolvedValue(mockTransactionReturn);
+
+      const createUserCompanyRoleQueryReturn = {
+        data: {
+          roleId: ownerRecord.id,
+          userId: validCreatorId,
+          companyId: validCompanyId,
+          creatorId: validCreatorId,
+        },
+      };
+      const createUCRQueryBuilderSpy = jest
+        .spyOn(
+          companyRoleAndPermissionDbQueryBuilder,
+          'buildCreateUserCompanyRoleQuery',
+        )
+        .mockReturnValue(createUserCompanyRoleQueryReturn);
+
       // Act
-      const result = await service.initializeRoles(companyId, creatorId);
+      const result = await service.initializeRolesAndAssignOwner(
+        companyId,
+        creatorId,
+      );
 
       // Assert
       expect(result).toBe(true);
@@ -145,6 +205,40 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
           mockPrismaClientService.role.create(roleCreateArg),
         ),
       );
+      expect(createUCRQueryBuilderSpy).toHaveBeenCalledWith(
+        ownerRecord.id,
+        validCreatorId,
+        validCompanyId,
+      );
+      expect(prismaClient.userCompanyRole.create).toHaveBeenCalledWith(
+        createUserCompanyRoleQueryReturn,
+      );
+    });
+
+    it('should not call log service if InvalidUUIDError is thrown', async () => {
+      jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
+
+      await expect(
+        service.initializeRolesAndAssignOwner('', ''),
+      ).rejects.toThrow(InvalidUUIDError);
+
+      expect(logService.error).not.toHaveBeenCalled();
+    });
+
+    it('should not call any other mehtods if InvalidUUIDError is thrown', async () => {
+      jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
+
+      await expect(
+        service.initializeRolesAndAssignOwner('', ''),
+      ).rejects.toThrow(InvalidUUIDError);
+
+      expect(prismaClient.role.findMany).not.toHaveBeenCalled();
+      expect(
+        companyRoleAndPermissionDbQueryBuilder.buildCreateManySingleCompanyRolesQuery,
+      ).not.toHaveBeenCalled();
+      expect(prismaClient.$transaction).not.toHaveBeenCalled();
+      expect(prismaClient.role.create).not.toHaveBeenCalled();
+      expect(prismaClient.userCompanyRole.create).not.toHaveBeenCalled();
     });
 
     it('should throw invalid uuid error if companyId is empty and only call isUUID once with companyId', async () => {
@@ -153,7 +247,7 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
 
       const spy = jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
       await expect(
-        service.initializeRoles(companyId, creatorId),
+        service.initializeRolesAndAssignOwner(companyId, creatorId),
       ).rejects.toThrow(InvalidUUIDError);
 
       expect(spy).toHaveBeenCalledTimes(1);
@@ -166,7 +260,7 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
 
       const spy = jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
       await expect(
-        service.initializeRoles(companyId, creatorId),
+        service.initializeRolesAndAssignOwner(companyId, creatorId),
       ).rejects.toThrow(InvalidUUIDError);
 
       expect(spy).toHaveBeenCalledTimes(1);
@@ -182,7 +276,7 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
         .mockReturnValueOnce(true)
         .mockReturnValueOnce(false);
       await expect(
-        service.initializeRoles(companyId, creatorId),
+        service.initializeRolesAndAssignOwner(companyId, creatorId),
       ).rejects.toThrow(InvalidUUIDError);
 
       expect(spy).toHaveBeenCalledTimes(2);
@@ -199,7 +293,7 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
         .mockReturnValueOnce(true)
         .mockReturnValueOnce(false);
       await expect(
-        service.initializeRoles(companyId, creatorId),
+        service.initializeRolesAndAssignOwner(companyId, creatorId),
       ).rejects.toThrow(InvalidUUIDError);
 
       expect(spy).toHaveBeenCalledTimes(2);
@@ -260,7 +354,7 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
         .mockReturnValue(roleCreateArgs);
 
       // Act
-      await service.initializeRoles(companyId, creatorId);
+      await service.initializeRolesAndAssignOwner(companyId, creatorId);
 
       // Assert
       expect(mockPrismaClientService.role.findMany).toHaveBeenCalledWith({
@@ -322,7 +416,7 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
         .mockReturnValue(roleCreateArgs);
 
       // Act
-      await service.initializeRoles(companyId, creatorId);
+      await service.initializeRolesAndAssignOwner(companyId, creatorId);
 
       // Assert
       expect(
@@ -383,7 +477,7 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
         .mockReturnValue(roleCreateArgs);
 
       // Act
-      await service.initializeRoles(companyId, creatorId);
+      await service.initializeRolesAndAssignOwner(companyId, creatorId);
 
       // Assert
       expect(mockPrismaClientService.$transaction).toHaveBeenCalledWith(
@@ -446,7 +540,7 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
         .mockReturnValue(roleCreateArgs);
 
       // Act
-      await service.initializeRoles(companyId, creatorId);
+      await service.initializeRolesAndAssignOwner(companyId, creatorId);
 
       // Assert
       expect(mockPrismaClientService.$transaction).toHaveBeenCalledWith(
@@ -476,7 +570,10 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
         .mockReturnValue([]);
 
       // Act
-      const result = await service.initializeRoles(companyId, creatorId);
+      const result = await service.initializeRolesAndAssignOwner(
+        companyId,
+        creatorId,
+      );
 
       // Assert
       expect(result).toBe(false);
@@ -497,7 +594,10 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
         .mockRejectedValue(error);
 
       // Act & Assert
-      const result = await service.initializeRoles(companyId, creatorId);
+      const result = await service.initializeRolesAndAssignOwner(
+        companyId,
+        creatorId,
+      );
 
       expect(result).toBe(false);
       expect(mockLogService.error).toHaveBeenCalledWith(
@@ -508,6 +608,12 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
           message: 'Company role initialization failed',
         },
       );
+      expect(
+        companyRoleAndPermissionDbQueryBuilder.buildCreateManySingleCompanyRolesQuery,
+      ).not.toHaveBeenCalled();
+      expect(prismaClient.$transaction).not.toHaveBeenCalled();
+      expect(prismaClient.role.create).not.toHaveBeenCalled();
+      expect(prismaClient.userCompanyRole.create).not.toHaveBeenCalled();
     });
 
     it('should return false and log an error and rethrow it when an error occurs during the transaction', async () => {
@@ -570,7 +676,118 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
         .mockRejectedValue(error);
 
       // Act & Assert
-      const result = await service.initializeRoles(companyId, creatorId);
+      const result = await service.initializeRolesAndAssignOwner(
+        companyId,
+        creatorId,
+      );
+      expect(result).toBe(false);
+      expect(mockLogService.error).toHaveBeenCalledWith(
+        error.message,
+        error.stack ? error.stack : 'Stack trace unavailable',
+        {
+          companyId,
+          message: 'Company role initialization failed',
+        },
+      );
+      expect(prismaClient.userCompanyRole.create).not.toHaveBeenCalled();
+    });
+
+    it('should return false and log an error and rethrow it when an error occurs during userCompanyRole.create', async () => {
+      // Arrange
+      const companyId = validCompanyId;
+      const creatorId = validCreatorId;
+      const error = new Error('Database error');
+      systemRolesWithPermissions = [
+        {
+          id: 'role1',
+          name: 'Role 1',
+          description: 'Role 1 description',
+          companyId: null,
+          creatorId: 'system',
+          isEditable: true,
+          permissions: [
+            { id: 1, name: PermissionName.ManageBilling },
+            { id: 2, name: PermissionName.ManageCompanyRoles },
+          ],
+        },
+        {
+          id: 'role2',
+          name: 'Role 2',
+          description: 'Role 2 description',
+          companyId: null,
+          creatorId: 'system',
+          isEditable: true,
+          permissions: [
+            { id: 3, name: PermissionName.ManageIntegrations },
+            { id: 4, name: PermissionName.ManageIntegrationAssets },
+          ],
+        },
+      ];
+
+      const roleCreateArgs = systemRolesWithPermissions.map((role) => ({
+        data: {
+          name: role.name,
+          description: role.description,
+          companyId,
+          creatorId,
+          isEditable: false,
+          permissions: {
+            connect: role.permissions.map(({ id }) => ({ id })),
+          },
+        },
+      }));
+
+      jest
+        .spyOn(
+          mockCompanyRoleAndPermissionDbQueryBuilder,
+          'buildCreateManySingleCompanyRolesQuery',
+        )
+        .mockReturnValue(roleCreateArgs);
+
+      jest
+        .spyOn(mockPrismaClientService.role, 'findMany')
+        .mockResolvedValue(systemRolesWithPermissions);
+
+      const ownerRecord = {
+        id: '1',
+        name: 'Owner',
+        description: '',
+        companyId: null,
+        creatorId: '1',
+        isEditable: true,
+      };
+      const mockTransactionReturn = [
+        ownerRecord,
+        {
+          id: '2',
+          name: 'Super Administrator',
+          description: '',
+          companyId: null,
+          creatorId: '1',
+          isEditable: true,
+        },
+        {
+          id: '3',
+          name: 'Administrator',
+          description: '',
+          companyId: null,
+          creatorId: '1',
+          isEditable: true,
+        },
+      ];
+
+      jest
+        .spyOn(mockPrismaClientService, '$transaction')
+        .mockResolvedValue(mockTransactionReturn);
+      jest
+        .spyOn(mockPrismaClientService.userCompanyRole, 'create')
+        .mockRejectedValue(error);
+
+      // Act & Assert
+      const result = await service.initializeRolesAndAssignOwner(
+        companyId,
+        creatorId,
+      );
       expect(result).toBe(false);
       expect(mockLogService.error).toHaveBeenCalledWith(
         error.message,
@@ -621,7 +838,7 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
         .mockRejectedValue(error);
 
       // Act & Assert
-      await service.initializeRoles(companyId, creatorId);
+      await service.initializeRolesAndAssignOwner(companyId, creatorId);
       expect(mockLogService.error).toHaveBeenCalledWith(
         error.message,
         error.stack ? error.stack : 'Stack trace unavailable',
@@ -673,7 +890,7 @@ describe('CompanyRoleAndPermissionDbHandlerService', () => {
         .mockReturnValue([]);
 
       // Act
-      await service.initializeRoles(companyId, creatorId);
+      await service.initializeRolesAndAssignOwner(companyId, creatorId);
 
       // Assert
       expect(mockPrismaClientService.$transaction).not.toHaveBeenCalled();

@@ -8,7 +8,7 @@ import {
   IBuildCreateCompanyRoleArgs,
   IBuildUpdateCompanyRoleArgs,
 } from './interfaces/query-builder-args.interface';
-import uuidUtils from '../../../../utility/functions/is_uuid';
+import uuidUtils from '../../../../utility/functions/uuid-utils';
 import { InvalidUUIDError } from '../../../../common/errors/invalid_uuid.error';
 import { ERROR_CODE } from '../../../../common/codes/error-codes';
 
@@ -22,7 +22,7 @@ export class CompanyRoleAndPermissionDbHandlerService
     private readonly logService: LogService,
   ) {}
   // Called once per company on creation
-  async initializeRoles(
+  async initializeRolesAndAssignOwner(
     companyId: string,
     creatorId: string,
   ): Promise<boolean> {
@@ -65,11 +65,23 @@ export class CompanyRoleAndPermissionDbHandlerService
         throw new Error('roleCreateArgs is empty');
       }
 
-      await this.prismaClient.$transaction(
+      const companyRoles = await this.prismaClient.$transaction(
         roleCreateArgs.map((roleCreateArg) => {
           return this.prismaClient.role.create(roleCreateArg);
         }),
       );
+
+      const ownerRecord = companyRoles.find((role) => role.name === 'Owner');
+      if (ownerRecord) {
+        await this.prismaClient.userCompanyRole.create(
+          this.companyRoleAndPermissionDbQueryBuilder.buildCreateUserCompanyRoleQuery(
+            ownerRecord.id,
+            creatorId,
+            companyId,
+          ),
+        );
+      }
+
       return true;
     } catch (err) {
       const stackTrace = err.stack ? err.stack : 'Stack trace unavailable';

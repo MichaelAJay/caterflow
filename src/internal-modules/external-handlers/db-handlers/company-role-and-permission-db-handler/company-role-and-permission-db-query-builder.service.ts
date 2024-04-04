@@ -28,7 +28,7 @@ export class CompanyRoleAndPermissionDbQueryBuilderService
     companyId: string,
     creatorId: string,
   ): Prisma.RoleCreateArgs[] {
-    const companyRecords: Prisma.RoleCreateArgs[] =
+    const companyRecordArgs: Prisma.RoleCreateArgs[] =
       systemRolesWithPermissions.map(
         ({ name, description, permissions: rolePermissions }) => {
           const data: Prisma.RoleUncheckedCreateInput = {
@@ -45,10 +45,26 @@ export class CompanyRoleAndPermissionDbQueryBuilderService
             };
           }
 
+          // Should be able to connect UserCompanyRole too - but can't for some reason
+
           return { data };
         },
       );
-    return companyRecords;
+    return companyRecordArgs;
+  }
+  buildCreateUserCompanyRoleQuery(
+    roleId: string,
+    creatorId: string,
+    companyId: string,
+  ): Prisma.UserCompanyRoleCreateArgs {
+    return {
+      data: {
+        roleId,
+        userId: creatorId,
+        companyId,
+        creatorId,
+      },
+    };
   }
   buildCreateCompanyRoleQuery(
     input: IBuildCreateCompanyRoleArgs,

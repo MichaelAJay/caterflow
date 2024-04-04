@@ -22,6 +22,11 @@ export interface ICompanyRoleAndPermissionDbQueryBuilder {
     companyId: string,
     creatorId: string,
   ): Prisma.RoleCreateArgs[];
+  buildCreateUserCompanyRoleQuery(
+    roleId: string,
+    creatorId: string,
+    companyId: string,
+  ): Prisma.UserCompanyRoleCreateArgs;
   buildCreateCompanyRoleQuery(
     input: IBuildCreateCompanyRoleArgs,
   ): Prisma.RoleCreateArgs;

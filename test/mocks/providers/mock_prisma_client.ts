@@ -3,6 +3,9 @@ export const mockPrismaClientService = {
   cateringCompany: {
     create: jest.fn(),
   },
+  companyIntegration: {
+    findMany: jest.fn(),
+  },
   role: {
     findMany: jest.fn(),
     findUnique: jest.fn(),
@@ -17,6 +20,7 @@ export const mockPrismaClientService = {
     update: jest.fn(),
   },
   userCompanyRole: {
+    create: jest.fn(),
     createMany: jest.fn(),
     deleteMany: jest.fn(),
     findFirst: jest.fn(),

@@ -8,6 +8,10 @@ import { FirebaseAdminService } from '../../external-modules/firebase-admin/fire
 import { mockFirebaseAdminService } from '../../../test/mocks/providers/mock_firebase_admin';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { validateCreateCateringCompanyRequestBody } from './validators/post.caterer';
+import { IBuildRetrieveIntegrationListArgs } from '../../internal-modules/external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
+import { AuthenticatedRequestForCompanyUser } from '../interfaces/authenticated-request.interface';
+import { CompanyIntegrationOutputItem } from 'src/common/types/company-integration-list-item.type';
+import { $Enums } from '@prisma/client';
 
 describe('CateringCompanyController', () => {
   let controller: CateringCompanyController;
@@ -109,6 +113,64 @@ describe('CateringCompanyController', () => {
       await expect(
         controller.createCateringCompany(invalidBody, req as any),
       ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('getIntegrations', () => {
+    const mockRequest: AuthenticatedRequestForCompanyUser = {
+      companyId: 'company-id',
+      // Add other necessary properties for the mock request
+    } as AuthenticatedRequestForCompanyUser;
+
+    it('should call retrieveIntegrationsList with companyId and undefined query when no query parameters are provided', async () => {
+      const result = [
+        {
+          key: 'val',
+        } as unknown as CompanyIntegrationOutputItem,
+      ] as CompanyIntegrationOutputItem[];
+      jest
+        .spyOn(cateringCompanyService, 'retrieveIntegrationsList')
+        .mockResolvedValue(result);
+
+      const response = await controller.getIntegrations(mockRequest, {});
+
+      expect(
+        cateringCompanyService.retrieveIntegrationsList,
+      ).toHaveBeenCalledWith('company-id', undefined);
+      expect(response).toBe(result);
+    });
+
+    it('should call retrieveIntegrationsList with companyId and query parameters when provided', async () => {
+      const query: IBuildRetrieveIntegrationListArgs = {
+        perPage: 10,
+        pg: 1,
+      };
+      const result = [
+        {
+          key: 'val',
+        } as unknown as CompanyIntegrationOutputItem,
+      ] as CompanyIntegrationOutputItem[];
+      jest
+        .spyOn(cateringCompanyService, 'retrieveIntegrationsList')
+        .mockResolvedValue(result);
+
+      const response = await controller.getIntegrations(mockRequest, query);
+
+      expect(
+        cateringCompanyService.retrieveIntegrationsList,
+      ).toHaveBeenCalledWith('company-id', query);
+      expect(response).toBe(result);
+    });
+
+    it('should throw an error when retrieveIntegrationsList throws an error', async () => {
+      const errorMessage = 'Some error occurred';
+      jest
+        .spyOn(cateringCompanyService, 'retrieveIntegrationsList')
+        .mockRejectedValue(new Error(errorMessage));
+
+      await expect(controller.getIntegrations(mockRequest, {})).rejects.toThrow(
+        errorMessage,
+      );
     });
   });
 });

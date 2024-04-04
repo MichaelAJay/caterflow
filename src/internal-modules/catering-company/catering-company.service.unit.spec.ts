@@ -4,12 +4,23 @@ import { CateringCompanyDbHandlerService } from '../external-handlers/db-handler
 import { UserDbHandlerService } from '../external-handlers/db-handlers/user-db-handler/user-db-handler.service';
 import { mockCateringCompanyDbHandlerService } from '../../../test/mocks/providers/mock_catering_company_db_handler';
 import { mockUserDbHandlerService } from '../../../test/mocks/providers/mock_user_db_handler';
-import { CateringCompany, User } from '@prisma/client';
+import { CompanyRoleAndPermissionDbHandlerService } from '../external-handlers/db-handlers/company-role-and-permission-db-handler/company-role-and-permission-db-handler.service';
+import { mockCompanyRoleAndPermissionDbHandler } from '../../../test/mocks/providers/mock_company_role_and_permission_db_handler';
+import { CompanyMapperService } from './company-mapper.service';
+import { mockCompanyMapper } from '../../../test/mocks/providers/mock_company_mapper_service';
+import { $Enums } from '@prisma/client';
+import {
+  CompanyIntegrationListItem,
+  CompanyIntegrationOutputItem,
+} from '../../common/types/company-integration-list-item.type';
+import { IBuildRetrieveIntegrationListArgs } from '../external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
 
 describe('CateringCompanyService', () => {
   let service: CateringCompanyService;
   let cateringCompanyDbHandler: CateringCompanyDbHandlerService;
   let userDbHandler: UserDbHandlerService;
+  let companyRoleDbHandler: CompanyRoleAndPermissionDbHandlerService;
+  let companyMapper: CompanyMapperService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -20,6 +31,11 @@ describe('CateringCompanyService', () => {
           useValue: mockCateringCompanyDbHandlerService,
         },
         { provide: UserDbHandlerService, useValue: mockUserDbHandlerService },
+        {
+          provide: CompanyRoleAndPermissionDbHandlerService,
+          useValue: mockCompanyRoleAndPermissionDbHandler,
+        },
+        { provide: CompanyMapperService, useValue: mockCompanyMapper },
       ],
     }).compile();
 
@@ -28,6 +44,10 @@ describe('CateringCompanyService', () => {
       CateringCompanyDbHandlerService,
     );
     userDbHandler = module.get<UserDbHandlerService>(UserDbHandlerService);
+    companyRoleDbHandler = module.get<CompanyRoleAndPermissionDbHandlerService>(
+      CompanyRoleAndPermissionDbHandlerService,
+    );
+    companyMapper = module.get<CompanyMapperService>(CompanyMapperService);
   });
 
   afterEach(() => {
@@ -39,55 +59,199 @@ describe('CateringCompanyService', () => {
   });
 
   describe('createCateringCompany', () => {
-    const cateringCompanyName = 'Test CateringCompany';
-    const ownerId = 'ownerId';
-    const mockCateringCompanyId = 'CateringCompanyId';
+    const companyName = 'Test Company';
+    const ownerId = 'owner-id';
+    const companyId = 'company-id';
 
-    it('should successfully create a CateringCompany and update the user', async () => {
-      const createCateringCompanySpy = jest
+    it('should create a catering company and assign owner', async () => {
+      const createCateringCompanyMock = jest
         .spyOn(cateringCompanyDbHandler, 'createCateringCompany')
-        .mockResolvedValue({ id: mockCateringCompanyId } as CateringCompany);
-      const updateUserSpy = jest
+        .mockResolvedValueOnce({ id: companyId } as any);
+      const initializeRolesAndAssignOwnerMock = jest
+        .spyOn(companyRoleDbHandler, 'initializeRolesAndAssignOwner')
+        .mockResolvedValueOnce(undefined as any);
+      const updateUserMock = jest
         .spyOn(userDbHandler, 'updateUser')
-        .mockResolvedValue({} as User);
+        .mockResolvedValueOnce(undefined as any);
 
-      await expect(
-        service.createCateringCompany(cateringCompanyName, ownerId),
-      ).resolves.toBeUndefined();
-      expect(createCateringCompanySpy).toHaveBeenCalledWith(
-        cateringCompanyName,
+      await service.createCateringCompany(companyName, ownerId);
+
+      expect(createCateringCompanyMock).toHaveBeenCalledWith(
+        companyName,
         ownerId,
       );
-      expect(updateUserSpy).toHaveBeenCalledWith(ownerId, {
-        companyId: mockCateringCompanyId,
-      });
+      expect(initializeRolesAndAssignOwnerMock).toHaveBeenCalledWith(
+        companyId,
+        ownerId,
+      );
+      expect(updateUserMock).toHaveBeenCalledWith(ownerId, { companyId });
     });
-    it('should propagate an error thrown during create company', async () => {
-      const errMsg = 'Create company failed';
-      const error = new Error(errMsg);
 
+    it('should throw an error if creating catering company fails', async () => {
+      const errorMessage = 'Failed to create catering company';
       jest
         .spyOn(cateringCompanyDbHandler, 'createCateringCompany')
-        .mockRejectedValue(error);
+        .mockRejectedValueOnce(new Error(errorMessage));
+
       await expect(
-        service.createCateringCompany(cateringCompanyName, ownerId),
-      ).rejects.toThrow(errMsg);
+        service.createCateringCompany(companyName, ownerId),
+      ).rejects.toThrow(errorMessage);
+      expect(
+        companyRoleDbHandler.initializeRolesAndAssignOwner,
+      ).not.toHaveBeenCalled();
       expect(userDbHandler.updateUser).not.toHaveBeenCalled();
     });
-    it('should propagate an error thrown during update user', async () => {
-      const errMsg = 'Update user failed';
-      const error = new Error(errMsg);
 
-      const createCateringCompanySpy = jest
+    it('should throw an error if initializing roles and assigning owner fails', async () => {
+      const errorMessage = 'Failed to initialize roles and assign owner';
+      jest
         .spyOn(cateringCompanyDbHandler, 'createCateringCompany')
-        .mockResolvedValue({ id: mockCateringCompanyId } as CateringCompany);
-
-      jest.spyOn(userDbHandler, 'updateUser').mockRejectedValue(error);
+        .mockResolvedValueOnce({ id: companyId } as any);
+      jest
+        .spyOn(companyRoleDbHandler, 'initializeRolesAndAssignOwner')
+        .mockRejectedValueOnce(new Error(errorMessage));
 
       await expect(
-        service.createCateringCompany(cateringCompanyName, ownerId),
-      ).rejects.toThrow(errMsg);
-      expect(createCateringCompanySpy).toHaveBeenCalledTimes(1);
+        service.createCateringCompany(companyName, ownerId),
+      ).rejects.toThrow(errorMessage);
+      expect(userDbHandler.updateUser).not.toHaveBeenCalled();
+    });
+
+    it('should throw an error if updating user fails', async () => {
+      const errorMessage = 'Failed to update user';
+      jest
+        .spyOn(cateringCompanyDbHandler, 'createCateringCompany')
+        .mockResolvedValueOnce({ id: companyId } as any);
+      jest
+        .spyOn(companyRoleDbHandler, 'initializeRolesAndAssignOwner')
+        .mockResolvedValueOnce(undefined as any);
+      jest
+        .spyOn(userDbHandler, 'updateUser')
+        .mockRejectedValueOnce(new Error(errorMessage));
+
+      await expect(
+        service.createCateringCompany(companyName, ownerId),
+      ).rejects.toThrow(errorMessage);
+    });
+  });
+
+  describe('retrieveIntegrationsList', () => {
+    const companyId = 'company-1';
+    const mockIntegrationRecords: CompanyIntegrationListItem[] = [
+      {
+        id: 'integration-1',
+        event: 'ezCaterOrderReceived',
+        template: {
+          srcSystem: $Enums.ExternalSystem.ezCater,
+          srcEntity: $Enums.ExternalEntity.Order,
+          targetSystem: $Enums.ExternalSystem.Nutshell,
+          targetEntity: $Enums.ExternalEntity.Lead,
+        },
+        isConfigured: true,
+        isActive: true,
+        createdAt: new Date(),
+      } as CompanyIntegrationListItem,
+      {
+        id: 'integration-2',
+        event: 'ezCaterOrderReceived',
+        template: {
+          srcSystem: $Enums.ExternalSystem.Nutshell,
+          srcEntity: $Enums.ExternalEntity.Lead,
+          targetSystem: $Enums.ExternalSystem.ezCater,
+          targetEntity: $Enums.ExternalEntity.Order,
+        },
+        isConfigured: false,
+        isActive: false,
+        createdAt: new Date(),
+      } as CompanyIntegrationListItem,
+    ];
+    const mockMappedIntegrations: CompanyIntegrationOutputItem[] = [
+      {
+        template: { src: 'ezCater Order', target: 'Nutshell Lead' },
+        event: 'ezCater Order Received',
+        isConfigured: true,
+        isActive: true,
+        createdAt: new Date(),
+      },
+      {
+        template: { src: 'EzCater Menu', target: 'Company Menu' },
+        event: 'ezCater Order Received',
+        isConfigured: false,
+        isActive: false,
+        createdAt: new Date(),
+      },
+    ];
+
+    beforeEach(() => {
+      jest
+        .spyOn(
+          mockCateringCompanyDbHandlerService,
+          'retrieveCompanyIntegrationsList',
+        )
+        .mockResolvedValue(mockIntegrationRecords);
+
+      jest
+        .spyOn(mockCompanyMapper, 'mapCompanyIntegrationListForOutput')
+        .mockReturnValue(mockMappedIntegrations);
+    });
+
+    it('should call cateringCompanyDbHandler.retrieveCompanyIntegrationsList with the correct companyId and pass through undefined query', async () => {
+      await service.retrieveIntegrationsList(companyId);
+      expect(
+        cateringCompanyDbHandler.retrieveCompanyIntegrationsList,
+      ).toHaveBeenCalledWith(companyId, undefined);
+    });
+
+    it('should call cateringCompanyDbHandler.retrieveCompanyIntegrationsList with the correct companyId and pass through defined query', async () => {
+      const query: IBuildRetrieveIntegrationListArgs = { pg: 1 };
+
+      await service.retrieveIntegrationsList(companyId, query);
+      expect(
+        cateringCompanyDbHandler.retrieveCompanyIntegrationsList,
+      ).toHaveBeenCalledWith(companyId, query);
+    });
+
+    it('should call companyMapper.mapCompanyIntegrationListForOutput with the retrieved integration records', async () => {
+      await service.retrieveIntegrationsList(companyId);
+      expect(
+        companyMapper.mapCompanyIntegrationListForOutput,
+      ).toHaveBeenCalledWith(mockIntegrationRecords);
+    });
+
+    it('should return the mapped integration list', async () => {
+      const result = await service.retrieveIntegrationsList(companyId);
+      expect(result).toEqual(mockMappedIntegrations);
+    });
+
+    it('should throw an error if cateringCompanyDbHandler.retrieveCompanyIntegrationsList throws an error', async () => {
+      const errorMessage = 'Database error';
+      jest
+        .spyOn(
+          mockCateringCompanyDbHandlerService,
+          'retrieveCompanyIntegrationsList',
+        )
+        .mockRejectedValue(new Error(errorMessage));
+      await expect(service.retrieveIntegrationsList(companyId)).rejects.toThrow(
+        errorMessage,
+      );
+      expect(
+        companyMapper.mapCompanyIntegrationListForOutput,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('should throw an error if companyMapper.mapCompanyIntegrationListForOutput throws an error', async () => {
+      const errorMessage = 'Mapping error';
+      jest
+        .spyOn(mockCompanyMapper, 'mapCompanyIntegrationListForOutput')
+        .mockImplementation(() => {
+          throw new Error(errorMessage);
+        });
+      await expect(service.retrieveIntegrationsList(companyId)).rejects.toThrow(
+        errorMessage,
+      );
+      expect(
+        cateringCompanyDbHandler.retrieveCompanyIntegrationsList,
+      ).toHaveBeenCalled();
     });
   });
 });

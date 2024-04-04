@@ -14,6 +14,7 @@ import { bypassUserRequirementMetadataName } from '../../decorators/bypass-user-
 import { bypassVerifiedEmailRequirementMetadataName } from '../../decorators/bypass-verified-email-requirement.decorator';
 import {
   AuthenticatedRequest,
+  AuthenticatedRequestForCompanyUser,
   AuthenticatedRequestForNewUser,
 } from '../../../api/interfaces/authenticated-request.interface';
 import { isLogInMetadataName } from '../../../common/decorators/login.decorator';
@@ -96,9 +97,19 @@ export class AuthGuard implements CanActivate {
             code: ERROR_CODE.NoCompany,
           });
         }
+
+        (request as AuthenticatedRequest).user = {
+          id: user.id,
+          internalUserEmailVerificationStatus: user.emailVerified,
+          external_auth_uid: payload.uid,
+          email: payload.email,
+          companyId: user.companyId,
+        };
+
+        return true;
       }
 
-      (request as AuthenticatedRequest).user = {
+      (request as AuthenticatedRequestForCompanyUser).user = {
         id: user.id,
         internalUserEmailVerificationStatus: user.emailVerified,
         external_auth_uid: payload.uid,
