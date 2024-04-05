@@ -16,6 +16,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions/all-excepti
 import { PermissionGuard } from './common/guards/permission/permission.guard';
 import { CompanyRoleAndPermissionDbHandlerModule } from './internal-modules/external-handlers/db-handlers/company-role-and-permission-db-handler/company-role-and-permission-db-handler.module';
 import { DataAccessModule } from './internal-modules/external-handlers/data-access/data-access.module';
+import { IntegrationAPIModule } from './api/integration/integration-api.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { DataAccessModule } from './internal-modules/external-handlers/data-acce
     InternalCacheModule,
     CateringCompanyApiModule,
     UserApiModule,
+    IntegrationAPIModule,
     UserModule,
     GuardModule,
     CompanyRoleAndPermissionDbHandlerModule,

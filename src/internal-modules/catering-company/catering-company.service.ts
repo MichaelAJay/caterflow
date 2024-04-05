@@ -5,7 +5,7 @@ import { UserDbHandlerService } from '../external-handlers/db-handlers/user-db-h
 import { CompanyRoleAndPermissionDbHandlerService } from '../external-handlers/db-handlers/company-role-and-permission-db-handler/company-role-and-permission-db-handler.service';
 import { CompanyMapperService } from './company-mapper.service';
 import { CompanyIntegrationOutputItem } from 'src/common/types/company-integration-list-item.type';
-import { IBuildRetrieveIntegrationListArgs } from '../external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
+import { IBuildRetrieveCompanyIntegrationListArgs } from '../external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
 
 @Injectable()
 export class CateringCompanyService implements ICateringCompanyService {
@@ -31,7 +31,7 @@ export class CateringCompanyService implements ICateringCompanyService {
 
   async retrieveIntegrationsList(
     companyId: string,
-    query?: IBuildRetrieveIntegrationListArgs,
+    query?: IBuildRetrieveCompanyIntegrationListArgs,
   ): Promise<CompanyIntegrationOutputItem[]> {
     const records =
       await this.cateringCompanyDbHandler.retrieveCompanyIntegrationsList(

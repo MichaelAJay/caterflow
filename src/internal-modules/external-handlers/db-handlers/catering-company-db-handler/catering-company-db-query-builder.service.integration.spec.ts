@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CateringCompanyDbQueryBuilderService } from './catering-company-db-query-builder.service';
-import { IBuildRetrieveIntegrationListArgs } from './interfaces/query-builder-args.interfaces';
+import { IBuildRetrieveCompanyIntegrationListArgs } from './interfaces/query-builder-args.interfaces';
 import queryBuilderUtilities from './utilities/query-builder-utilities';
 
 describe('CateringCompanyDbQueryBuilderService', () => {
@@ -42,7 +42,9 @@ describe('CateringCompanyDbQueryBuilderService', () => {
 
     it('should include isConfigured in WHERE clause when provided', () => {
       const companyId = 'abc123';
-      const query: IBuildRetrieveIntegrationListArgs = { isConfigured: true };
+      const query: IBuildRetrieveCompanyIntegrationListArgs = {
+        isConfigured: true,
+      };
       const result =
         service.buildRetrieveCompanyIntegrationsListQueryWithoutInclude(
           companyId,
@@ -57,7 +59,9 @@ describe('CateringCompanyDbQueryBuilderService', () => {
 
     it('should include isActive in WHERE clause when provided', () => {
       const companyId = 'abc123';
-      const query: IBuildRetrieveIntegrationListArgs = { isActive: false };
+      const query: IBuildRetrieveCompanyIntegrationListArgs = {
+        isActive: false,
+      };
       const result =
         service.buildRetrieveCompanyIntegrationsListQueryWithoutInclude(
           companyId,
@@ -73,7 +77,7 @@ describe('CateringCompanyDbQueryBuilderService', () => {
     it('should include createdSince in WHERE clause when provided', () => {
       const companyId = 'abc123';
       const createdSince = new Date('2023-01-01');
-      const query: IBuildRetrieveIntegrationListArgs = { createdSince };
+      const query: IBuildRetrieveCompanyIntegrationListArgs = { createdSince };
       const result =
         service.buildRetrieveCompanyIntegrationsListQueryWithoutInclude(
           companyId,
@@ -88,7 +92,7 @@ describe('CateringCompanyDbQueryBuilderService', () => {
 
     it('should include template srcSystem condition in WHERE clause when provided', () => {
       const companyId = 'abc123';
-      const query: IBuildRetrieveIntegrationListArgs = {
+      const query: IBuildRetrieveCompanyIntegrationListArgs = {
         templateSrcSystem: 'ezCater',
       };
       const result =
@@ -105,7 +109,7 @@ describe('CateringCompanyDbQueryBuilderService', () => {
 
     it('should include template targetSystem condition in WHERE clause when provided', () => {
       const companyId = 'abc123';
-      const query: IBuildRetrieveIntegrationListArgs = {
+      const query: IBuildRetrieveCompanyIntegrationListArgs = {
         templateTargetSystem: 'Nutshell',
       };
       const result =
@@ -122,7 +126,7 @@ describe('CateringCompanyDbQueryBuilderService', () => {
 
     it('should include both template srcSystem and targetSystem conditions in WHERE clause when provided', () => {
       const companyId = 'abc123';
-      const query: IBuildRetrieveIntegrationListArgs = {
+      const query: IBuildRetrieveCompanyIntegrationListArgs = {
         templateSrcSystem: 'ezCater',
         templateTargetSystem: 'Nutshell',
       };
@@ -143,7 +147,7 @@ describe('CateringCompanyDbQueryBuilderService', () => {
     it('should include all provided query parameters in WHERE clause', () => {
       const companyId = 'abc123';
       const createdSince = new Date('2023-01-01');
-      const query: IBuildRetrieveIntegrationListArgs = {
+      const query: IBuildRetrieveCompanyIntegrationListArgs = {
         isConfigured: true,
         isActive: true,
         createdSince,
@@ -170,7 +174,9 @@ describe('CateringCompanyDbQueryBuilderService', () => {
     it('should include valid ORDERBY clause if query.sort is defined', () => {
       const companyId = 'abc123';
 
-      const query: IBuildRetrieveIntegrationListArgs = { sort: 'created_asc' };
+      const query: IBuildRetrieveCompanyIntegrationListArgs = {
+        sort: 'created_asc',
+      };
       const result =
         service.buildRetrieveCompanyIntegrationsListQueryWithoutInclude(
           companyId,

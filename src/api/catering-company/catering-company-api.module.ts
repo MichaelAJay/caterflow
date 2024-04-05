@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { CateringCompanyModule } from 'src/internal-modules/catering-company/catering-company.module';
 import { CateringCompanyController } from './catering-company.controller';
-import { GetIntegrationsValidatorTransformerMiddleware } from './middleware/get-integrations-validator-transformer/get-integrations-validator-transformer.middleware';
+import { GetCompanyIntegrationsValidatorTransformerMiddleware } from './middleware/get-integrations-validator-transformer/get-integrations-validator-transformer.middleware';
 
 @Module({
   imports: [CateringCompanyModule],
@@ -15,7 +15,7 @@ import { GetIntegrationsValidatorTransformerMiddleware } from './middleware/get-
 export class CateringCompanyApiModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(GetIntegrationsValidatorTransformerMiddleware)
+      .apply(GetCompanyIntegrationsValidatorTransformerMiddleware)
       .forRoutes({ path: 'caterer/integrations', method: RequestMethod.GET });
   }
 }

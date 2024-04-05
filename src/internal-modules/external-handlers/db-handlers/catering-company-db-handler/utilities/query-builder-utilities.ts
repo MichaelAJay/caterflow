@@ -1,12 +1,15 @@
 import { Prisma } from '@prisma/client';
-import { IBuildRetrieveIntegrationListArgs } from '../interfaces/query-builder-args.interfaces';
+import {
+  IBuildRetrieveCompanyIntegrationListArgs,
+  IBuildRetrieveIntegrationListArgs,
+} from '../interfaces/query-builder-args.interfaces';
 
 const queryBuilderUtilities = {
   buildRetrieveCompanyIntegrationsListWhereClause(
     companyId: string,
-    query?: IBuildRetrieveIntegrationListArgs,
+    query?: IBuildRetrieveCompanyIntegrationListArgs,
   ): Prisma.CompanyIntegrationWhereInput {
-    const input: Prisma.CompanyIntegrationWhereInput = {
+    const whereInput: Prisma.CompanyIntegrationWhereInput = {
       companyId,
     };
 
@@ -20,15 +23,15 @@ const queryBuilderUtilities = {
       } = query;
 
       if (typeof isConfigured === 'boolean') {
-        input.isConfigured = isConfigured;
+        whereInput.isConfigured = isConfigured;
       }
 
       if (typeof isActive === 'boolean') {
-        input.isActive = isActive;
+        whereInput.isActive = isActive;
       }
 
       if (createdSince) {
-        input.createdAt = { gte: createdSince };
+        whereInput.createdAt = { gte: createdSince };
       }
       const templateConditions: Prisma.IntegrationTemplateWhereInput[] = [];
 
@@ -41,19 +44,36 @@ const queryBuilderUtilities = {
       }
 
       if (templateConditions.length > 0) {
-        input.template = {
+        whereInput.template = {
           AND: templateConditions,
         };
       }
     }
 
-    return input;
+    return whereInput;
   },
   buildRetrieveCompanyIntegrationsListSortClause(
     sort: 'created_asc' | 'created_desc',
   ): Prisma.CompanyIntegrationOrderByWithRelationInput {
     const sortOrder = sort.split('_')[1] as 'asc' | 'desc';
     return { createdAt: sortOrder };
+  },
+  buildRetrieveIntegrationTemplatesListWhereClause(
+    query: IBuildRetrieveIntegrationListArgs,
+  ): Prisma.IntegrationTemplateWhereInput {
+    const { templateSrcSystem, templateTargetSystem } = query;
+
+    const whereInput: Prisma.IntegrationTemplateWhereInput = {};
+
+    if (templateSrcSystem) {
+      whereInput.srcSystem = templateSrcSystem;
+    }
+
+    if (templateTargetSystem) {
+      whereInput.targetSystem = templateTargetSystem;
+    }
+
+    return whereInput;
   },
 };
 export default queryBuilderUtilities;

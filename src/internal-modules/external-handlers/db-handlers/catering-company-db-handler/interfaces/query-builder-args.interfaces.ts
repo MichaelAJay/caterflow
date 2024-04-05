@@ -8,10 +8,14 @@ export type IBuildCreateCateringCompanyArgs = Pick<
 export interface IBuildRetrieveIntegrationListArgs {
   pg?: number;
   perPage?: number;
+  templateSrcSystem?: 'ezCater';
+  templateTargetSystem?: 'ezCater' | 'Nutshell';
+}
+
+export interface IBuildRetrieveCompanyIntegrationListArgs
+  extends IBuildRetrieveIntegrationListArgs {
   isConfigured?: boolean;
   isActive?: boolean;
   createdSince?: Date;
-  templateSrcSystem?: 'ezCater';
-  templateTargetSystem?: 'ezCater' | 'Nutshell';
   sort?: 'created_asc' | 'created_desc';
 }

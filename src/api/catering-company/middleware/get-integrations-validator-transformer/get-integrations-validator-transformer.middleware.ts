@@ -4,25 +4,25 @@ import {
   NestMiddleware,
 } from '@nestjs/common';
 import { FastifyReply, FastifyRequest } from 'fastify';
-import { validateGetIntegrationsListQuery } from '../../validators/get.integration-lists';
+import { validateGetCompanyIntegrationsListQuery } from '../../validators/get.integration-lists';
 import dateUtils from '../../../../utility/functions/date-utils';
-import { IBuildRetrieveIntegrationListArgs } from '../../../../internal-modules/external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
+import { IBuildRetrieveCompanyIntegrationListArgs } from '../../../../internal-modules/external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
 
 @Injectable()
-export class GetIntegrationsValidatorTransformerMiddleware
+export class GetCompanyIntegrationsValidatorTransformerMiddleware
   implements NestMiddleware
 {
   use(req: FastifyRequest, res: FastifyReply, next: () => void) {
     const query = req.query as unknown;
 
-    if (!validateGetIntegrationsListQuery(query)) {
+    if (!validateGetCompanyIntegrationsListQuery(query)) {
       throw new BadRequestException({
         error: 'Invalid query parameters',
-        details: validateGetIntegrationsListQuery.errors,
+        details: validateGetCompanyIntegrationsListQuery.errors,
       });
     }
 
-    const transformedQuery: IBuildRetrieveIntegrationListArgs = {
+    const transformedQuery: IBuildRetrieveCompanyIntegrationListArgs = {
       pg: query.pg ? parseInt(query.pg, 10) : undefined,
       perPage: query.per_page ? parseInt(query.per_page, 10) : undefined,
       isConfigured: query.filter_configured
@@ -38,6 +38,16 @@ export class GetIntegrationsValidatorTransformerMiddleware
       templateTargetSystem: query.template_target,
       sort: query.sort,
     };
+
+    if (
+      (transformedQuery.pg && transformedQuery.pg < 1) ||
+      (transformedQuery.perPage && transformedQuery.perPage < 1)
+    ) {
+      throw new BadRequestException({
+        error:
+          'Page number must be 1 or greater, and records per page must be 1 or greater',
+      });
+    }
 
     req.query = transformedQuery;
     next();

@@ -20,7 +20,7 @@ import {
 import { BypassCateringCompanyRequirement } from '../../common/decorators/bypass-company-requirement.decorator';
 import { ERROR_CODE } from '../../common/codes/error-codes';
 import { SUCCESS_CODE } from '../../common/codes/success-codes';
-import { IBuildRetrieveIntegrationListArgs } from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
+import { IBuildRetrieveCompanyIntegrationListArgs } from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
 import { $Enums } from '@prisma/client';
 
 @Controller('caterer')
@@ -74,7 +74,7 @@ export class CateringCompanyController implements ICateringCompanyController {
   @SetMetadata('permissions', [$Enums.PermissionName.ManageIntegrations])
   async getIntegrations(
     @Req() req: AuthenticatedRequestForCompanyUser,
-    @Query() query: IBuildRetrieveIntegrationListArgs,
+    @Query() query: IBuildRetrieveCompanyIntegrationListArgs,
   ) {
     return this.cateringCompanyService.retrieveIntegrationsList(
       req.user.companyId,

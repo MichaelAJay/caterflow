@@ -1,6 +1,6 @@
 import { CateringCompany } from '@prisma/client';
 import { CompanyIntegrationListItem } from 'src/common/types/company-integration-list-item.type';
-import { IBuildRetrieveIntegrationListArgs } from './query-builder-args.interfaces';
+import { IBuildRetrieveCompanyIntegrationListArgs } from './query-builder-args.interfaces';
 
 export interface ICateringCompanyDbHandler {
   createCateringCompany(
@@ -10,7 +10,7 @@ export interface ICateringCompanyDbHandler {
 
   retrieveCompanyIntegrationsList(
     companyId: string,
-    query?: IBuildRetrieveIntegrationListArgs,
+    query?: IBuildRetrieveCompanyIntegrationListArgs,
   ): Promise<CompanyIntegrationListItem[]>;
 
   countCompanyIntegrations(companyId: string): Promise<number>;

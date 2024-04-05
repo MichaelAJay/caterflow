@@ -4,6 +4,7 @@ import {
   CompanyIntegrationListItem,
   CompanyIntegrationOutputItem,
 } from '../../common/types/company-integration-list-item.type';
+import { ICompanyMapper } from './interfaces/company-mapper.service.interface';
 
 export type IntegrationEventOutput = 'ezCater Order Received';
 
@@ -15,7 +16,7 @@ export const INTEGRATION_EVENT_MAPPER: Record<
 };
 
 @Injectable()
-export class CompanyMapperService {
+export class CompanyMapperService implements ICompanyMapper {
   mapCompanyIntegrationListForOutput(
     list: CompanyIntegrationListItem[],
   ): CompanyIntegrationOutputItem[] {
