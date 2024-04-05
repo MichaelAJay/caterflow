@@ -6,7 +6,7 @@ import {
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { validateGetIntegrationsListQuery } from '../../validators/get.integration-lists';
 import dateUtils from '../../../../utility/functions/date-utils';
-import { IBuildRetrieveIntegrationListArgs } from '../../../../internal-modules/external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
+import { IBuildRetrieveCompanyIntegrationListArgs } from '../../../../internal-modules/external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
 
 @Injectable()
 export class GetIntegrationsValidatorTransformerMiddleware
@@ -22,7 +22,7 @@ export class GetIntegrationsValidatorTransformerMiddleware
       });
     }
 
-    const transformedQuery: IBuildRetrieveIntegrationListArgs = {
+    const transformedQuery: IBuildRetrieveCompanyIntegrationListArgs = {
       pg: query.pg ? parseInt(query.pg, 10) : undefined,
       perPage: query.per_page ? parseInt(query.per_page, 10) : undefined,
       isConfigured: query.filter_configured

@@ -1,5 +1,5 @@
 import { Prisma } from '@prisma/client';
-import { IBuildRetrieveIntegrationListArgs } from '../interfaces/query-builder-args.interfaces';
+import { IBuildRetrieveCompanyIntegrationListArgs } from '../interfaces/query-builder-args.interfaces';
 import queryBuilderUtilities from './query-builder-utilities';
 
 describe('queryBuilderUtilities', () => {
@@ -15,7 +15,7 @@ describe('queryBuilderUtilities', () => {
     });
 
     it('should handle boolean flags correctly', () => {
-      const args: IBuildRetrieveIntegrationListArgs = {
+      const args: IBuildRetrieveCompanyIntegrationListArgs = {
         isConfigured: true,
         isActive: false,
       };
@@ -33,7 +33,7 @@ describe('queryBuilderUtilities', () => {
     });
 
     it('should handle undefined boolean fields correctly', () => {
-      const args: IBuildRetrieveIntegrationListArgs = {
+      const args: IBuildRetrieveCompanyIntegrationListArgs = {
         isConfigured: undefined,
         isActive: undefined,
       };
@@ -51,7 +51,7 @@ describe('queryBuilderUtilities', () => {
     it('should handle createdSince correctly', () => {
       const targetDate = new Date('2020-01-01');
 
-      const args: IBuildRetrieveIntegrationListArgs = {
+      const args: IBuildRetrieveCompanyIntegrationListArgs = {
         createdSince: targetDate,
       };
       const companyId = 'test-company';
@@ -66,7 +66,7 @@ describe('queryBuilderUtilities', () => {
     });
 
     it('should handle templateSrcSystem and templateTargetSystem correctly', () => {
-      const args: IBuildRetrieveIntegrationListArgs = {
+      const args: IBuildRetrieveCompanyIntegrationListArgs = {
         templateSrcSystem: 'ezCater',
         templateTargetSystem: 'Nutshell',
       };
@@ -85,7 +85,7 @@ describe('queryBuilderUtilities', () => {
     });
 
     it('should return correct conditions when all options are provided', () => {
-      const args: IBuildRetrieveIntegrationListArgs = {
+      const args: IBuildRetrieveCompanyIntegrationListArgs = {
         isConfigured: true,
         isActive: true,
         createdSince: new Date('2020-01-01'),

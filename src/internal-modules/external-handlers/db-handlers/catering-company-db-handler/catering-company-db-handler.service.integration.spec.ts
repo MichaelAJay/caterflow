@@ -8,7 +8,7 @@ import uuidUtils from '../../../../utility/functions/uuid-utils';
 import { $Enums, Prisma } from '@prisma/client';
 import { CompanyIntegrationListItem } from '../../../../common/types/company-integration-list-item.type';
 import { InvalidUUIDError } from '../../../../common/errors/invalid_uuid.error';
-import { IBuildRetrieveIntegrationListArgs } from './interfaces/query-builder-args.interfaces';
+import { IBuildRetrieveCompanyIntegrationListArgs } from './interfaces/query-builder-args.interfaces';
 
 describe('CateringCompanyDbHandlerService', () => {
   let service: CateringCompanyDbHandlerService;
@@ -162,7 +162,7 @@ describe('CateringCompanyDbHandlerService', () => {
       const PG_NUM = 2;
       const PER_PAGE = 10;
       const IS_ACTIVE = false;
-      let query: IBuildRetrieveIntegrationListArgs;
+      let query: IBuildRetrieveCompanyIntegrationListArgs;
 
       it('calls with where.companyId and include', async () => {
         query = { pg: 2 };

@@ -1,10 +1,10 @@
 import { Prisma } from '@prisma/client';
-import { IBuildRetrieveIntegrationListArgs } from '../interfaces/query-builder-args.interfaces';
+import { IBuildRetrieveCompanyIntegrationListArgs } from '../interfaces/query-builder-args.interfaces';
 
 const queryBuilderUtilities = {
   buildRetrieveCompanyIntegrationsListWhereClause(
     companyId: string,
-    query?: IBuildRetrieveIntegrationListArgs,
+    query?: IBuildRetrieveCompanyIntegrationListArgs,
   ): Prisma.CompanyIntegrationWhereInput {
     const input: Prisma.CompanyIntegrationWhereInput = {
       companyId,

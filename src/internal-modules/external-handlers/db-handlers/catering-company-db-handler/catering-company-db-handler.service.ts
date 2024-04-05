@@ -7,7 +7,7 @@ import { CompanyIntegrationListItem } from '../../../../common/types/company-int
 import uuidUtils from '../../../../utility/functions/uuid-utils';
 import { InvalidUUIDError } from '../../../../common/errors/invalid_uuid.error';
 import { ERROR_CODE } from '../../../../common/codes/error-codes';
-import { IBuildRetrieveIntegrationListArgs } from './interfaces/query-builder-args.interfaces';
+import { IBuildRetrieveCompanyIntegrationListArgs } from './interfaces/query-builder-args.interfaces';
 
 @Injectable()
 export class CateringCompanyDbHandlerService
@@ -38,7 +38,7 @@ export class CateringCompanyDbHandlerService
 
   async retrieveCompanyIntegrationsList(
     companyId: string,
-    query?: IBuildRetrieveIntegrationListArgs,
+    query?: IBuildRetrieveCompanyIntegrationListArgs,
   ): Promise<CompanyIntegrationListItem[]> {
     if (!uuidUtils.isUUID(companyId)) {
       throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);

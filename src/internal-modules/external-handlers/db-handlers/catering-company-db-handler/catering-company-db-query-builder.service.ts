@@ -4,7 +4,7 @@ import { Prisma } from '@prisma/client';
 import { DefaultArgs } from '@prisma/client/runtime/library';
 import {
   IBuildCreateCateringCompanyArgs,
-  IBuildRetrieveIntegrationListArgs,
+  IBuildRetrieveCompanyIntegrationListArgs,
 } from './interfaces/query-builder-args.interfaces';
 import queryBuilderUtilities from './utilities/query-builder-utilities';
 
@@ -22,7 +22,7 @@ export class CateringCompanyDbQueryBuilderService
 
   buildRetrieveCompanyIntegrationsListQueryWithoutInclude(
     companyId: string,
-    queryInput?: IBuildRetrieveIntegrationListArgs,
+    queryInput?: IBuildRetrieveCompanyIntegrationListArgs,
   ): Omit<Prisma.CompanyIntegrationFindManyArgs, 'include'> {
     const PG_NUM = queryInput && queryInput.pg ? queryInput.pg : 1;
     const PER_PAGE = queryInput && queryInput.perPage ? queryInput.perPage : 10;

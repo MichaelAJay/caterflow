@@ -5,7 +5,7 @@ export type IBuildCreateCateringCompanyArgs = Pick<
   'name' | 'ownerId'
 >;
 
-export interface IBuildRetrieveIntegrationListArgs {
+export interface IBuildRetrieveCompanyIntegrationListArgs {
   pg?: number;
   perPage?: number;
   isConfigured?: boolean;

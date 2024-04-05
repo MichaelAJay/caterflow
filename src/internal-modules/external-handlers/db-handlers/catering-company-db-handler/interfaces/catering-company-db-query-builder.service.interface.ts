@@ -1,7 +1,7 @@
 import { Prisma } from '@prisma/client';
 import {
   IBuildCreateCateringCompanyArgs,
-  IBuildRetrieveIntegrationListArgs,
+  IBuildRetrieveCompanyIntegrationListArgs,
 } from './query-builder-args.interfaces';
 
 export interface ICateringCompanyDbQueryBuilder {
@@ -10,6 +10,6 @@ export interface ICateringCompanyDbQueryBuilder {
   ): Prisma.CateringCompanyCreateArgs;
   buildRetrieveCompanyIntegrationsListQueryWithoutInclude(
     companyId: string,
-    queryInput?: IBuildRetrieveIntegrationListArgs,
+    queryInput?: IBuildRetrieveCompanyIntegrationListArgs,
   ): Omit<Prisma.CompanyIntegrationFindManyArgs, 'include'>;
 }

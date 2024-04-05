@@ -13,7 +13,7 @@ import {
   CompanyIntegrationListItem,
   CompanyIntegrationOutputItem,
 } from '../../common/types/company-integration-list-item.type';
-import { IBuildRetrieveIntegrationListArgs } from '../external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
+import { IBuildRetrieveCompanyIntegrationListArgs } from '../external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
 
 describe('CateringCompanyService', () => {
   let service: CateringCompanyService;
@@ -203,7 +203,7 @@ describe('CateringCompanyService', () => {
     });
 
     it('should call cateringCompanyDbHandler.retrieveCompanyIntegrationsList with the correct companyId and pass through defined query', async () => {
-      const query: IBuildRetrieveIntegrationListArgs = { pg: 1 };
+      const query: IBuildRetrieveCompanyIntegrationListArgs = { pg: 1 };
 
       await service.retrieveIntegrationsList(companyId, query);
       expect(
