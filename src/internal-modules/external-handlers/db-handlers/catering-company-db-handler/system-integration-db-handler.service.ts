@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ISystemIntegrationDbHandler } from './interfaces/sytem-integration-db-handler.service.interface';
 import { IBuildRetrieveIntegrationListArgs } from './interfaces/query-builder-args.interfaces';
 import { SystemIntegrationDbQueryBuilderService } from './system-integration-db-query-builder.service';
-import { PrismaClientService } from 'src/external-modules/prisma-client/prisma-client.service';
+import { PrismaClientService } from '../../../../external-modules/prisma-client/prisma-client.service';
 
 @Injectable()
 export class SystemIntegrationDbHandlerService
