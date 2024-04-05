@@ -24,6 +24,8 @@ describe('SystemIntegrationDbQueryBuilderService', () => {
   });
 
   describe('buildRetrieveIntegrationsListQueryWithoutInclude', () => {
+    const DEFAULT_QUERY_OBJECT = { take: 10 };
+
     const utilityWhereClauseReturn: Prisma.IntegrationTemplateWhereInput = {
       srcSystem: 'ezCater',
       targetSystem: 'Nutshell',
@@ -41,7 +43,7 @@ describe('SystemIntegrationDbQueryBuilderService', () => {
 
     it('should return the default query object when no queryInput is provided', () => {
       const result = service.buildRetrieveIntegrationsListQueryWithoutInclude();
-      expect(result).toEqual({ take: 10 });
+      expect(result).toEqual(DEFAULT_QUERY_OBJECT);
     });
 
     it('should use the provided pg and perPage values when queryInput is provided', () => {

@@ -24,10 +24,6 @@ describe('SystemIntegrationDbHandlerService', () => {
       SystemIntegrationDbHandlerService,
     );
     prismaClient = module.get<PrismaClientService>(PrismaClientService);
-    // systemIntegrationDbQueryBuilder =
-    //   module.get<SystemIntegrationDbQueryBuilderService>(
-    //     SystemIntegrationDbQueryBuilderService,
-    //   );
   });
 
   afterEach(() => {
