@@ -4,7 +4,7 @@ import {
   NestMiddleware,
 } from '@nestjs/common';
 import { FastifyReply, FastifyRequest } from 'fastify';
-import { validateGetIntegrationsListQuery } from '../../validators/get.integration-lists';
+import { validateGetCompanyIntegrationsListQuery } from '../../validators/get.integration-lists';
 import dateUtils from '../../../../utility/functions/date-utils';
 import { IBuildRetrieveCompanyIntegrationListArgs } from '../../../../internal-modules/external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
 
@@ -15,10 +15,10 @@ export class GetIntegrationsValidatorTransformerMiddleware
   use(req: FastifyRequest, res: FastifyReply, next: () => void) {
     const query = req.query as unknown;
 
-    if (!validateGetIntegrationsListQuery(query)) {
+    if (!validateGetCompanyIntegrationsListQuery(query)) {
       throw new BadRequestException({
         error: 'Invalid query parameters',
-        details: validateGetIntegrationsListQuery.errors,
+        details: validateGetCompanyIntegrationsListQuery.errors,
       });
     }
 
