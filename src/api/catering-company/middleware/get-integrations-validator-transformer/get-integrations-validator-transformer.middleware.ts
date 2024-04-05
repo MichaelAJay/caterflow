@@ -9,7 +9,7 @@ import dateUtils from '../../../../utility/functions/date-utils';
 import { IBuildRetrieveCompanyIntegrationListArgs } from '../../../../internal-modules/external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
 
 @Injectable()
-export class GetIntegrationsValidatorTransformerMiddleware
+export class GetCompanyIntegrationsValidatorTransformerMiddleware
   implements NestMiddleware
 {
   use(req: FastifyRequest, res: FastifyReply, next: () => void) {
