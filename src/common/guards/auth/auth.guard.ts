@@ -118,7 +118,6 @@ export class AuthGuard implements CanActivate {
 
       return true;
     } catch (err) {
-      console.error('auth guard err', err);
       // Specific errors to allow request lifecycle to address
       if (err instanceof ForbiddenException) {
         throw err;

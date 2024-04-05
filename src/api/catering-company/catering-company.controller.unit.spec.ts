@@ -118,8 +118,10 @@ describe('CateringCompanyController', () => {
 
   describe('getIntegrations', () => {
     const mockRequest: AuthenticatedRequestForCompanyUser = {
-      companyId: 'company-id',
-      // Add other necessary properties for the mock request
+      user: {
+        companyId: 'company-id',
+        // Add other necessary properties for the mock request
+      },
     } as AuthenticatedRequestForCompanyUser;
 
     it('should call retrieveIntegrationsList with companyId and undefined query when no query parameters are provided', async () => {
