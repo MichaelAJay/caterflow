@@ -66,6 +66,7 @@ export class AuthGuard implements CanActivate {
 
       // User exists?
       const user = await this.userService.getUserByExternalUID(payload.uid);
+
       // This actually represents a problem
       if (user === null) {
         const canSkipUserCheck = this.reflector.getAllAndOverride<boolean>(
@@ -83,7 +84,6 @@ export class AuthGuard implements CanActivate {
           return true;
         }
       }
-
       // User isn't associated with company
       if (user.companyId === null) {
         const canSkipCompanyCheck = this.reflector.getAllAndOverride<boolean>(
@@ -105,7 +105,6 @@ export class AuthGuard implements CanActivate {
           email: payload.email,
           companyId: user.companyId,
         };
-
         return true;
       }
 
@@ -119,6 +118,7 @@ export class AuthGuard implements CanActivate {
 
       return true;
     } catch (err) {
+      console.error('auth guard err', err);
       // Specific errors to allow request lifecycle to address
       if (err instanceof ForbiddenException) {
         throw err;

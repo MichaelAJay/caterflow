@@ -18,9 +18,12 @@ export interface AuthenticatedRequest extends FastifyRequest {
   };
 }
 
-export type AuthenticatedRequestForCompanyUser = Omit<
-  AuthenticatedRequest,
-  'companyId'
-> & {
-  companyId: string;
-};
+export interface AuthenticatedRequestForCompanyUser extends FastifyRequest {
+  user: {
+    id: string;
+    internalUserEmailVerificationStatus: boolean;
+    external_auth_uid: string;
+    email: string;
+    companyId: string;
+  };
+}

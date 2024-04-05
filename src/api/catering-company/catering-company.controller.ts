@@ -77,7 +77,7 @@ export class CateringCompanyController implements ICateringCompanyController {
     @Query() query: IBuildRetrieveIntegrationListArgs,
   ) {
     return this.cateringCompanyService.retrieveIntegrationsList(
-      req.companyId,
+      req.user.companyId,
       Object.keys(query).length > 0 ? query : undefined,
     );
   }

@@ -232,7 +232,6 @@ export class CompanyRoleAndPermissionDbHandlerService
     if (permissions.length === 0) {
       throw new Error('cannot send empty array');
     }
-
     const userCompanyRolesWithPermissions =
       await this.prismaClient.userCompanyRole.findMany({
         where: {

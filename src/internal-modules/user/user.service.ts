@@ -43,16 +43,14 @@ export class UserService implements IUserService {
   }
 
   async getUserByExternalUID(externalUID: string): Promise<User | null> {
-    // const user =
-    //   await this.userDbHandler.retrieveUserByExternalAuthUID(externalUID);
-    // return user;
     const user = await this.dataService.retrieveAndCache(
       `user:${externalUID}`,
       () => this.userDbHandler.retrieveUserByExternalAuthUID(externalUID),
       (user) => ({
         id: user.id,
-        name: user.name,
-        email: user.email, // Assume we only want to cache these fields
+        name: user.nameEncrypted,
+        email: user.emailEncrypted, // Assume we only want to cache these fields
+        companyId: user.companyId,
       }),
       14400000, // ttl: 4 hrs
     );
