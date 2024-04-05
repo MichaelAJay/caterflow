@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { SystemIntegrationDbHandlerService } from './system-integration-db-handler.service';
-import { PrismaClientService } from 'src/external-modules/prisma-client/prisma-client.service';
+import { PrismaClientService } from '../../../../external-modules/prisma-client/prisma-client.service';
 import { SystemIntegrationDbQueryBuilderService } from './system-integration-db-query-builder.service';
-import { mockPrismaClientService } from 'test/mocks/providers/mock_prisma_client';
+import { mockPrismaClientService } from '../../../../../test/mocks/providers/mock_prisma_client';
 import { IBuildRetrieveIntegrationListArgs } from './interfaces/query-builder-args.interfaces';
 import { Prisma } from '@prisma/client';
 

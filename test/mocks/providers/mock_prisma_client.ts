@@ -6,6 +6,7 @@ export const mockPrismaClientService = {
   companyIntegration: {
     findMany: jest.fn(),
   },
+  integrationTemplate: { findMany: jest.fn() },
   role: {
     findMany: jest.fn(),
     findUnique: jest.fn(),

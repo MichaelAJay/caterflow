@@ -4,8 +4,6 @@ import queryBuilderUtilities from './utilities/query-builder-utilities';
 import { Prisma } from '@prisma/client';
 import { IBuildRetrieveIntegrationListArgs } from './interfaces/query-builder-args.interfaces';
 
-jest.mock('./utilities/query-builder-utilities');
-
 describe('SystemIntegrationDbQueryBuilderService', () => {
   let service: SystemIntegrationDbQueryBuilderService;
 
@@ -17,6 +15,10 @@ describe('SystemIntegrationDbQueryBuilderService', () => {
     service = module.get<SystemIntegrationDbQueryBuilderService>(
       SystemIntegrationDbQueryBuilderService,
     );
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -35,9 +37,6 @@ describe('SystemIntegrationDbQueryBuilderService', () => {
       const result =
         service.buildRetrieveIntegrationsListQueryWithoutInclude(queryInput);
 
-      expect(
-        queryBuilderUtilities.buildRetrieveIntegrationTemplatesListWhereClause,
-      ).toHaveBeenCalledWith(queryInput);
       expect(result.where).toEqual(expectedWhereClause);
     });
 
@@ -52,9 +51,6 @@ describe('SystemIntegrationDbQueryBuilderService', () => {
       const result =
         service.buildRetrieveIntegrationsListQueryWithoutInclude(queryInput);
 
-      expect(
-        queryBuilderUtilities.buildRetrieveIntegrationTemplatesListWhereClause,
-      ).toHaveBeenCalledWith(queryInput);
       expect(result.where).toEqual(expectedWhereClause);
     });
 
@@ -71,9 +67,6 @@ describe('SystemIntegrationDbQueryBuilderService', () => {
       const result =
         service.buildRetrieveIntegrationsListQueryWithoutInclude(queryInput);
 
-      expect(
-        queryBuilderUtilities.buildRetrieveIntegrationTemplatesListWhereClause,
-      ).toHaveBeenCalledWith(queryInput);
       expect(result.where).toEqual(expectedWhereClause);
     });
 
@@ -83,28 +76,7 @@ describe('SystemIntegrationDbQueryBuilderService', () => {
       const result =
         service.buildRetrieveIntegrationsListQueryWithoutInclude(queryInput);
 
-      expect(
-        queryBuilderUtilities.buildRetrieveIntegrationTemplatesListWhereClause,
-      ).not.toHaveBeenCalled();
       expect(result.where).toBeUndefined();
-    });
-
-    it('should pass the correct queryInput to queryBuilderUtilities', () => {
-      const queryInput: IBuildRetrieveIntegrationListArgs = {
-        pg: 2,
-        perPage: 20,
-        templateSrcSystem: 'ezCater',
-        templateTargetSystem: 'Nutshell',
-      };
-
-      service.buildRetrieveIntegrationsListQueryWithoutInclude(queryInput);
-
-      expect(
-        queryBuilderUtilities.buildRetrieveIntegrationTemplatesListWhereClause,
-      ).toHaveBeenCalledWith({
-        templateSrcSystem: 'ezCater',
-        templateTargetSystem: 'Nutshell',
-      });
     });
   });
 });

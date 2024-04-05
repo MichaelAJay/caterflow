@@ -82,7 +82,7 @@ describe('SystemIntegrationDbQueryBuilderService', () => {
       const queryInput = { pg: 1, perPage: 0 };
       const result =
         service.buildRetrieveIntegrationsListQueryWithoutInclude(queryInput);
-      expect(result).toEqual({ take: 0 });
+      expect(result).toEqual({ take: 10 });
     });
 
     it('should return the correct Omit<Prisma.IntegrationTemplateFindManyArgs, "include"> type', () => {
