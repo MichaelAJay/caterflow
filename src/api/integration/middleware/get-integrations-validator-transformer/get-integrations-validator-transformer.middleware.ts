@@ -8,7 +8,7 @@ import { IBuildRetrieveCompanyIntegrationListArgs } from '../../../../internal-m
 import { validateGetSystemIntegrationsListQuery } from '../../validators/get.integration-lists';
 
 @Injectable()
-export class GetCompanyIntegrationsValidatorTransformerMiddleware
+export class GetSystemIntegrationsValidatorTransformerMiddleware
   implements NestMiddleware
 {
   use(req: FastifyRequest, res: FastifyReply, next: () => void) {

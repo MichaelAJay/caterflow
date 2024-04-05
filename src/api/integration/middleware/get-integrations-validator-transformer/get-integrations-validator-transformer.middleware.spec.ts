@@ -1,10 +1,10 @@
 import { BadRequestException } from '@nestjs/common';
 import { FastifyReply, FastifyRequest } from 'fastify';
-import { GetCompanyIntegrationsValidatorTransformerMiddleware } from './get-integrations-validator-transformer.middleware';
+import { GetSystemIntegrationsValidatorTransformerMiddleware } from './get-integrations-validator-transformer.middleware';
 import dateUtils from '../../../../utility/functions/date-utils';
 
 describe('GetIntegrationsValidatorTransformerMiddleware', () => {
-  let middleware: GetCompanyIntegrationsValidatorTransformerMiddleware;
+  let middleware: GetSystemIntegrationsValidatorTransformerMiddleware;
   let req: FastifyRequest;
   let res: FastifyReply;
   let next: jest.Mock;
