@@ -24,8 +24,12 @@ export class CateringCompanyDbQueryBuilderService
     companyId: string,
     queryInput?: IBuildRetrieveCompanyIntegrationListArgs,
   ): Omit<Prisma.CompanyIntegrationFindManyArgs, 'include'> {
-    const PG_NUM = queryInput && queryInput.pg ? queryInput.pg : 1;
-    const PER_PAGE = queryInput && queryInput.perPage ? queryInput.perPage : 10;
+    const DEFAULT_PG_NUM = 1;
+    const DEFAULT_PER_PAGE = 10;
+
+    const PG_NUM = queryInput && queryInput.pg ? queryInput.pg : DEFAULT_PG_NUM;
+    const PER_PAGE =
+      queryInput && queryInput.perPage ? queryInput.perPage : DEFAULT_PER_PAGE;
 
     const query: Omit<Prisma.CompanyIntegrationFindManyArgs, 'include'> = {
       where:

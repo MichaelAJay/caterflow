@@ -1,5 +1,8 @@
 import { Prisma } from '@prisma/client';
-import { IBuildRetrieveCompanyIntegrationListArgs } from '../interfaces/query-builder-args.interfaces';
+import {
+  IBuildRetrieveCompanyIntegrationListArgs,
+  IBuildRetrieveIntegrationListArgs,
+} from '../interfaces/query-builder-args.interfaces';
 import queryBuilderUtilities from './query-builder-utilities';
 
 describe('queryBuilderUtilities', () => {
@@ -130,5 +133,76 @@ describe('queryBuilderUtilities', () => {
     });
 
     // Here, you can add more tests if your application has more valid sort options.
+  });
+
+  describe('buildRetrieveIntegrationTemplatesListWhereClause', () => {
+    it('should return an empty object when no query parameters are provided', () => {
+      const query = {};
+      const result =
+        queryBuilderUtilities.buildRetrieveIntegrationTemplatesListWhereClause(
+          query,
+        );
+      expect(result).toEqual({});
+    });
+
+    it('should include the srcSystem in the whereInput when templateSrcSystem is provided', () => {
+      const query: IBuildRetrieveIntegrationListArgs = {
+        templateSrcSystem: 'ezCater',
+      };
+      const result =
+        queryBuilderUtilities.buildRetrieveIntegrationTemplatesListWhereClause(
+          query,
+        );
+      expect(result).toEqual({ srcSystem: 'ezCater' });
+    });
+
+    it('should include the targetSystem in the whereInput when templateTargetSystem is provided', () => {
+      const query: IBuildRetrieveIntegrationListArgs = {
+        templateTargetSystem: 'ezCater',
+      };
+      const result =
+        queryBuilderUtilities.buildRetrieveIntegrationTemplatesListWhereClause(
+          query,
+        );
+      expect(result).toEqual({ targetSystem: 'ezCater' });
+    });
+
+    it('should include both srcSystem and targetSystem in the whereInput when both are provided', () => {
+      const query: IBuildRetrieveIntegrationListArgs = {
+        templateSrcSystem: 'ezCater',
+        templateTargetSystem: 'Nutshell',
+      };
+      const result =
+        queryBuilderUtilities.buildRetrieveIntegrationTemplatesListWhereClause(
+          query,
+        );
+      expect(result).toEqual({
+        srcSystem: 'ezCater',
+        targetSystem: 'Nutshell',
+      });
+    });
+
+    it('should ignore additional properties in the query object', () => {
+      const query = { templateSrcSystem: 'ezCater', unknownProperty: 'value' };
+      const result =
+        queryBuilderUtilities.buildRetrieveIntegrationTemplatesListWhereClause(
+          query as IBuildRetrieveIntegrationListArgs,
+        );
+      expect(result).toEqual({ srcSystem: 'ezCater' });
+    });
+
+    it('should return the correct Prisma.IntegrationTemplateWhereInput type', () => {
+      const query: IBuildRetrieveIntegrationListArgs = {
+        templateSrcSystem: 'ezCater',
+        templateTargetSystem: 'Nutshell',
+      };
+      const result =
+        queryBuilderUtilities.buildRetrieveIntegrationTemplatesListWhereClause(
+          query,
+        );
+      expect(result).toBeInstanceOf(Object);
+      expect(result).toHaveProperty('srcSystem', 'ezCater');
+      expect(result).toHaveProperty('targetSystem', 'Nutshell');
+    });
   });
 });

@@ -6,6 +6,7 @@ export class IntegrationsService {
   async getSystemIntegrations(
     query?: IBuildRetrieveIntegrationListArgs,
   ): Promise<any> {
+    console.log(query);
     return 'b00ty butt';
   }
 }

@@ -41,7 +41,9 @@ describe('CateringCompanyDbQueryBuilderService', () => {
   describe('buildRetrieveCompanyIntegrationsListQueryWithoutInclude', () => {
     it('calls query builder where clause utility with the correct arguments', () => {
       const companyId = 'abc123';
-      const query: IBuildRetrieveCompanyIntegrationListArgs = { isConfigured: true };
+      const query: IBuildRetrieveCompanyIntegrationListArgs = {
+        isConfigured: true,
+      };
 
       const utilityWhereClauseReturn: Prisma.CompanyIntegrationWhereInput = {
         companyId,
@@ -85,7 +87,9 @@ describe('CateringCompanyDbQueryBuilderService', () => {
     });
     it('returns an object with where and take properties if queryInput is defined', () => {
       const companyId = 'abc123';
-      const query: IBuildRetrieveCompanyIntegrationListArgs = { isConfigured: true };
+      const query: IBuildRetrieveCompanyIntegrationListArgs = {
+        isConfigured: true,
+      };
       const utilityWhereClauseReturn: Prisma.CompanyIntegrationWhereInput = {
         companyId,
         isConfigured: true,
@@ -108,7 +112,8 @@ describe('CateringCompanyDbQueryBuilderService', () => {
     });
     it('returns an object with default "take" if query is undefined', () => {
       const companyId = 'abc123';
-      const query: IBuildRetrieveCompanyIntegrationListArgs | undefined = undefined;
+      const query: IBuildRetrieveCompanyIntegrationListArgs | undefined =
+        undefined;
       const utilityWhereClauseReturn: Prisma.CompanyIntegrationWhereInput = {
         companyId,
       };
@@ -128,7 +133,9 @@ describe('CateringCompanyDbQueryBuilderService', () => {
     });
     it('returns an object with default "take" if query.perPage is not included', () => {
       const companyId = 'abc123';
-      const query: IBuildRetrieveCompanyIntegrationListArgs = { isActive: true };
+      const query: IBuildRetrieveCompanyIntegrationListArgs = {
+        isActive: true,
+      };
       const utilityWhereClauseReturn: Prisma.CompanyIntegrationWhereInput = {
         companyId,
         isActive: true,
@@ -149,7 +156,8 @@ describe('CateringCompanyDbQueryBuilderService', () => {
     });
     it('returns an object without "skip" if query is undefined', () => {
       const companyId = 'abc123';
-      const query: IBuildRetrieveCompanyIntegrationListArgs | undefined = undefined;
+      const query: IBuildRetrieveCompanyIntegrationListArgs | undefined =
+        undefined;
       const utilityWhereClauseReturn: Prisma.CompanyIntegrationWhereInput = {
         companyId,
       };
@@ -168,7 +176,9 @@ describe('CateringCompanyDbQueryBuilderService', () => {
     });
     it('returns an object without "skip" if query.pg is not included', () => {
       const companyId = 'abc123';
-      const query: IBuildRetrieveCompanyIntegrationListArgs = { isActive: true };
+      const query: IBuildRetrieveCompanyIntegrationListArgs = {
+        isActive: true,
+      };
       const utilityWhereClauseReturn: Prisma.CompanyIntegrationWhereInput = {
         companyId,
         isActive: true,
@@ -268,7 +278,9 @@ describe('CateringCompanyDbQueryBuilderService', () => {
     });
     it('returns an object without "orderBy" if query.sort is defined', () => {
       const companyId = 'abc123';
-      const query: IBuildRetrieveCompanyIntegrationListArgs = { sort: 'created_asc' };
+      const query: IBuildRetrieveCompanyIntegrationListArgs = {
+        sort: 'created_asc',
+      };
       const utilityWhereClauseReturn: Prisma.CompanyIntegrationWhereInput = {
         companyId,
       };
