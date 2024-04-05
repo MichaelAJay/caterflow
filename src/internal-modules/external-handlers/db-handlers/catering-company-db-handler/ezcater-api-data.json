@@ -1,0 +1,4 @@
+[
+  { "name": "apiToken", "uiName": "API Key", "isSecret": true },
+  { "name": "username", "uiName": "Username (Email)", "isSecret": true }
+]
