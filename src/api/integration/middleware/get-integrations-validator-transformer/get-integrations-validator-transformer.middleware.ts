@@ -4,7 +4,7 @@ import {
   NestMiddleware,
 } from '@nestjs/common';
 import { FastifyReply, FastifyRequest } from 'fastify';
-import { IBuildRetrieveCompanyIntegrationListArgs } from '../../../../internal-modules/external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
+import { IBuildRetrieveIntegrationListArgs } from '../../../../internal-modules/external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
 import { validateGetSystemIntegrationsListQuery } from '../../validators/get.integration-lists';
 
 @Injectable()
@@ -21,7 +21,7 @@ export class GetSystemIntegrationsValidatorTransformerMiddleware
       });
     }
 
-    const transformedQuery: IBuildRetrieveCompanyIntegrationListArgs = {
+    const transformedQuery: IBuildRetrieveIntegrationListArgs = {
       pg: query.pg ? parseInt(query.pg, 10) : undefined,
       perPage: query.per_page ? parseInt(query.per_page, 10) : undefined,
       templateSrcSystem: query.template_src,
