@@ -39,6 +39,16 @@ export class GetCompanyIntegrationsValidatorTransformerMiddleware
       sort: query.sort,
     };
 
+    if (
+      (transformedQuery.pg && transformedQuery.pg < 1) ||
+      (transformedQuery.perPage && transformedQuery.perPage < 1)
+    ) {
+      throw new BadRequestException({
+        error:
+          'Page number must be 1 or greater, and records per page must be 1 or greater',
+      });
+    }
+
     req.query = transformedQuery;
     next();
   }
