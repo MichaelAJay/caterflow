@@ -9,6 +9,7 @@ import { InvalidUUIDError } from '../../../../common/errors/invalid_uuid.error';
 import { ERROR_CODE } from '../../../../common/codes/error-codes';
 import { IBuildRetrieveCompanyIntegrationListArgs } from './interfaces/query-builder-args.interfaces';
 import { SystemIntegrationDbQueryBuilderService } from './system-integration-db-query-builder.service';
+import { CreatedCompanyIntegration } from './types/return/create-company-integration.return.type';
 
 @Injectable()
 export class CateringCompanyDbHandlerService
@@ -90,28 +91,13 @@ export class CateringCompanyDbHandlerService
     companyId: string,
     templateId: number,
     creatorId: string,
-  ) {
+  ): Promise<CreatedCompanyIntegration> {
     try {
       if (!uuidUtils.isUUID(companyId)) {
         throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
       }
 
       // Get IntegrationTemplate by id w/ requirements & company's assets
-      // await this.prismaClient.integrationTemplate.findUniqueOrThrow({
-      //   ...this.systemIntegrationDbQueryBuilder.buildRetrieveIntegrationQueryWithoutInclude(
-      //     templateId,
-      //   ),
-      //   include: {
-      //     requirements: {
-      //       where: {
-      //         assets: { some: { companyId } },
-      //       },
-      //       include: {
-      //         assets: { select: { id: true, integrationRequirementId: true } },
-      //       },
-      //     },
-      //   },
-      // });
       const integration =
         await this.prismaClient.integrationTemplate.findUniqueOrThrow({
           ...this.systemIntegrationDbQueryBuilder.buildRetrieveIntegrationQueryWithoutInclude(
@@ -124,19 +110,32 @@ export class CateringCompanyDbHandlerService
                   where: {
                     companyId: companyId,
                   },
-                  select: { id: true, integrationRequirementId: true },
+                  select: {
+                    id: true,
+                    menuId: true,
+                    integrationRequirementId: true,
+                    type: true,
+                    system: true,
+                    isTested: true,
+                  },
                 },
               },
             },
           },
         });
 
-      const existingAssetIds = integration.requirements.flatMap((requirement) =>
-        requirement.assets.map((asset) => asset.id),
+      const metRequirements = integration.requirements.filter(
+        (requirement) => requirement.assets.length > 0,
+      );
+      const unmetRequirements = integration.requirements.filter(
+        (requirement) => requirement.assets.length === 0,
       );
 
+      const existingAssetIds = metRequirements.flatMap((requirement) =>
+        requirement.assets.map((asset) => asset.id),
+      );
       // Create company integration and attach all assets
-      const createdIntegration =
+      const companyIntegration =
         await this.prismaClient.companyIntegration.create(
           this.cateringCompanyDbQueryBuilder.buildCreateCompanyIntegration(
             companyId,
@@ -146,7 +145,7 @@ export class CateringCompanyDbHandlerService
             existingAssetIds.length > 0 ? existingAssetIds : undefined,
           ),
         );
-      return createdIntegration;
+      return { companyIntegration, metRequirements, unmetRequirements };
     } catch (err) {
       console.error('err', err);
       throw err;

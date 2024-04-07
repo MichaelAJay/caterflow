@@ -3,7 +3,7 @@ import { ISystemIntegrationDbHandler } from './interfaces/sytem-integration-db-h
 import { IBuildRetrieveIntegrationListArgs } from './interfaces/query-builder-args.interfaces';
 import { SystemIntegrationDbQueryBuilderService } from './system-integration-db-query-builder.service';
 import { PrismaClientService } from '../../../../external-modules/prisma-client/prisma-client.service';
-import { IntegrationTemplateWithRequirements } from './types/return/integration-template-with-requirements.type';
+import { IntegrationTemplateWithRequirements } from './types/return/integration-template-with-requirements.return.type';
 
 @Injectable()
 export class SystemIntegrationDbHandlerService

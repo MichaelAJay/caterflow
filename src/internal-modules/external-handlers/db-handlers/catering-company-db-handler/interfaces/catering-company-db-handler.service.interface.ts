@@ -1,6 +1,7 @@
 import { CateringCompany } from '@prisma/client';
 import { CompanyIntegrationListItem } from 'src/common/types/company-integration-list-item.type';
 import { IBuildRetrieveCompanyIntegrationListArgs } from './query-builder-args.interfaces';
+import { CreatedCompanyIntegration } from '../types/return/create-company-integration.return.type';
 
 export interface ICateringCompanyDbHandler {
   createCateringCompany(
@@ -18,5 +19,5 @@ export interface ICateringCompanyDbHandler {
     companyId: string,
     templateId: number,
     creatorId: string,
-  ): Promise<any>;
+  ): Promise<CreatedCompanyIntegration>;
 }
