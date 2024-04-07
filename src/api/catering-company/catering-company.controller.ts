@@ -5,6 +5,8 @@ import {
   Controller,
   Get,
   NotImplementedException,
+  Param,
+  ParseIntPipe,
   Post,
   Query,
   Req,
@@ -93,7 +95,17 @@ export class CateringCompanyController implements ICateringCompanyController {
     throw new NotImplementedException('Not implemented');
   }
 
-  @Post('integration')
+  @Post('integration/create-from/:templateId')
   @SetMetadata('permissions', [$Enums.PermissionName.ManageIntegrations])
-  async createIntegration(@Req() req: AuthenticatedRequestForCompanyUser) {}
+  async createIntegration(
+    @Req() req: AuthenticatedRequestForCompanyUser,
+    @Param('templateId', ParseIntPipe) templateId: number,
+  ) {
+    const { user } = req;
+    return this.cateringCompanyService.createIntegration(
+      user.companyId,
+      templateId,
+      user.id,
+    );
+  }
 }

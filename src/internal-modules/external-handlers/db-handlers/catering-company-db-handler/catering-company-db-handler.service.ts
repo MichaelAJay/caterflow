@@ -147,6 +147,7 @@ export class CateringCompanyDbHandlerService
         );
       return { companyIntegration, metRequirements, unmetRequirements };
     } catch (err) {
+      // Known Prisma error on findUniqueOrThrow 'P2025'
       console.error('err', err);
       throw err;
     }

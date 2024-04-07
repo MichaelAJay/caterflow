@@ -20,5 +20,8 @@ export interface ICateringCompanyController {
     query: IBuildRetrieveCompanyIntegrationListArgs,
   ): Promise<CompanyIntegrationOutputItem[]>;
   getIntegrationAssets(): Promise<any>;
-  createIntegration(req: AuthenticatedRequestForCompanyUser): Promise<any>;
+  createIntegration(
+    req: AuthenticatedRequestForCompanyUser,
+    templateId: number,
+  ): Promise<any>;
 }
