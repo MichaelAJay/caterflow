@@ -70,6 +70,12 @@ export class CateringCompanyController implements ICateringCompanyController {
     throw new NotImplementedException('Not implemented');
   }
 
+  /**
+   * ********************
+   * *** INTEGRATIONS ***
+   * ********************
+   */
+
   @Get('integrations')
   @SetMetadata('permissions', [$Enums.PermissionName.ManageIntegrations])
   async getIntegrations(
@@ -86,4 +92,8 @@ export class CateringCompanyController implements ICateringCompanyController {
   async getIntegrationAssets() {
     throw new NotImplementedException('Not implemented');
   }
+
+  @Post('integration')
+  @SetMetadata('permissions', [$Enums.PermissionName.ManageIntegrations])
+  async createIntegration(@Req() req: AuthenticatedRequestForCompanyUser) {}
 }

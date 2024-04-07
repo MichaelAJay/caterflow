@@ -11,4 +11,5 @@ export interface ICateringCompanyService {
     companyId: string,
     query?: IBuildRetrieveCompanyIntegrationListArgs,
   ): Promise<CompanyIntegrationOutputItem[]>;
+  createIntegration(companyId: string, templateId: string): Promise<any>;
 }

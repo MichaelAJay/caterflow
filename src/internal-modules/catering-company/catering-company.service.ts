@@ -29,6 +29,12 @@ export class CateringCompanyService implements ICateringCompanyService {
     return;
   }
 
+  /**
+   * *******************
+   * ***INTEGRATIONS ***
+   * *******************
+   */
+
   async retrieveIntegrationsList(
     companyId: string,
     query?: IBuildRetrieveCompanyIntegrationListArgs,
@@ -43,4 +49,6 @@ export class CateringCompanyService implements ICateringCompanyService {
       this.companyMapper.mapCompanyIntegrationListForOutput(records);
     return mappedList;
   }
+
+  async createIntegration(companyId: string, templateId: string) {}
 }

@@ -38,4 +38,10 @@ export class SystemIntegrationDbQueryBuilderService
 
     return query;
   }
+
+  buildRetrieveIntegrationQueryWithoutInclude(
+    templateId: number,
+  ): Prisma.IntegrationTemplateFindUniqueArgs {
+    return { where: { id: templateId } };
+  }
 }

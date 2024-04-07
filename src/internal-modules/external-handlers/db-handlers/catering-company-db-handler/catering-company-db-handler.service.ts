@@ -8,6 +8,7 @@ import uuidUtils from '../../../../utility/functions/uuid-utils';
 import { InvalidUUIDError } from '../../../../common/errors/invalid_uuid.error';
 import { ERROR_CODE } from '../../../../common/codes/error-codes';
 import { IBuildRetrieveCompanyIntegrationListArgs } from './interfaces/query-builder-args.interfaces';
+import { SystemIntegrationDbQueryBuilderService } from './system-integration-db-query-builder.service';
 
 @Injectable()
 export class CateringCompanyDbHandlerService
@@ -15,6 +16,7 @@ export class CateringCompanyDbHandlerService
 {
   constructor(
     private readonly cateringCompanyDbQueryBuilder: CateringCompanyDbQueryBuilderService,
+    private readonly systemIntegrationDbQueryBuilder: SystemIntegrationDbQueryBuilderService,
     private readonly prismaClient: PrismaClientService,
   ) {}
 
@@ -35,6 +37,12 @@ export class CateringCompanyDbHandlerService
     );
     return company;
   }
+
+  /**
+   * *******************
+   * ***INTEGRATIONS ***
+   * *******************
+   */
 
   async retrieveCompanyIntegrationsList(
     companyId: string,
@@ -76,5 +84,53 @@ export class CateringCompanyDbHandlerService
     });
 
     return ct;
+  }
+
+  async createIntegration(companyId: string, templateId: number) {
+    try {
+      if (!uuidUtils.isUUID(companyId)) {
+        throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
+      }
+
+      // Get IntegrationTemplate by id w/ requirements & company's assets
+      // await this.prismaClient.integrationTemplate.findUniqueOrThrow({
+      //   ...this.systemIntegrationDbQueryBuilder.buildRetrieveIntegrationQueryWithoutInclude(
+      //     templateId,
+      //   ),
+      //   include: {
+      //     requirements: {
+      //       where: {
+      //         assets: { some: { companyId } },
+      //       },
+      //       include: {
+      //         assets: { select: { id: true, integrationRequirementId: true } },
+      //       },
+      //     },
+      //   },
+      // });
+      const result =
+        await this.prismaClient.integrationTemplate.findUniqueOrThrow({
+          where: {
+            id: templateId,
+          },
+          include: {
+            requirements: {
+              include: {
+                assets: {
+                  where: {
+                    companyId: companyId,
+                  },
+                  select: { id: true, integrationRequirementId: true },
+                },
+              },
+            },
+          },
+        });
+
+      // Create company integration and attach all assets
+    } catch (err) {
+      console.error('err', err);
+      throw err;
+    }
   }
 }
