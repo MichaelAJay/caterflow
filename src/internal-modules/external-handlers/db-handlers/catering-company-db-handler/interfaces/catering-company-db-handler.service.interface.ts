@@ -14,5 +14,9 @@ export interface ICateringCompanyDbHandler {
   ): Promise<CompanyIntegrationListItem[]>;
 
   countCompanyIntegrations(companyId: string): Promise<number>;
-  createIntegration(companyId: string, templateId: number): Promise<any>;
+  createIntegration(
+    companyId: string,
+    templateId: number,
+    creatorId: string,
+  ): Promise<any>;
 }

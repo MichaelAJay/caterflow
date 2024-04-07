@@ -86,7 +86,11 @@ export class CateringCompanyDbHandlerService
     return ct;
   }
 
-  async createIntegration(companyId: string, templateId: number) {
+  async createIntegration(
+    companyId: string,
+    templateId: number,
+    creatorId: string,
+  ) {
     try {
       if (!uuidUtils.isUUID(companyId)) {
         throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
@@ -108,11 +112,11 @@ export class CateringCompanyDbHandlerService
       //     },
       //   },
       // });
-      const result =
+      const integration =
         await this.prismaClient.integrationTemplate.findUniqueOrThrow({
-          where: {
-            id: templateId,
-          },
+          ...this.systemIntegrationDbQueryBuilder.buildRetrieveIntegrationQueryWithoutInclude(
+            templateId,
+          ),
           include: {
             requirements: {
               include: {
@@ -127,7 +131,22 @@ export class CateringCompanyDbHandlerService
           },
         });
 
+      const existingAssetIds = integration.requirements.flatMap((requirement) =>
+        requirement.assets.map((asset) => asset.id),
+      );
+
       // Create company integration and attach all assets
+      const createdIntegration =
+        await this.prismaClient.companyIntegration.create(
+          this.cateringCompanyDbQueryBuilder.buildCreateCompanyIntegration(
+            companyId,
+            templateId,
+            integration.event,
+            creatorId,
+            existingAssetIds.length > 0 ? existingAssetIds : undefined,
+          ),
+        );
+      return createdIntegration;
     } catch (err) {
       console.error('err', err);
       throw err;

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ICateringCompanyDbQueryBuilder } from './interfaces/catering-company-db-query-builder.service.interface';
-import { Prisma } from '@prisma/client';
+import { $Enums, Prisma } from '@prisma/client';
 import { DefaultArgs } from '@prisma/client/runtime/library';
 import {
   IBuildCreateCateringCompanyArgs,
@@ -55,5 +55,28 @@ export class CateringCompanyDbQueryBuilderService
     }
 
     return query;
+  }
+
+  buildCreateCompanyIntegration(
+    companyId: string,
+    templateId: number,
+    event: $Enums.IntegrationEvent,
+    creatorId: string,
+    existingAssetIds?: string[],
+  ): Prisma.CompanyIntegrationCreateArgs {
+    const data: Prisma.CompanyIntegrationUncheckedCreateInput = {
+      companyId,
+      templateId,
+      event,
+      creatorId,
+    };
+
+    if (existingAssetIds) {
+      data.assets = {
+        connect: existingAssetIds.map((assetId) => ({ id: assetId })),
+      };
+    }
+
+    return { data };
   }
 }
