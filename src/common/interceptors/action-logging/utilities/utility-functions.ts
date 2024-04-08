@@ -10,7 +10,7 @@ const routeActionMapper: Record<Route, SystemAction[]> = {
   BOTTOM: ['AddIntegration'],
 };
 
-export function buildSystemActionsForDB(
+export function buildSystemActionsForDb(
   request: AuthenticatedRequest,
   result: $Enums.SystemActionResult,
 ): IBuildCreateUserSystemActionArgs[] {
@@ -28,6 +28,9 @@ export function buildSystemActionsForDB(
 
   // Get route key
   const routeKey = getRouteKey(method, pathname);
+  if (!routeKey) {
+    return [];
+  }
 
   // Get SystemActions
   const systemActions = routeActionMapper[routeKey];
@@ -62,10 +65,10 @@ function getUserDetails(request: AuthenticatedRequest): {
   return { userId: user.id, companyId: user.companyId };
 }
 
-function getRouteKey(method: string, pathname: string): Route {
+function getRouteKey(method: string, pathname: string): Route | '' {
   const key = `${method}:${pathname}`;
   if (!(key in routeActionMapper)) {
-    throw new Error(`Invalid route: ${key}`);
+    return '';
   }
   return key as Route;
 }

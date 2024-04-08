@@ -8,7 +8,7 @@ import { Observable, catchError, tap, throwError } from 'rxjs';
 import { UserSystemActionDbHandlerService } from '../../../internal-modules/external-handlers/db-handlers/user-system-action-db-handler/user-system-action-db-handler.service';
 import {
   buildErrorContextForLog,
-  buildSystemActionsForDB,
+  buildSystemActionsForDb,
 } from './utilities/utility-functions';
 import { LogService } from '../../../system/modules/log/log.service';
 import { AuthenticatedRequest } from 'src/api/interfaces/authenticated-request.interface';
@@ -41,7 +41,7 @@ export class ActionLoggingInterceptor implements NestInterceptor {
   ): void {
     const request = context.switchToHttp().getRequest() as AuthenticatedRequest;
     try {
-      const createArgs = buildSystemActionsForDB(request, actionResult);
+      const createArgs = buildSystemActionsForDb(request, actionResult);
       if (createArgs.length > 0) {
         this.executeDbOperation(createArgs, request);
       }
