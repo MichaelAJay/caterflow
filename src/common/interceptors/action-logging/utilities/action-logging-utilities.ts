@@ -4,18 +4,55 @@ import { IBuildCreateUserSystemActionArgs } from '../../../../internal-modules/e
 import { LogContext } from '../../../../system/modules/log/log.service';
 
 // Routes should specify strings of form 'method:url' for each route that this interceptor services
-type Route = 'TOP' | 'BOTTOM';
+type Route =
+  | 'post:/integration/create-from'
+  | 'post:/integration/create-asset-from';
 const routeActionMapper: Record<Route, SystemAction[]> = {
-  TOP: ['AddIntegration'],
-  BOTTOM: ['AddIntegration'],
+  'post:/integration/create-asset-from': ['AddIntegration'],
+  'post:/integration/create-from': ['AddIntegrationAsset', 'UpdateIntegration'],
 };
 
-export function buildSystemActionsForDb(
-  request: AuthenticatedRequest,
-  result: $Enums.SystemActionResult,
-): IBuildCreateUserSystemActionArgs[] {
-  const { method, url } = getRouteDetails(request);
-  const { userId, companyId } = getUserDetails(request);
+const actionLoggingUtilities = {
+  buildSystemActionsForDb(
+    request: AuthenticatedRequest,
+    result: $Enums.SystemActionResult,
+  ): IBuildCreateUserSystemActionArgs[] {
+    const { method, pathname } = getRouteDetails(request);
+    const { userId, companyId } = getUserDetails(request);
+
+    // Get route key
+    const routeKey = getRouteKey(method, pathname);
+    if (!routeKey) {
+      return [];
+    }
+
+    // Get SystemActions
+    const systemActions = routeActionMapper[routeKey];
+
+    return buildSystemActionsForCreation(
+      systemActions,
+      userId,
+      companyId,
+      result,
+    );
+  },
+  buildErrorContextForLog(request: any): LogContext {
+    const { method, pathname } = getRouteDetails(request);
+    const { userId, companyId } = getUserDetails(request);
+    return { method, pathname, userId, companyId };
+  },
+};
+
+export default actionLoggingUtilities;
+
+function getRouteDetails(request: AuthenticatedRequest): {
+  method: string;
+  pathname: string;
+} {
+  const { method, url } = request.raw;
+  if (!(typeof method === 'string' && typeof url === 'string')) {
+    throw new Error('Request object could not parse method and url');
+  }
 
   /**
    * @TODO Figure out what to do with query params
@@ -24,34 +61,8 @@ export function buildSystemActionsForDb(
   const { pathname, searchParams } = new URL(url, 'http://localhost');
 
   const queryParams = Array.from(searchParams.entries());
-  console.log(queryParams);
-
-  // Get route key
-  const routeKey = getRouteKey(method, pathname);
-  if (!routeKey) {
-    return [];
-  }
-
-  // Get SystemActions
-  const systemActions = routeActionMapper[routeKey];
-
-  return buildSystemActionsForCreation(
-    systemActions,
-    userId,
-    companyId,
-    result,
-  );
-}
-
-function getRouteDetails(request: AuthenticatedRequest): {
-  method: string;
-  url: string;
-} {
-  const { method, url } = request.raw;
-  if (!(typeof method === 'string' && typeof url === 'string')) {
-    throw new Error('Request object could not parse method and url');
-  }
-  return { method, url };
+  // console.log(queryParams);
+  return { method: method.toLowerCase(), pathname };
 }
 
 function getUserDetails(request: AuthenticatedRequest): {
@@ -85,10 +96,4 @@ function buildSystemActionsForCreation(
     action,
     result,
   }));
-}
-
-export function buildErrorContextForLog(request: any): LogContext {
-  const { method, url } = getRouteDetails(request);
-  const { userId, companyId } = getUserDetails(request);
-  return { method, url, userId, companyId };
 }
