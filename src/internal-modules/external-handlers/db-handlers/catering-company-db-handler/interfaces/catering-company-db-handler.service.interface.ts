@@ -20,4 +20,10 @@ export interface ICateringCompanyDbHandler {
     templateId: number,
     creatorId: string,
   ): Promise<CreatedCompanyIntegration>;
+  createIntegrationAsset(
+    companyId: string,
+    requirementId: number,
+    creatorId: string,
+    menuId?: string,
+  ): Promise<any>;
 }

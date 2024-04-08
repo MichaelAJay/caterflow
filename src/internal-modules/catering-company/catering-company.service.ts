@@ -63,4 +63,10 @@ export class CateringCompanyService implements ICateringCompanyService {
     );
     return results;
   }
+
+  async createIntegrationAsset(
+    companyId: string,
+    requirementId: number,
+    creatorId: string,
+  ): Promise<any> {}
 }

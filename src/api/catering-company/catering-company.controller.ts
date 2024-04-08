@@ -108,4 +108,17 @@ export class CateringCompanyController implements ICateringCompanyController {
       user.id,
     );
   }
+
+  @Post('integration/create-asset-from/:requirementId')
+  async createIntegrationAsset(
+    req: AuthenticatedRequestForCompanyUser,
+    @Param('requirementId', ParseIntPipe) requirementId: number,
+  ): Promise<any> {
+    const { user } = req;
+    return this.cateringCompanyService.createIntegrationAsset(
+      user.companyId,
+      requirementId,
+      user.id,
+    );
+  }
 }
