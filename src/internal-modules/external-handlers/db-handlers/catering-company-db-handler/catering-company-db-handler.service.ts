@@ -2,12 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { ICateringCompanyDbHandler } from './interfaces/catering-company-db-handler.service.interface';
 import { CateringCompanyDbQueryBuilderService } from './catering-company-db-query-builder.service';
 import { PrismaClientService } from '../../../../external-modules/prisma-client/prisma-client.service';
-import { CateringCompany } from '@prisma/client';
+import { $Enums, CateringCompany } from '@prisma/client';
 import { CompanyIntegrationListItem } from '../../../../common/types/company-integration-list-item.type';
 import uuidUtils from '../../../../utility/functions/uuid-utils';
 import { InvalidUUIDError } from '../../../../common/errors/invalid_uuid.error';
 import { ERROR_CODE } from '../../../../common/codes/error-codes';
 import { IBuildRetrieveCompanyIntegrationListArgs } from './interfaces/query-builder-args.interfaces';
+import { SystemIntegrationDbQueryBuilderService } from './system-integration-db-query-builder.service';
+import { CreatedCompanyIntegration } from './types/return/create-company-integration.return.type';
 
 @Injectable()
 export class CateringCompanyDbHandlerService
@@ -15,6 +17,7 @@ export class CateringCompanyDbHandlerService
 {
   constructor(
     private readonly cateringCompanyDbQueryBuilder: CateringCompanyDbQueryBuilderService,
+    private readonly systemIntegrationDbQueryBuilder: SystemIntegrationDbQueryBuilderService,
     private readonly prismaClient: PrismaClientService,
   ) {}
 
@@ -35,6 +38,12 @@ export class CateringCompanyDbHandlerService
     );
     return company;
   }
+
+  /**
+   * *******************
+   * ***INTEGRATIONS ***
+   * *******************
+   */
 
   async retrieveCompanyIntegrationsList(
     companyId: string,
@@ -76,5 +85,109 @@ export class CateringCompanyDbHandlerService
     });
 
     return ct;
+  }
+
+  async createIntegration(
+    companyId: string,
+    templateId: number,
+    creatorId: string,
+  ): Promise<CreatedCompanyIntegration> {
+    try {
+      if (!uuidUtils.isUUID(companyId)) {
+        throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
+      }
+
+      // Get IntegrationTemplate by id w/ requirements & company's assets
+      const integration =
+        await this.prismaClient.integrationTemplate.findUniqueOrThrow({
+          ...this.systemIntegrationDbQueryBuilder.buildRetrieveIntegrationQueryWithoutInclude(
+            templateId,
+          ),
+          include: {
+            requirements: {
+              include: {
+                assets: {
+                  where: {
+                    companyId: companyId,
+                  },
+                  select: {
+                    id: true,
+                    menuId: true,
+                    integrationRequirementId: true,
+                    type: true,
+                    system: true,
+                    isTested: true,
+                  },
+                },
+              },
+            },
+          },
+        });
+
+      const metRequirements = integration.requirements.filter(
+        (requirement) => requirement.assets.length > 0,
+      );
+      const unmetRequirements = integration.requirements.filter(
+        (requirement) => requirement.assets.length === 0,
+      );
+
+      const existingAssetIds = metRequirements.flatMap((requirement) =>
+        requirement.assets.map((asset) => asset.id),
+      );
+      // Create company integration and attach all assets
+      const companyIntegration =
+        await this.prismaClient.companyIntegration.create(
+          this.cateringCompanyDbQueryBuilder.buildCreateCompanyIntegration(
+            companyId,
+            templateId,
+            integration.event,
+            creatorId,
+            existingAssetIds.length > 0 ? existingAssetIds : undefined,
+          ),
+        );
+      return { companyIntegration, metRequirements, unmetRequirements };
+    } catch (err) {
+      // Known Prisma error on findUniqueOrThrow 'P2025'
+      console.error('err', err);
+      throw err;
+    }
+  }
+
+  async createIntegrationAsset(
+    companyId: string,
+    requirementId: number,
+    creatorId: string,
+    menuId?: string,
+  ): Promise<any> {
+    if (!uuidUtils.isUUID(companyId) || (menuId && !uuidUtils.isUUID(menuId))) {
+      throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
+    }
+
+    const requirement =
+      await this.prismaClient.integrationRequirement.findUniqueOrThrow({
+        where: { id: requirementId },
+        include: {
+          assets: {
+            where: { companyId },
+          },
+        },
+      });
+
+    // If company requirement with asset is found, that's an error
+    if (
+      requirement.level === $Enums.IntegrationRequirementLevel.Company &&
+      requirement.assets.length > 0
+    ) {
+      // throw err
+      console.log('moo like a cow');
+    }
+
+    if (
+      requirement.level === $Enums.IntegrationRequirementLevel.Menu &&
+      !menuId
+    ) {
+      // throw err
+      console.log('moo like a horse');
+    }
   }
 }

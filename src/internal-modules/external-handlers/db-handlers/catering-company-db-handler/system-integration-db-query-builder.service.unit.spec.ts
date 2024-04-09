@@ -102,4 +102,17 @@ describe('SystemIntegrationDbQueryBuilderService', () => {
       expect(result).toHaveProperty('where', utilityWhereClauseReturn);
     });
   });
+
+  describe('buildRetrieveIntegrationQueryWithoutInclude', () => {
+    it('should return the simple find unique args with only the where clause', () => {
+      const templateId = 1;
+      const result =
+        service.buildRetrieveIntegrationQueryWithoutInclude(templateId);
+      const expectedResult: Pick<
+        Prisma.IntegrationTemplateFindUniqueArgs,
+        'where'
+      > = { where: { id: templateId } };
+      expect(result).toEqual(expectedResult);
+    });
+  });
 });

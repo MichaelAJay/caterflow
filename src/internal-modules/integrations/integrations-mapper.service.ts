@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { IIntegrationsMapper } from './interfaces/integrations-mapper.service.interface';
-import { IntegrationTemplateWithRequirements } from '../external-handlers/db-handlers/catering-company-db-handler/types/return/integration-template-with-requirements.type';
+import { IntegrationTemplateWithRequirements } from '../external-handlers/db-handlers/catering-company-db-handler/types/return/integration-template-with-requirements.return.type';
 import { ResponseIntegrationTemplate } from './types/mapped/response-integration-template.type';
 import {
   RESPONSE_INTEGRATION_REQUIREMENT_TYPE_MAPPER,

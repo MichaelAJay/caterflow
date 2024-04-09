@@ -5,4 +5,7 @@ export interface ISystemIntegrationDbQueryBuilder {
   buildRetrieveIntegrationsListQueryWithoutInclude(
     queryInput?: IBuildRetrieveIntegrationListArgs,
   ): Omit<Prisma.IntegrationTemplateFindManyArgs, 'include'>;
+  buildRetrieveIntegrationQueryWithoutInclude(
+    templateId: number,
+  ): Pick<Prisma.IntegrationTemplateFindUniqueArgs, 'where'>;
 }

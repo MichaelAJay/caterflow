@@ -38,4 +38,10 @@ export class SystemIntegrationDbQueryBuilderService
 
     return query;
   }
+
+  buildRetrieveIntegrationQueryWithoutInclude(
+    templateId: number,
+  ): Pick<Prisma.IntegrationTemplateFindUniqueArgs, 'where'> {
+    return { where: { id: templateId } };
+  }
 }

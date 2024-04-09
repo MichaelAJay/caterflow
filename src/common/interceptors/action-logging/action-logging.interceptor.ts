@@ -4,15 +4,16 @@ import {
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
-import { Observable, tap } from 'rxjs';
+import { Observable, catchError, tap, throwError } from 'rxjs';
 import { UserSystemActionDbHandlerService } from '../../../internal-modules/external-handlers/db-handlers/user-system-action-db-handler/user-system-action-db-handler.service';
+import actionLoggingUtilities from './utilities/action-logging-utilities';
 import {
-  buildErrorContextForLog,
-  buildSystemActionsForDB,
-} from './utilities/utility-functions';
-import { LogService } from '../../../system/modules/log/log.service';
-import { AuthenticatedRequest } from 'src/api/interfaces/authenticated-request.interface';
-import { IBuildCreateUserSystemActionArgs } from 'src/internal-modules/external-handlers/db-handlers/user-system-action-db-handler/interfaces/query-builder-args.interface';
+  LogContext,
+  LogService,
+} from '../../../system/modules/log/log.service';
+import { AuthenticatedRequest } from '../../../api/interfaces/authenticated-request.interface';
+import { IBuildCreateUserSystemActionArgs } from '../../../internal-modules/external-handlers/db-handlers/user-system-action-db-handler/interfaces/query-builder-args.interface';
+import { $Enums } from '@prisma/client';
 
 @Injectable()
 export class ActionLoggingInterceptor implements NestInterceptor {
@@ -24,18 +25,32 @@ export class ActionLoggingInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     return next.handle().pipe(
       tap(() => {
-        const request = context
-          .switchToHttp()
-          .getRequest() as AuthenticatedRequest;
-        try {
-          const createArgs = buildSystemActionsForDB(request);
-          this.executeDbOperation(createArgs, request);
-        } catch (err) {
-          const context = buildErrorContextForLog(request);
-          this.logService.warn(err.message, context);
-        }
+        this.logUserAction(context, $Enums.SystemActionResult.SUCCESS);
+      }),
+      catchError((err) => {
+        this.logUserAction(context, $Enums.SystemActionResult.ERROR);
+        // Pass through error
+        return throwError(() => err);
       }),
     );
+  }
+
+  logUserAction(
+    context: ExecutionContext,
+    actionResult: $Enums.SystemActionResult,
+  ): void {
+    const request = context.switchToHttp().getRequest() as AuthenticatedRequest;
+    try {
+      const createArgs: IBuildCreateUserSystemActionArgs[] =
+        actionLoggingUtilities.buildSystemActionsForDb(request, actionResult);
+      if (createArgs.length > 0) {
+        this.executeDbOperation(createArgs, request);
+      }
+    } catch (err) {
+      const logContext: LogContext =
+        actionLoggingUtilities.buildErrorContextForLog(request);
+      this.logService.warn(err.message, logContext);
+    }
   }
 
   executeDbOperation(
@@ -47,7 +62,7 @@ export class ActionLoggingInterceptor implements NestInterceptor {
         ? this.userSystemActionDbHandler.create(createArgs[0])
         : this.userSystemActionDbHandler.createMany(createArgs);
     operationPromise.catch((err) => {
-      const context = buildErrorContextForLog(request);
+      const context = actionLoggingUtilities.buildErrorContextForLog(request);
       this.logService.warn(err.message, context);
     });
   }

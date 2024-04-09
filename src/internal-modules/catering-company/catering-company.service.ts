@@ -6,6 +6,7 @@ import { CompanyRoleAndPermissionDbHandlerService } from '../external-handlers/d
 import { CompanyMapperService } from './company-mapper.service';
 import { CompanyIntegrationOutputItem } from 'src/common/types/company-integration-list-item.type';
 import { IBuildRetrieveCompanyIntegrationListArgs } from '../external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
+import { CreatedCompanyIntegration } from '../external-handlers/db-handlers/catering-company-db-handler/types/return/create-company-integration.return.type';
 
 @Injectable()
 export class CateringCompanyService implements ICateringCompanyService {
@@ -29,6 +30,12 @@ export class CateringCompanyService implements ICateringCompanyService {
     return;
   }
 
+  /**
+   * *******************
+   * ***INTEGRATIONS ***
+   * *******************
+   */
+
   async retrieveIntegrationsList(
     companyId: string,
     query?: IBuildRetrieveCompanyIntegrationListArgs,
@@ -43,4 +50,23 @@ export class CateringCompanyService implements ICateringCompanyService {
       this.companyMapper.mapCompanyIntegrationListForOutput(records);
     return mappedList;
   }
+
+  async createIntegration(
+    companyId: string,
+    templateId: number,
+    creatorId: string,
+  ): Promise<CreatedCompanyIntegration> {
+    const results = await this.cateringCompanyDbHandler.createIntegration(
+      companyId,
+      templateId,
+      creatorId,
+    );
+    return results;
+  }
+
+  async createIntegrationAsset(
+    companyId: string,
+    requirementId: number,
+    creatorId: string,
+  ): Promise<any> {}
 }

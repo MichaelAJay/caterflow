@@ -3,23 +3,26 @@ import { CateringCompanyDbHandlerService } from './catering-company-db-handler.s
 import { CateringCompanyDbQueryBuilderService } from './catering-company-db-query-builder.service';
 import { PrismaClientService } from '../../../../external-modules/prisma-client/prisma-client.service';
 import { mockPrismaClientService } from '../../../../../test/mocks/providers/mock_prisma_client';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import uuidUtils from '../../../../utility/functions/uuid-utils';
-import { $Enums, Prisma } from '@prisma/client';
+import { $Enums } from '@prisma/client';
 import { CompanyIntegrationListItem } from '../../../../common/types/company-integration-list-item.type';
 import { InvalidUUIDError } from '../../../../common/errors/invalid_uuid.error';
 import { IBuildRetrieveCompanyIntegrationListArgs } from './interfaces/query-builder-args.interfaces';
+import { SystemIntegrationDbQueryBuilderService } from './system-integration-db-query-builder.service';
 
 describe('CateringCompanyDbHandlerService', () => {
   let service: CateringCompanyDbHandlerService;
   let cateringCompanyDbQueryBuilder: CateringCompanyDbQueryBuilderService;
+  let systemIntegrationDbQueryBuilder: SystemIntegrationDbQueryBuilderService;
   let prismaClient: PrismaClientService;
 
   beforeEach(async () => {
+    jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CateringCompanyDbHandlerService,
         CateringCompanyDbQueryBuilderService,
+        SystemIntegrationDbQueryBuilderService,
         { provide: PrismaClientService, useValue: mockPrismaClientService },
       ],
     }).compile();
@@ -31,11 +34,11 @@ describe('CateringCompanyDbHandlerService', () => {
       module.get<CateringCompanyDbQueryBuilderService>(
         CateringCompanyDbQueryBuilderService,
       );
+    systemIntegrationDbQueryBuilder =
+      module.get<SystemIntegrationDbQueryBuilderService>(
+        SystemIntegrationDbQueryBuilderService,
+      );
     prismaClient = module.get<PrismaClientService>(PrismaClientService);
-  });
-
-  afterEach(() => {
-    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -460,6 +463,163 @@ describe('CateringCompanyDbHandlerService', () => {
           orderBy: { createdAt: 'asc' },
           include: STATIC_INCLUDE,
         });
+      });
+    });
+  });
+
+  describe('createIntegration', () => {
+    const companyId = '3e2c59f2-b94b-4a45-b295-c08f0b969586';
+    const templateId = 1;
+    const creatorId = '6a0cba0a-7cce-4c4d-bfef-90f495d4c6da';
+
+    it('should create a company integration successfully', async () => {
+      const mockIntegration = {
+        requirements: [{ assets: [{ id: '1' }, { id: '2' }] }, { assets: [] }],
+        event: $Enums.IntegrationEvent.ezCaterOrderReceived,
+      };
+      const mockCompanyIntegration = { id: 'integration-id' };
+
+      jest
+        .spyOn(prismaClient.integrationTemplate, 'findUniqueOrThrow')
+        .mockResolvedValueOnce(mockIntegration as any);
+      jest
+        .spyOn(prismaClient.companyIntegration, 'create')
+        .mockResolvedValueOnce(mockCompanyIntegration as any);
+
+      const result = await service.createIntegration(
+        companyId,
+        templateId,
+        creatorId,
+      );
+
+      expect(result.companyIntegration).toEqual(mockCompanyIntegration);
+      expect(result.metRequirements).toHaveLength(1);
+      expect(result.unmetRequirements).toHaveLength(1);
+      expect(
+        prismaClient.integrationTemplate.findUniqueOrThrow,
+      ).toHaveBeenCalledWith({
+        where: { id: templateId },
+        include: {
+          requirements: {
+            include: {
+              assets: {
+                where: { companyId },
+                select: {
+                  id: true,
+                  menuId: true,
+                  integrationRequirementId: true,
+                  type: true,
+                  system: true,
+                  isTested: true,
+                },
+              },
+            },
+          },
+        },
+      });
+      expect(prismaClient.companyIntegration.create).toHaveBeenCalledWith({
+        data: {
+          companyId,
+          templateId,
+          event: $Enums.IntegrationEvent.ezCaterOrderReceived,
+          creatorId,
+          assets: {
+            connect: [{ id: '1' }, { id: '2' }],
+          },
+        },
+      });
+    });
+
+    it('should throw an InvalidUUIDError if companyId is not a valid UUID', async () => {
+      const invalidCompanyId = 'invalid-uuid';
+
+      await expect(
+        service.createIntegration(invalidCompanyId, templateId, creatorId),
+      ).rejects.toThrow(InvalidUUIDError);
+    });
+
+    it('should throw an error if integrationTemplate is not found', async () => {
+      // Code is P2025 - in case I decide to iuse it later
+      const error = new Error('Integration template not found');
+      jest
+        .spyOn(prismaClient.integrationTemplate, 'findUniqueOrThrow')
+        .mockRejectedValueOnce(error);
+
+      await expect(
+        service.createIntegration(companyId, templateId, creatorId),
+      ).rejects.toThrow(error);
+    });
+
+    it('should create a company integration with no existing assets', async () => {
+      const mockIntegration = {
+        requirements: [{ assets: [] }, { assets: [] }],
+        event: $Enums.IntegrationEvent.ezCaterOrderReceived,
+      };
+      const mockCompanyIntegration = { id: 'integration-id' };
+
+      jest
+        .spyOn(prismaClient.integrationTemplate, 'findUniqueOrThrow')
+        .mockResolvedValueOnce(mockIntegration as any);
+      jest
+        .spyOn(prismaClient.companyIntegration, 'create')
+        .mockResolvedValueOnce(mockCompanyIntegration as any);
+
+      const result = await service.createIntegration(
+        companyId,
+        templateId,
+        creatorId,
+      );
+
+      expect(result.companyIntegration).toEqual(mockCompanyIntegration);
+      expect(result.metRequirements).toHaveLength(0);
+      expect(result.unmetRequirements).toHaveLength(2);
+      expect(prismaClient.companyIntegration.create).toHaveBeenCalledWith({
+        data: {
+          companyId,
+          templateId,
+          event: $Enums.IntegrationEvent.ezCaterOrderReceived,
+          creatorId,
+        },
+      });
+    });
+
+    it('should create a company integration with no existing assets', async () => {
+      const existingAssetId = 'existing-asset-id';
+      const mockIntegration = {
+        requirements: [
+          { assets: [{ id: existingAssetId } as any] },
+          { assets: [] },
+        ],
+        event: $Enums.IntegrationEvent.ezCaterOrderReceived,
+      };
+      const mockCompanyIntegration = { id: 'integration-id' };
+
+      jest
+        .spyOn(prismaClient.integrationTemplate, 'findUniqueOrThrow')
+        .mockResolvedValueOnce(mockIntegration as any);
+      jest
+        .spyOn(prismaClient.companyIntegration, 'create')
+        .mockResolvedValueOnce(mockCompanyIntegration as any);
+
+      const result = await service.createIntegration(
+        companyId,
+        templateId,
+        creatorId,
+      );
+
+      expect(result.companyIntegration).toEqual(mockCompanyIntegration);
+      expect(result.metRequirements).toHaveLength(1);
+      expect(result.unmetRequirements).toHaveLength(1);
+      expect(prismaClient.companyIntegration.create).toHaveBeenCalledWith({
+        data: {
+          companyId,
+          templateId,
+          event: $Enums.IntegrationEvent.ezCaterOrderReceived,
+          creatorId,
+          assets: {
+            connect: [{ id: existingAssetId }],
+          },
+        },
       });
     });
   });
