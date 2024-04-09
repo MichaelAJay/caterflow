@@ -3,4 +3,5 @@ import { ISystemIntegrationDbQueryBuilder } from 'src/internal-modules/external-
 export const mockSystemIntegrationDbQueryBuilder: ISystemIntegrationDbQueryBuilder =
   {
     buildRetrieveIntegrationsListQueryWithoutInclude: jest.fn(),
+    buildRetrieveIntegrationQueryWithoutInclude: jest.fn(),
   };
