@@ -7,9 +7,12 @@ import {
 import { Observable, catchError, tap, throwError } from 'rxjs';
 import { UserSystemActionDbHandlerService } from '../../../internal-modules/external-handlers/db-handlers/user-system-action-db-handler/user-system-action-db-handler.service';
 import actionLoggingUtilities from './utilities/action-logging-utilities';
-import { LogService } from '../../../system/modules/log/log.service';
-import { AuthenticatedRequest } from 'src/api/interfaces/authenticated-request.interface';
-import { IBuildCreateUserSystemActionArgs } from 'src/internal-modules/external-handlers/db-handlers/user-system-action-db-handler/interfaces/query-builder-args.interface';
+import {
+  LogContext,
+  LogService,
+} from '../../../system/modules/log/log.service';
+import { AuthenticatedRequest } from '../../../api/interfaces/authenticated-request.interface';
+import { IBuildCreateUserSystemActionArgs } from '../../../internal-modules/external-handlers/db-handlers/user-system-action-db-handler/interfaces/query-builder-args.interface';
 import { $Enums } from '@prisma/client';
 
 @Injectable()
@@ -38,15 +41,13 @@ export class ActionLoggingInterceptor implements NestInterceptor {
   ): void {
     const request = context.switchToHttp().getRequest() as AuthenticatedRequest;
     try {
-      const createArgs = actionLoggingUtilities.buildSystemActionsForDb(
-        request,
-        actionResult,
-      );
+      const createArgs: IBuildCreateUserSystemActionArgs[] =
+        actionLoggingUtilities.buildSystemActionsForDb(request, actionResult);
       if (createArgs.length > 0) {
         this.executeDbOperation(createArgs, request);
       }
     } catch (err) {
-      const logContext =
+      const logContext: LogContext =
         actionLoggingUtilities.buildErrorContextForLog(request);
       this.logService.warn(err.message, logContext);
     }

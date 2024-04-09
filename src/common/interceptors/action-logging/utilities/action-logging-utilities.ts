@@ -57,7 +57,6 @@ function getRouteDetails(request: AuthenticatedRequest): {
   /**
    * @TODO Figure out what to do with query params
    */
-
   const { pathname, searchParams } = new URL(url, 'http://localhost');
 
   const queryParams = Array.from(searchParams.entries());
