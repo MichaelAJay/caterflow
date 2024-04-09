@@ -14,6 +14,7 @@ import {
   CompanyIntegrationOutputItem,
 } from '../../common/types/company-integration-list-item.type';
 import { IBuildRetrieveCompanyIntegrationListArgs } from '../external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
+import { CreatedCompanyIntegration } from '../external-handlers/db-handlers/catering-company-db-handler/types/return/create-company-integration.return.type';
 
 describe('CateringCompanyService', () => {
   let service: CateringCompanyService;
@@ -23,6 +24,7 @@ describe('CateringCompanyService', () => {
   let companyMapper: CompanyMapperService;
 
   beforeEach(async () => {
+    jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CateringCompanyService,
@@ -48,10 +50,6 @@ describe('CateringCompanyService', () => {
       CompanyRoleAndPermissionDbHandlerService,
     );
     companyMapper = module.get<CompanyMapperService>(CompanyMapperService);
-  });
-
-  afterEach(() => {
-    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -252,6 +250,49 @@ describe('CateringCompanyService', () => {
       expect(
         cateringCompanyDbHandler.retrieveCompanyIntegrationsList,
       ).toHaveBeenCalled();
+    });
+  });
+
+  describe('createIntegration', () => {
+    it('should return the results from created integration from db handler', async () => {
+      const companyId = 'company-id';
+      const templateId = 1;
+      const creatorId = 'creator-id';
+      const expectedResults: CreatedCompanyIntegration = {
+        companyIntegration: {
+          id: '',
+          companyId,
+          templateId,
+          event: 'ezCaterOrderReceived',
+          isConfigured: false,
+          isActive: false,
+          creatorId,
+          createdAt: new Date(),
+        },
+        metRequirements: [],
+        unmetRequirements: [{ id: '123' } as any],
+      };
+      jest
+        .spyOn(cateringCompanyDbHandler, 'createIntegration')
+        .mockResolvedValue(expectedResults);
+      const results = await service.createIntegration(
+        companyId,
+        templateId,
+        creatorId,
+      );
+      expect(results).toBe(expectedResults);
+    });
+    it('should propagate any error thrown by the db handler', async () => {
+      const companyId = 'invalid-company-id';
+      const templateId = 1;
+      const creatorId = 'creator-id';
+      const expectedError = new Error('Expected error');
+      jest
+        .spyOn(cateringCompanyDbHandler, 'createIntegration')
+        .mockRejectedValue(expectedError);
+      await expect(
+        service.createIntegration(companyId, templateId, creatorId),
+      ).rejects.toThrow(expectedError);
     });
   });
 });

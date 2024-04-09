@@ -11,13 +11,13 @@ import { validateCreateCateringCompanyRequestBody } from './validators/post.cate
 import { IBuildRetrieveCompanyIntegrationListArgs } from '../../internal-modules/external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
 import { AuthenticatedRequestForCompanyUser } from '../interfaces/authenticated-request.interface';
 import { CompanyIntegrationOutputItem } from 'src/common/types/company-integration-list-item.type';
-import { $Enums } from '@prisma/client';
 
 describe('CateringCompanyController', () => {
   let controller: CateringCompanyController;
   let cateringCompanyService: CateringCompanyService;
 
   beforeEach(async () => {
+    jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
       controllers: [CateringCompanyController],
       providers: [
@@ -35,10 +35,6 @@ describe('CateringCompanyController', () => {
     cateringCompanyService = module.get<CateringCompanyService>(
       CateringCompanyService,
     );
-  });
-
-  afterEach(() => {
-    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -173,6 +169,50 @@ describe('CateringCompanyController', () => {
       await expect(controller.getIntegrations(mockRequest, {})).rejects.toThrow(
         errorMessage,
       );
+    });
+  });
+
+  describe('createIntegration', () => {
+    const mockUser: AuthenticatedRequestForCompanyUser['user'] = {
+      id: '1',
+      companyId: '1',
+      // Add other necessary user properties
+    } as unknown as AuthenticatedRequestForCompanyUser['user'];
+
+    const mockReq: AuthenticatedRequestForCompanyUser = {
+      user: mockUser,
+      // Add other necessary request properties
+    } as unknown as AuthenticatedRequestForCompanyUser;
+
+    it('should create an integration successfully', async () => {
+      const templateId = 1;
+      const mockIntegration = { id: 1 /* Add other integration properties */ };
+
+      jest
+        .spyOn(mockCateringCompanyService, 'createIntegration')
+        .mockResolvedValue(mockIntegration as any);
+
+      const result = await controller.createIntegration(mockReq, templateId);
+
+      expect(cateringCompanyService.createIntegration).toHaveBeenCalledWith(
+        mockUser.companyId,
+        templateId,
+        mockUser.id,
+      );
+      expect(result).toEqual(mockIntegration);
+    });
+
+    it('should throw an error if createIntegration fails', async () => {
+      const templateId = 1;
+      const errorMessage = 'Failed to create integration';
+
+      jest
+        .spyOn(mockCateringCompanyService, 'createIntegration')
+        .mockRejectedValue(new Error(errorMessage));
+
+      await expect(
+        controller.createIntegration(mockReq, templateId),
+      ).rejects.toThrow(errorMessage);
     });
   });
 });
