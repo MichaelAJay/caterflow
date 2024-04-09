@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserSystemActionDbQueryBuilderService } from './user-system-action-db-query-builder.service';
-import { Prisma } from '@prisma/client';
+import { $Enums, Prisma } from '@prisma/client';
 
 describe('UserSystemActionDbQueryBuilderService', () => {
   let service: UserSystemActionDbQueryBuilderService;
@@ -25,6 +25,7 @@ describe('UserSystemActionDbQueryBuilderService', () => {
         userId: '123',
         action: 'AddIntegration',
         details: 'testDetails',
+        result: $Enums.SystemActionResult.SUCCESS,
       };
       const expectedQuery: Prisma.UserSystemActionCreateArgs = {
         data: input,
@@ -42,6 +43,7 @@ describe('UserSystemActionDbQueryBuilderService', () => {
           userId: '123',
           action: 'AddIntegration',
           details: 'testDetails',
+          result: $Enums.SystemActionResult.SUCCESS,
         },
       ];
       const expectedQuery: Prisma.UserSystemActionCreateManyArgs = {

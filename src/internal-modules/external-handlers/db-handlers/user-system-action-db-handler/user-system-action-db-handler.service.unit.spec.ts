@@ -5,7 +5,7 @@ import { UserSystemActionDbQueryBuilderService } from './user-system-action-db-q
 import { mockPrismaClientService } from '../../../../../test/mocks/providers/mock_prisma_client';
 import { mockUserSystemActionDbQueryBuilder } from '../../../../../test/mocks/providers/mock_user_system_action_db_querybuilder';
 import { IBuildCreateUserSystemActionArgs } from './interfaces/query-builder-args.interface';
-import { SystemAction } from '@prisma/client';
+import { $Enums, SystemAction } from '@prisma/client';
 
 describe('UserSystemActionDbHandlerService', () => {
   let service: UserSystemActionDbHandlerService;
@@ -50,6 +50,7 @@ describe('UserSystemActionDbHandlerService', () => {
         userId: '1',
         action: 'AddIntegration',
         details: {},
+        result: $Enums.SystemActionResult.SUCCESS,
       };
       const expectedResult = { id: '1', date: now, ...input, details: {} };
 
@@ -59,7 +60,7 @@ describe('UserSystemActionDbHandlerService', () => {
         .mockReturnValue(queryBuilderOutput);
       jest
         .spyOn(prismaClient.userSystemAction, 'create')
-        .mockResolvedValue(expectedResult);
+        .mockResolvedValue(expectedResult as any);
 
       const result = await service.create(input);
 
@@ -77,6 +78,7 @@ describe('UserSystemActionDbHandlerService', () => {
         userId: '1',
         action: 'AddIntegration',
         details: 'testDetails',
+        result: $Enums.SystemActionResult.SUCCESS,
       };
       const error = new Error('Creation failed');
 
@@ -100,8 +102,18 @@ describe('UserSystemActionDbHandlerService', () => {
 
   describe('createMany', () => {
     const mockInput: IBuildCreateUserSystemActionArgs[] = [
-      { userId: 'user1', action: 'AddIntegration', details: {} },
-      { userId: 'user2', action: 'AddIntegration', details: {} },
+      {
+        userId: 'user1',
+        action: 'AddIntegration',
+        details: {},
+        result: $Enums.SystemActionResult.SUCCESS,
+      },
+      {
+        userId: 'user2',
+        action: 'AddIntegration',
+        details: {},
+        result: $Enums.SystemActionResult.SUCCESS,
+      },
     ];
     const mockResult = { count: 2 }; // Assuming the result format for demonstration
 
@@ -159,7 +171,7 @@ describe('UserSystemActionDbHandlerService', () => {
         .mockReturnValue(queryBuilderOutput);
       jest
         .spyOn(prismaClient.userSystemAction, 'findUnique')
-        .mockResolvedValue(expectedResult);
+        .mockResolvedValue(expectedResult as any);
 
       const result = await service.retrieveOne(id);
 

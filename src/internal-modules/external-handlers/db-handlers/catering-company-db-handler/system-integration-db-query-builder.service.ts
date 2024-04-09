@@ -41,7 +41,7 @@ export class SystemIntegrationDbQueryBuilderService
 
   buildRetrieveIntegrationQueryWithoutInclude(
     templateId: number,
-  ): Prisma.IntegrationTemplateFindUniqueArgs {
+  ): Pick<Prisma.IntegrationTemplateFindUniqueArgs, 'where'> {
     return { where: { id: templateId } };
   }
 }
