@@ -59,8 +59,9 @@ model CompanyIntegrationAsset {
   integrationRequirementId Int                  @map("integration_requirement_id")
   type                     IntegrationAssetType
   system                   ExternalSystem?
+  isSecret                 Boolean              @default(true) @map("is_secret")
+  data                     Json?
   isTested                 Boolean              @default(false) @map("is_tested")
-  data                     Json
   creatorId                String               @map("creator_id")
 
   company                CateringCompany        @relation(fields: [companyId], references: [id], onDelete: Cascade)
@@ -115,11 +116,13 @@ model CompanyStore {
 }
 
 model IntegrationRequirement {
-  id     Int                         @id @default(autoincrement())
-  type   IntegrationAssetType
-  system ExternalSystem?
-  data   Json
-  level  IntegrationRequirementLevel
+  id            Int                         @id @default(autoincrement())
+  type          IntegrationAssetType
+  system        ExternalSystem?
+  uiName        String                      @map("ui_name")
+  uiDescription String                      @map("ui_description")
+  level         IntegrationRequirementLevel
+  isSecret      Boolean                     @default(true) @map("is_secret")
 
   templates IntegrationTemplate[]
   assets    CompanyIntegrationAsset[]
@@ -237,8 +240,9 @@ enum ExternalSystem {
 }
 
 enum IntegrationAssetType {
-  apiConfiguration
-  dataMap
+  API_CREDENTIAL_API_KEY
+  API_CREDENTIAL_USERNAME
+  DATA_MAP
 }
 
 enum IntegrationEvent {

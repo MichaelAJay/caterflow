@@ -113,6 +113,7 @@ export class CateringCompanyController implements ICateringCompanyController {
   async createIntegrationAsset(
     req: AuthenticatedRequestForCompanyUser,
     @Param('requirementId', ParseIntPipe) requirementId: number,
+    @Body() body: any,
   ): Promise<any> {
     const { user } = req;
     return this.cateringCompanyService.createIntegrationAsset(

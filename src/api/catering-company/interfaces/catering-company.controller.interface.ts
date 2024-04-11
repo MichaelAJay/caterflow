@@ -27,5 +27,6 @@ export interface ICateringCompanyController {
   createIntegrationAsset(
     req: AuthenticatedRequestForCompanyUser,
     requirementId: number,
+    body: any,
   ): Promise<any>;
 }
