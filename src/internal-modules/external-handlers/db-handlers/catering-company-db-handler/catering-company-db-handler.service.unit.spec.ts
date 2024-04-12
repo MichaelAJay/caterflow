@@ -524,4 +524,31 @@ describe('CateringCompanyDbHandlerService', () => {
 
     it('should handle the case when requirement.level is not Company or Menu', async () => {});
   });
+
+  describe('createIntegrationAsset ChatGPT', () => {
+    it('should throw InvalidUUIDError if companyId is not a valid UUID', async () => {});
+
+    it('should throw InvalidUUIDError if creatorId is not a valid UUID', async () => {});
+
+    it('should retrieve the requirement and include assets and templates correctly', async () => {});
+
+    it('should throw an error if the isSecret flag does not match the requirement’s isSecret flag', async () => {});
+
+    it('should log an error if requirement level is Company and there are existing assets', async () => {});
+
+    it('should log an error if requirement level is Menu and no menuId is provided', async () => {});
+
+    it('should push integration IDs into companyIntegrationIds for each template integration matching the company', async () => {});
+
+    it('should create a company integration asset with correct parameters if all conditions are met', async () => {});
+
+    it('should handle the case where companyIntegrationIds are empty when creating an asset', async () => {});
+
+    it('should return the created asset', async () => {});
+
+    // Additional tests to consider may include error handling for database or network failures
+    it('should handle PrismaClient known errors gracefully', async () => {});
+
+    it('should handle unexpected errors during database operations', async () => {});
+  });
 });
