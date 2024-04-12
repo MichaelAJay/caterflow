@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { CateringCompanyDbQueryBuilderService } from './catering-company-db-query-builder.service';
 import { IBuildRetrieveCompanyIntegrationListArgs } from './interfaces/query-builder-args.interfaces';
 import queryBuilderUtilities from './utilities/query-builder-utilities';
-import { Prisma } from '@prisma/client';
+import { $Enums, Prisma } from '@prisma/client';
 
 jest.mock('./utilities/query-builder-utilities');
 
@@ -10,6 +10,7 @@ describe('CateringCompanyDbQueryBuilderService', () => {
   let service: CateringCompanyDbQueryBuilderService;
 
   beforeEach(async () => {
+    jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
       providers: [CateringCompanyDbQueryBuilderService],
     }).compile();
@@ -17,10 +18,6 @@ describe('CateringCompanyDbQueryBuilderService', () => {
     service = module.get<CateringCompanyDbQueryBuilderService>(
       CateringCompanyDbQueryBuilderService,
     );
-  });
-
-  afterEach(() => {
-    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -327,6 +324,61 @@ describe('CateringCompanyDbQueryBuilderService', () => {
       expect(result).toHaveProperty('take');
       expect(result).toHaveProperty('orderBy');
       expect(result).toHaveProperty('skip');
+    });
+  });
+
+  describe('buildCreateCompanyIntegrationAsset', () => {
+    it('should return correct data when data and companyIntegrationIds are not provided', () => {
+      const result = service.buildCreateCompanyIntegrationAsset(
+        'companyId1',
+        1,
+        $Enums.IntegrationAssetType.API_CREDENTIAL_API_KEY,
+        $Enums.ExternalSystem.ezCater,
+        true,
+        'creatorId1',
+      );
+
+      expect(result).toEqual({
+        data: {
+          companyId: 'companyId1',
+          integrationRequirementId: 1,
+          type: $Enums.IntegrationAssetType.API_CREDENTIAL_API_KEY,
+          system: $Enums.ExternalSystem.ezCater,
+          isSecret: true,
+          creatorId: 'creatorId1',
+          menuId: undefined,
+        },
+      });
+    });
+
+    it('should return correct data when data and companyIntegrationIds are provided', () => {
+      const result = service.buildCreateCompanyIntegrationAsset(
+        'companyId1',
+        1,
+        $Enums.IntegrationAssetType.API_CREDENTIAL_API_KEY,
+        $Enums.ExternalSystem.ezCater,
+        true,
+        'creatorId1',
+        2,
+        { key: 'value' },
+        [{ id: 'integrationId1' }],
+      );
+
+      expect(result).toEqual({
+        data: {
+          companyId: 'companyId1',
+          integrationRequirementId: 1,
+          type: $Enums.IntegrationAssetType.API_CREDENTIAL_API_KEY,
+          system: $Enums.ExternalSystem.ezCater,
+          isSecret: true,
+          creatorId: 'creatorId1',
+          menuId: 2,
+          data: { key: 'value' },
+          integrations: {
+            connect: [{ id: 'integrationId1' }],
+          },
+        },
+      });
     });
   });
 });

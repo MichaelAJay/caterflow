@@ -79,4 +79,49 @@ export class CateringCompanyDbQueryBuilderService
 
     return { data };
   }
+
+  buildCreateCompanyIntegrationAsset(
+    companyId: string,
+    integrationRequirementId: number,
+    type: $Enums.IntegrationAssetType,
+    system: $Enums.ExternalSystem | null,
+    isSecret: boolean,
+    creatorId: string,
+    menuId?: number,
+    data?: Prisma.JsonValue,
+    companyIntegrationIds?: { id: string }[],
+  ): Prisma.CompanyIntegrationAssetCreateArgs {
+    const input: Pick<
+      Prisma.CompanyIntegrationAssetUncheckedCreateInput,
+      | 'companyId'
+      | 'menuId'
+      | 'integrationRequirementId'
+      | 'type'
+      | 'system'
+      | 'isSecret'
+      | 'creatorId'
+      | 'data'
+      | 'integrations'
+    > = {
+      companyId,
+      integrationRequirementId,
+      type,
+      system,
+      isSecret,
+      creatorId,
+      menuId,
+    };
+
+    if (data) {
+      input.data = data;
+    }
+
+    if (companyIntegrationIds) {
+      input.integrations = {
+        connect: companyIntegrationIds,
+      };
+    }
+
+    return { data: input };
+  }
 }

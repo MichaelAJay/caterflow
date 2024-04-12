@@ -20,12 +20,8 @@ export class SecretManagerService implements ISecretManager {
     >('env');
   }
 
-  getSecretName(
-    companyId: string,
-    companyIntegrationId: string,
-    secretType: string,
-  ): string {
-    return `${companyId}_${companyIntegrationId}_${secretType}`;
+  getSecretName(companyId: string, companyIntegrationAssetId: string): string {
+    return `${companyId}_${companyIntegrationAssetId}`;
   }
 
   getSystemSecretName(secretName: string): string {

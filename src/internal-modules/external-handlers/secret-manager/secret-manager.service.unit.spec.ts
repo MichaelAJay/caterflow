@@ -51,10 +51,9 @@ describe('SecretManagerService', () => {
     it('should format the secret name correctly', () => {
       const secretName = service.getSecretName(
         'companyId',
-        'companyIntegrationId',
-        'secretType',
+        'companyIntegrationAssetId',
       );
-      expect(secretName).toBe('companyId_companyIntegrationId_secretType');
+      expect(secretName).toBe('companyId_companyIntegrationId');
     });
   });
 

@@ -4,12 +4,14 @@ import { CateringCompanyDbHandlerModule } from '../external-handlers/db-handlers
 import { UserDbHandlerModule } from '../external-handlers/db-handlers/user-db-handler/user-db-handler.module';
 import { CompanyRoleAndPermissionDbHandlerModule } from '../external-handlers/db-handlers/company-role-and-permission-db-handler/company-role-and-permission-db-handler.module';
 import { CompanyMapperService } from './company-mapper.service';
+import { SecretManagerModule } from '../external-handlers/secret-manager/secret-manager.module';
 
 @Module({
   imports: [
     CateringCompanyDbHandlerModule,
     UserDbHandlerModule,
     CompanyRoleAndPermissionDbHandlerModule,
+    SecretManagerModule,
   ],
   providers: [CateringCompanyService, CompanyMapperService],
   exports: [CateringCompanyService],

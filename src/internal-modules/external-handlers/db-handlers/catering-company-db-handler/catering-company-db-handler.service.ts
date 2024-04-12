@@ -10,6 +10,7 @@ import { ERROR_CODE } from '../../../../common/codes/error-codes';
 import { IBuildRetrieveCompanyIntegrationListArgs } from './interfaces/query-builder-args.interfaces';
 import { SystemIntegrationDbQueryBuilderService } from './system-integration-db-query-builder.service';
 import { CreatedCompanyIntegration } from './types/return/create-company-integration.return.type';
+import { JsonValue } from '@prisma/client/runtime/library';
 
 @Injectable()
 export class CateringCompanyDbHandlerService
@@ -157,9 +158,11 @@ export class CateringCompanyDbHandlerService
     companyId: string,
     requirementId: number,
     creatorId: string,
-    menuId?: string,
+    isSecret: boolean,
+    menuId?: number,
+    data?: JsonValue,
   ): Promise<any> {
-    if (!uuidUtils.isUUID(companyId) || (menuId && !uuidUtils.isUUID(menuId))) {
+    if (!(uuidUtils.isUUID(companyId) && uuidUtils.isUUID(creatorId))) {
       throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
     }
 
@@ -167,11 +170,29 @@ export class CateringCompanyDbHandlerService
       await this.prismaClient.integrationRequirement.findUniqueOrThrow({
         where: { id: requirementId },
         include: {
+          // All assets that reference the integration requirement and that belong to the company
           assets: {
             where: { companyId },
+            select: { id: true },
+          },
+          // All templates that are referenced by at least one integration that belongs to the company
+          templates: {
+            where: {
+              integrations: {
+                some: { companyId },
+              },
+            },
+            // Include all company integrations which reference the template and that belong to the company
+            include: {
+              integrations: { where: { companyId }, select: { id: true } },
+            },
           },
         },
       });
+
+    if (isSecret !== requirement.isSecret) {
+      throw new Error('Non-matching secret flag');
+    }
 
     // If company requirement with asset is found, that's an error
     if (
@@ -189,5 +210,30 @@ export class CateringCompanyDbHandlerService
       // throw err
       console.log('moo like a horse');
     }
+
+    // Uniqueness ensured since each integration references exactly one template
+    const companyIntegrationIds: { id: string }[] = [];
+    // Favors reduced memory overhead
+    requirement.templates.forEach((template) => {
+      template.integrations.forEach((integration) =>
+        companyIntegrationIds.push({ id: integration.id }),
+      );
+    });
+
+    // add updated assets
+    const asset = await this.prismaClient.companyIntegrationAsset.create(
+      this.cateringCompanyDbQueryBuilder.buildCreateCompanyIntegrationAsset(
+        companyId,
+        requirement.id,
+        requirement.type,
+        requirement.system,
+        isSecret,
+        creatorId,
+        menuId,
+        data,
+        companyIntegrationIds.length > 0 ? companyIntegrationIds : undefined,
+      ),
+    );
+    return asset;
   }
 }

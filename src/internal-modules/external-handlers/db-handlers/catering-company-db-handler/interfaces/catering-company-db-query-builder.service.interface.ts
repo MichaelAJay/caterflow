@@ -19,4 +19,15 @@ export interface ICateringCompanyDbQueryBuilder {
     creatorId: string,
     existingAssetIds?: string[],
   ): Prisma.CompanyIntegrationCreateArgs;
+  buildCreateCompanyIntegrationAsset(
+    companyId: string,
+    integrationRequirementId: number,
+    type: $Enums.IntegrationAssetType,
+    system: $Enums.ExternalSystem | null,
+    isSecret: boolean,
+    creatorId: string,
+    menuId?: number,
+    data?: Prisma.JsonValue,
+    companyIntegrationIds?: { id: string }[],
+  ): Prisma.CompanyIntegrationAssetCreateArgs;
 }

@@ -7,6 +7,8 @@ import { CompanyMapperService } from './company-mapper.service';
 import { CompanyIntegrationOutputItem } from 'src/common/types/company-integration-list-item.type';
 import { IBuildRetrieveCompanyIntegrationListArgs } from '../external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
 import { CreatedCompanyIntegration } from '../external-handlers/db-handlers/catering-company-db-handler/types/return/create-company-integration.return.type';
+import { CreateIntegrationAssetRequestBody } from 'src/api/catering-company/interfaces/request/body/post.create-integration-asset.body.type';
+import { SecretManagerService } from '../external-handlers/secret-manager/secret-manager.service';
 
 @Injectable()
 export class CateringCompanyService implements ICateringCompanyService {
@@ -15,6 +17,7 @@ export class CateringCompanyService implements ICateringCompanyService {
     private readonly userDbHandler: UserDbHandlerService,
     private readonly companyRoleDbHandler: CompanyRoleAndPermissionDbHandlerService,
     private readonly companyMapper: CompanyMapperService,
+    private readonly secretManager: SecretManagerService,
   ) {}
 
   async createCateringCompany(name: string, ownerId: string): Promise<any> {
@@ -68,5 +71,18 @@ export class CateringCompanyService implements ICateringCompanyService {
     companyId: string,
     requirementId: number,
     creatorId: string,
-  ): Promise<any> {}
+    asset: CreateIntegrationAssetRequestBody,
+  ): Promise<any> {
+    // Create the record & associate it to the company
+    // Then, if asset.isSecret is true, create the secret
+
+    const id = 'boop';
+    if (asset.isSecret) {
+      const secretName = this.secretManager.getSecretName(companyId, id);
+      await this.secretManager.upsertSecret(
+        secretName,
+        Buffer.from(asset.value),
+      );
+    }
+  }
 }

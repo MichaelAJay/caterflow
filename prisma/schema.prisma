@@ -69,8 +69,6 @@ model CompanyIntegrationAsset {
   integrationRequirement IntegrationRequirement @relation(fields: [integrationRequirementId], references: [id])
   integrations           CompanyIntegration[]
   creator                User                   @relation("creator", fields: [creatorId], references: [id])
-  CompanyStore           CompanyStore?          @relation(fields: [companyStoreId], references: [id])
-  companyStoreId         String?
 
   @@unique([menuId, integrationRequirementId], name: "assetRequirementUnique", map: "asset_requirement_unique")
   @@index([companyId])
@@ -108,8 +106,7 @@ model CompanyStore {
   companyId String @map("company_id")
   name      String
 
-  company CateringCompany           @relation(fields: [companyId], references: [id])
-  assets  CompanyIntegrationAsset[]
+  company CateringCompany @relation(fields: [companyId], references: [id])
 
   @@index([companyId])
   @@map("company_stores")

@@ -24,6 +24,7 @@ export interface ICateringCompanyDbHandler {
     companyId: string,
     requirementId: number,
     creatorId: string,
-    menuId?: string,
+    isSecret: boolean,
+    menuId?: number,
   ): Promise<any>;
 }

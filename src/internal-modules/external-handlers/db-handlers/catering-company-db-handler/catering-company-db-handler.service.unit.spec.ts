@@ -486,4 +486,42 @@ describe('CateringCompanyDbHandlerService', () => {
       );
     });
   });
+
+  describe('createIntegrationAsset Claude', () => {
+    it('should create a new integration asset successfully', async () => {});
+
+    it('should throw an InvalidUUIDError if companyId is not a valid UUID', async () => {});
+
+    it('should throw an InvalidUUIDError if creatorId is not a valid UUID', async () => {});
+
+    it('should throw an error if the integration requirement is not found', async () => {});
+
+    it("should throw an error if isSecret does not match the requirement's isSecret flag", async () => {});
+
+    it('should throw an error if the requirement level is Company and an asset already exists', async () => {});
+
+    it('should throw an error if the requirement level is Menu and menuId is not provided', async () => {});
+
+    it('should create an asset with companyIntegrationIds if there are associated integrations', async () => {});
+
+    it('should create an asset without companyIntegrationIds if there are no associated integrations', async () => {});
+
+    it('should call prismaClient.integrationRequirement.findUniqueOrThrow with the correct arguments', async () => {});
+
+    it('should call prismaClient.companyIntegrationAsset.create with the correct arguments', async () => {});
+
+    it('should call cateringCompanyDbQueryBuilder.buildCreateCompanyIntegrationAsset with the correct arguments', async () => {});
+
+    it('should return the newly created asset', async () => {});
+
+    it('should handle the case when data is not provided', async () => {});
+
+    it('should handle the case when menuId is not provided', async () => {});
+
+    it('should handle the case when requirement.templates is empty', async () => {});
+
+    it('should handle the case when requirement.assets is empty', async () => {});
+
+    it('should handle the case when requirement.level is not Company or Menu', async () => {});
+  });
 });

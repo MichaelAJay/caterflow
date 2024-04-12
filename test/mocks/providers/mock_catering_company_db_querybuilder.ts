@@ -5,4 +5,5 @@ export const mockCateringCompanyDbQueryBuilderService: ICateringCompanyDbQueryBu
     buildCreateCateringCompanyQuery: jest.fn(),
     buildRetrieveCompanyIntegrationsListQueryWithoutInclude: jest.fn(),
     buildCreateCompanyIntegration: jest.fn(),
+    buildCreateCompanyIntegrationAsset: jest.fn(),
   };

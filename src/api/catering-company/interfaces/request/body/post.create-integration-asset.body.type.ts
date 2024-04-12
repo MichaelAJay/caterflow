@@ -8,6 +8,11 @@ export type CreateNonSecretIntegrationAssetRequestBody = {
   value?: any;
 };
 
-export type CreateIntegrationAssetRequestBody =
+type CreateIntegrationAssetRequestBodyUnion =
   | CreateSecretIntegrationAssetRequestBody
   | CreateNonSecretIntegrationAssetRequestBody;
+
+export type CreateIntegrationAssetRequestBody =
+  CreateIntegrationAssetRequestBodyUnion & {
+    menuId?: string;
+  };

@@ -6,11 +6,13 @@ import { SUCCESS_CODE } from '../../common/codes/success-codes';
 import { BadRequestException, ConflictException } from '@nestjs/common';
 import { FirebaseAdminService } from '../../external-modules/firebase-admin/firebase-admin.service';
 import { mockFirebaseAdminService } from '../../../test/mocks/providers/mock_firebase_admin';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { validateCreateCateringCompanyRequestBody } from './validators/post.caterer';
 import { IBuildRetrieveCompanyIntegrationListArgs } from '../../internal-modules/external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
 import { AuthenticatedRequestForCompanyUser } from '../interfaces/authenticated-request.interface';
-import { CompanyIntegrationOutputItem } from 'src/common/types/company-integration-list-item.type';
+import { CompanyIntegrationOutputItem } from '../../common/types/company-integration-list-item.type';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { validateCreateCateringCompanyRequestBody } from './validators/post.caterer';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { validateCreateIntegrationAssetBody } from './validators/post.create-integration-asset';
 
 describe('CateringCompanyController', () => {
   let controller: CateringCompanyController;
@@ -213,6 +215,97 @@ describe('CateringCompanyController', () => {
       await expect(
         controller.createIntegration(mockReq, templateId),
       ).rejects.toThrow(errorMessage);
+    });
+  });
+
+  describe('createIntegrationAsset', () => {
+    let mockValidateCreateIntegrationAsset: jest.Mock;
+    beforeEach(() => {
+      mockValidateCreateIntegrationAsset = jest.fn();
+      (validateCreateIntegrationAssetBody as unknown as jest.Mock) =
+        mockValidateCreateIntegrationAsset;
+      mockValidateCreateIntegrationAsset.mockReturnValue(true);
+    });
+
+    it('should throw BadRequestException when body is invalid', async () => {
+      const req = {
+        user: { companyId: 1, id: 1 },
+      } as unknown as AuthenticatedRequestForCompanyUser;
+      const body = {}; // invalid body
+      mockValidateCreateIntegrationAsset.mockReturnValue(false);
+
+      await expect(
+        controller.createIntegrationAsset(req, 1, body),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should call createIntegrationAsset on the service with correct parameters', async () => {
+      const req = {
+        user: { companyId: 1, id: 1 },
+      } as unknown as AuthenticatedRequestForCompanyUser;
+      const body = {
+        /* valid body */
+      };
+      const requirementId = 1;
+
+      jest
+        .spyOn(cateringCompanyService, 'createIntegrationAsset')
+        .mockResolvedValueOnce({});
+
+      await controller.createIntegrationAsset(req, requirementId, body);
+
+      expect(
+        cateringCompanyService.createIntegrationAsset,
+      ).toHaveBeenCalledWith(
+        req.user.companyId,
+        requirementId,
+        req.user.id,
+        body,
+      );
+    });
+
+    it('should return the result of createIntegrationAsset on the service', async () => {
+      const req = {
+        user: { companyId: 1, id: 1 },
+      } as unknown as AuthenticatedRequestForCompanyUser;
+      const body = {
+        bodyKey: 'body val',
+      };
+      const requirementId = 1;
+      const serviceResult = {
+        key: 'value',
+      };
+
+      jest
+        .spyOn(cateringCompanyService, 'createIntegrationAsset')
+        .mockResolvedValueOnce(serviceResult);
+
+      const result = await controller.createIntegrationAsset(
+        req,
+        requirementId,
+        body,
+      );
+
+      expect(result).toBe(serviceResult);
+    });
+
+    it('should propagate any error thrown by createIntegrationAsset', async () => {
+      const req = {
+        user: { companyId: 1, id: 1 },
+      } as unknown as AuthenticatedRequestForCompanyUser;
+      const body = {
+        bodyKey: 'body val',
+      };
+      const requirementId = 1;
+
+      const expectedError = new Error('Expected error');
+      jest
+        .spyOn(cateringCompanyService, 'createIntegrationAsset')
+        .mockRejectedValue(expectedError);
+
+      await expect(
+        controller.createIntegrationAsset(req, requirementId, body),
+      ).rejects.toThrow(expectedError);
     });
   });
 });
