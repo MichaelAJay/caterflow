@@ -2,7 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { ICateringCompanyDbHandler } from './interfaces/catering-company-db-handler.service.interface';
 import { CateringCompanyDbQueryBuilderService } from './catering-company-db-query-builder.service';
 import { PrismaClientService } from '../../../../external-modules/prisma-client/prisma-client.service';
-import { $Enums, CateringCompany } from '@prisma/client';
+import {
+  $Enums,
+  CateringCompany,
+  IntegrationRequirement,
+  IntegrationTemplate,
+} from '@prisma/client';
 import { CompanyIntegrationListItem } from '../../../../common/types/company-integration-list-item.type';
 import uuidUtils from '../../../../utility/functions/uuid-utils';
 import { InvalidUUIDError } from '../../../../common/errors/invalid_uuid.error';
@@ -11,6 +16,8 @@ import { IBuildRetrieveCompanyIntegrationListArgs } from './interfaces/query-bui
 import { SystemIntegrationDbQueryBuilderService } from './system-integration-db-query-builder.service';
 import { CreatedCompanyIntegration } from './types/return/create-company-integration.return.type';
 import { JsonValue } from '@prisma/client/runtime/library';
+import { IntegrationRequirementWithCompanyAssociations } from './types/integration-requirement-with-company-associations.type';
+import { CompanyIntegrationAssetWithIntegrations } from './types/return/asset-with-integrations.return.type';
 
 @Injectable()
 export class CateringCompanyDbHandlerService
@@ -161,8 +168,82 @@ export class CateringCompanyDbHandlerService
     isSecret: boolean,
     menuId?: number,
     data?: JsonValue,
-  ): Promise<any> {
+  ): Promise<CompanyIntegrationAssetWithIntegrations> {
     if (!(uuidUtils.isUUID(companyId) && uuidUtils.isUUID(creatorId))) {
+      throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
+    }
+
+    // Throws if not found (Prisma known error P2025)
+    const requirement: IntegrationRequirement & {
+      assets: { id: string }[];
+      templates: (IntegrationTemplate & { integrations: { id: string }[] })[];
+    } = await this.retrieveTargetIntegrationRequirementWithCompanyAssociations(
+      requirementId,
+      companyId,
+    );
+
+    if (isSecret !== requirement.isSecret) {
+      throw new Error('Non-matching secret flag');
+    }
+
+    // If company requirement with asset is found, that's an error
+    if (
+      requirement.level === $Enums.IntegrationRequirementLevel.Company &&
+      requirement.assets.length > 0
+    ) {
+      throw new Error(
+        'Each "Company" type requirement may be referenced by only one company asset. Do you want to remove your previous asset and replace it with this one?',
+      );
+    }
+
+    if (
+      requirement.level === $Enums.IntegrationRequirementLevel.Menu &&
+      !menuId
+    ) {
+      throw new Error(
+        'This requirement is a Menu type requirement, and a menuId was not provided',
+      );
+    }
+
+    // Uniqueness ensured since each integration references exactly one template
+    const companyIntegrationIds: { id: string }[] = [];
+    // Favors reduced memory overhead
+    requirement.templates.forEach((template) => {
+      template.integrations.forEach((integration) =>
+        companyIntegrationIds.push({ id: integration.id }),
+      );
+    });
+
+    // add updated assets
+    const asset = await this.prismaClient.companyIntegrationAsset.create({
+      ...this.cateringCompanyDbQueryBuilder.buildCreateCompanyIntegrationAsset(
+        companyId,
+        requirement.id,
+        requirement.type,
+        requirement.system,
+        isSecret,
+        creatorId,
+        menuId,
+        data,
+        companyIntegrationIds.length > 0 ? companyIntegrationIds : undefined,
+      ),
+      include: {
+        integrations: true,
+      },
+    });
+
+    // Think about something like - the following integrations were updated.
+
+    // Actually, with regard to the integrations... it would maybe be worth confirming whether or not they're completed after this asset comes in
+
+    return asset;
+  }
+
+  async retrieveTargetIntegrationRequirementWithCompanyAssociations(
+    requirementId: number,
+    companyId: string,
+  ): Promise<IntegrationRequirementWithCompanyAssociations> {
+    if (!uuidUtils.isUUID(companyId)) {
       throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
     }
 
@@ -190,50 +271,6 @@ export class CateringCompanyDbHandlerService
         },
       });
 
-    if (isSecret !== requirement.isSecret) {
-      throw new Error('Non-matching secret flag');
-    }
-
-    // If company requirement with asset is found, that's an error
-    if (
-      requirement.level === $Enums.IntegrationRequirementLevel.Company &&
-      requirement.assets.length > 0
-    ) {
-      // throw err
-      console.log('moo like a cow');
-    }
-
-    if (
-      requirement.level === $Enums.IntegrationRequirementLevel.Menu &&
-      !menuId
-    ) {
-      // throw err
-      console.log('moo like a horse');
-    }
-
-    // Uniqueness ensured since each integration references exactly one template
-    const companyIntegrationIds: { id: string }[] = [];
-    // Favors reduced memory overhead
-    requirement.templates.forEach((template) => {
-      template.integrations.forEach((integration) =>
-        companyIntegrationIds.push({ id: integration.id }),
-      );
-    });
-
-    // add updated assets
-    const asset = await this.prismaClient.companyIntegrationAsset.create(
-      this.cateringCompanyDbQueryBuilder.buildCreateCompanyIntegrationAsset(
-        companyId,
-        requirement.id,
-        requirement.type,
-        requirement.system,
-        isSecret,
-        creatorId,
-        menuId,
-        data,
-        companyIntegrationIds.length > 0 ? companyIntegrationIds : undefined,
-      ),
-    );
-    return asset;
+    return requirement;
   }
 }

@@ -75,14 +75,50 @@ export class CateringCompanyService implements ICateringCompanyService {
   ): Promise<any> {
     // Create the record & associate it to the company
     // Then, if asset.isSecret is true, create the secret
+    const createdAsset =
+      await this.cateringCompanyDbHandler.createIntegrationAsset(
+        companyId,
+        requirementId,
+        creatorId,
+        asset.isSecret,
+        asset.menuId,
+      );
 
-    const id = 'boop';
     if (asset.isSecret) {
-      const secretName = this.secretManager.getSecretName(companyId, id);
+      const secretName = this.secretManager.getSecretName(
+        companyId,
+        createdAsset.id,
+      );
       await this.secretManager.upsertSecret(
         secretName,
         Buffer.from(asset.value),
       );
     }
+
+    for (const integration of createdAsset.integrations) {
+      console.log(integration.id);
+    }
+
+    /**
+     * Each integration of createdAsset.integrations was just joiend to the created asset
+     * As a result of this join, it may be the case that a companyIntegration's requirements are all now fully met.
+     * That would be like this:
+     * integration: {
+     *  template: {
+     *    requirements: {}[]
+     *  }
+     * }
+     */
+
+    /**
+     * So I need assets associated with each integration. Each asset references its requirement.
+     * *** EACH ASSET REFERENCES ITS REQUIREMENT, AND EACH INTEGRATION REFERENCES ITS TEMPLATE ***
+     * *** EACH TEMPLATE MAY RETRIEVE ITS REQUIREMENTS
+     *
+     * Each integration references its templates, and may be JOINED on asset.integrationId = integration.Id
+     * Each integration's referenced template may JOIN its requirements on template.id === requirement.templateId
+     * Each integration references template's requirements may be associated (loosely, with JS) to each integration's assets by asset.requirementId = requirement.id
+     *
+     */
   }
 }

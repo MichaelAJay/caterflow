@@ -12,6 +12,7 @@ import { InvalidUUIDError } from '../../../../common/errors/invalid_uuid.error';
 import { IBuildRetrieveCompanyIntegrationListArgs } from './interfaces/query-builder-args.interfaces';
 import { SystemIntegrationDbQueryBuilderService } from './system-integration-db-query-builder.service';
 import { mockSystemIntegrationDbQueryBuilder } from '../../../../../test/mocks/providers/mock_system_integration_db_querybuilder';
+import { IntegrationRequirementWithCompanyAssociations } from './types/integration-requirement-with-company-associations.type';
 
 describe('CateringCompanyDbHandlerService', () => {
   let service: CateringCompanyDbHandlerService;
@@ -487,68 +488,611 @@ describe('CateringCompanyDbHandlerService', () => {
     });
   });
 
-  describe('createIntegrationAsset Claude', () => {
-    it('should create a new integration asset successfully', async () => {});
+  describe('createIntegrationAsset', () => {
+    const companyId = 'a0b1c2d3-e4f5-6789-a0b1-c2d3e4f56789';
+    const requirementId = 1;
+    const creatorId = 'b1c2d3e4-f5a6-7890-b1c2-d3e4f5a67890';
+    const isSecret = true;
+    const menuId = 1;
+    const data = { key: 'value' };
 
-    it('should throw an InvalidUUIDError if companyId is not a valid UUID', async () => {});
+    const mockRequirement: IntegrationRequirementWithCompanyAssociations = {
+      id: requirementId,
+      level: $Enums.IntegrationRequirementLevel.Company,
+      type: $Enums.IntegrationAssetType.API_CREDENTIAL_API_KEY,
+      system: $Enums.ExternalSystem.ezCater,
+      uiName: 'UI name',
+      uiDescription: 'UI description',
+      isSecret: true,
+      assets: [],
+      templates: [],
+    };
 
-    it('should throw an InvalidUUIDError if creatorId is not a valid UUID', async () => {});
+    it('should create a new integration asset successfully', async () => {
+      it('should create a new integration asset successfully', async () => {
+        jest
+          .spyOn(
+            service,
+            'retrieveTargetIntegrationRequirementWithCompanyAssociations',
+          )
+          .mockResolvedValue(mockRequirement);
+        const mockAsset = { asset: 'val' };
+        jest
+          .spyOn(prismaClient.companyIntegrationAsset, 'create')
+          .mockResolvedValue(mockAsset as any);
 
-    it('should throw an error if the integration requirement is not found', async () => {});
+        await service.createIntegrationAsset(
+          companyId,
+          requirementId,
+          creatorId,
+          isSecret,
+          menuId,
+          data,
+        );
 
-    it("should throw an error if isSecret does not match the requirement's isSecret flag", async () => {});
+        expect(
+          service.retrieveTargetIntegrationRequirementWithCompanyAssociations,
+        ).toHaveBeenCalledWith(requirementId, companyId);
+        expect(
+          cateringCompanyDbQueryBuilder.buildCreateCompanyIntegrationAsset,
+        ).toHaveBeenCalledWith(
+          companyId,
+          mockRequirement.id,
+          mockRequirement.type,
+          mockRequirement.system,
+          isSecret,
+          creatorId,
+          menuId,
+          data,
+          undefined,
+        );
+        expect(prismaClient.companyIntegrationAsset.create).toHaveBeenCalled();
+      });
+    });
 
-    it('should throw an error if the requirement level is Company and an asset already exists', async () => {});
+    it('should throw an InvalidUUIDError if companyId is not a valid UUID', async () => {
+      jest.spyOn(uuidUtils, 'isUUID').mockReturnValueOnce(false);
 
-    it('should throw an error if the requirement level is Menu and menuId is not provided', async () => {});
+      await expect(
+        service.createIntegrationAsset(
+          'invalid-uuid',
+          requirementId,
+          creatorId,
+          isSecret,
+          menuId,
+          data,
+        ),
+      ).rejects.toThrow(InvalidUUIDError);
+    });
 
-    it('should create an asset with companyIntegrationIds if there are associated integrations', async () => {});
+    it('should throw an InvalidUUIDError if creatorId is not a valid UUID', async () => {
+      jest
+        .spyOn(uuidUtils, 'isUUID')
+        .mockReturnValueOnce(true)
+        .mockReturnValueOnce(false);
 
-    it('should create an asset without companyIntegrationIds if there are no associated integrations', async () => {});
+      await expect(
+        service.createIntegrationAsset(
+          companyId,
+          requirementId,
+          'invalid-uuid',
+          isSecret,
+          menuId,
+          data,
+        ),
+      ).rejects.toThrow(InvalidUUIDError);
+    });
 
-    it('should call prismaClient.integrationRequirement.findUniqueOrThrow with the correct arguments', async () => {});
+    it('should propagate any error from integration retrieval', async () => {
+      const errorMessage = 'Integration retrieval error';
+      jest
+        .spyOn(
+          service,
+          'retrieveTargetIntegrationRequirementWithCompanyAssociations',
+        )
+        .mockRejectedValue(new Error(errorMessage));
 
-    it('should call prismaClient.companyIntegrationAsset.create with the correct arguments', async () => {});
+      await expect(
+        service.createIntegrationAsset(
+          companyId,
+          requirementId,
+          creatorId,
+          isSecret,
+          menuId,
+          data,
+        ),
+      ).rejects.toThrow(errorMessage);
+    });
 
-    it('should call cateringCompanyDbQueryBuilder.buildCreateCompanyIntegrationAsset with the correct arguments', async () => {});
+    it("should throw an error if isSecret does not match the requirement's isSecret flag", async () => {
+      mockRequirement.isSecret = false;
+      jest
+        .spyOn(
+          service,
+          'retrieveTargetIntegrationRequirementWithCompanyAssociations',
+        )
+        .mockResolvedValue(mockRequirement);
 
-    it('should return the newly created asset', async () => {});
+      await expect(
+        service.createIntegrationAsset(
+          companyId,
+          requirementId,
+          creatorId,
+          isSecret,
+          menuId,
+          data,
+        ),
+      ).rejects.toThrow('Non-matching secret flag');
+    });
 
-    it('should handle the case when data is not provided', async () => {});
+    it('should throw an error if the requirement level is Company and an asset already exists', async () => {
+      mockRequirement.assets = [{ id: 'existing-asset-id' }];
+      jest
+        .spyOn(
+          service,
+          'retrieveTargetIntegrationRequirementWithCompanyAssociations',
+        )
+        .mockResolvedValue(mockRequirement);
 
-    it('should handle the case when menuId is not provided', async () => {});
+      await expect(
+        service.createIntegrationAsset(
+          companyId,
+          requirementId,
+          creatorId,
+          isSecret,
+          menuId,
+          data,
+        ),
+      ).rejects.toThrow(
+        'Each "Company" type requirement may be referenced by only one company asset. Do you want to remove your previous asset and replace it with this one?',
+      );
+    });
 
-    it('should handle the case when requirement.templates is empty', async () => {});
+    it('should throw an error if the requirement level is Menu and menuId is not provided', async () => {
+      mockRequirement.level = $Enums.IntegrationRequirementLevel.Menu;
+      jest
+        .spyOn(
+          service,
+          'retrieveTargetIntegrationRequirementWithCompanyAssociations',
+        )
+        .mockResolvedValue(mockRequirement);
 
-    it('should handle the case when requirement.assets is empty', async () => {});
+      await expect(
+        service.createIntegrationAsset(
+          companyId,
+          requirementId,
+          creatorId,
+          isSecret,
+          undefined,
+          data,
+        ),
+      ).rejects.toThrow(
+        'This requirement is a Menu type requirement, and a menuId was not provided',
+      );
+    });
 
-    it('should handle the case when requirement.level is not Company or Menu', async () => {});
-  });
+    it('should create an asset with companyIntegrationIds if there are associated integrations', async () => {
+      mockRequirement.templates = [
+        { integrations: [{ id: 'integration-id' } as any] } as any,
+      ];
+      jest
+        .spyOn(
+          service,
+          'retrieveTargetIntegrationRequirementWithCompanyAssociations',
+        )
+        .mockResolvedValue(mockRequirement);
 
-  describe('createIntegrationAsset ChatGPT', () => {
-    it('should throw InvalidUUIDError if companyId is not a valid UUID', async () => {});
+      await service.createIntegrationAsset(
+        companyId,
+        requirementId,
+        creatorId,
+        isSecret,
+        menuId,
+        data,
+      );
 
-    it('should throw InvalidUUIDError if creatorId is not a valid UUID', async () => {});
+      expect(
+        cateringCompanyDbQueryBuilder.buildCreateCompanyIntegrationAsset,
+      ).toHaveBeenCalledWith(
+        companyId,
+        mockRequirement.id,
+        mockRequirement.type,
+        mockRequirement.system,
+        isSecret,
+        creatorId,
+        menuId,
+        data,
+        [{ id: 'integration-id' }],
+      );
+    });
 
-    it('should retrieve the requirement and include assets and templates correctly', async () => {});
+    it('should create an asset without companyIntegrationIds if there are no associated integrations', async () => {
+      jest
+        .spyOn(
+          service,
+          'retrieveTargetIntegrationRequirementWithCompanyAssociations',
+        )
+        .mockResolvedValue(mockRequirement);
 
-    it('should throw an error if the isSecret flag does not match the requirement’s isSecret flag', async () => {});
+      await service.createIntegrationAsset(
+        companyId,
+        requirementId,
+        creatorId,
+        isSecret,
+        menuId,
+        data,
+      );
 
-    it('should log an error if requirement level is Company and there are existing assets', async () => {});
+      expect(
+        cateringCompanyDbQueryBuilder.buildCreateCompanyIntegrationAsset,
+      ).toHaveBeenCalledWith(
+        companyId,
+        mockRequirement.id,
+        mockRequirement.type,
+        mockRequirement.system,
+        isSecret,
+        creatorId,
+        menuId,
+        data,
+        undefined,
+      );
+    });
 
-    it('should log an error if requirement level is Menu and no menuId is provided', async () => {});
+    it('should call retrieveTargetIntegrationRequirementWithCompanyAssocations with the correct arguments', async () => {
+      jest
+        .spyOn(
+          service,
+          'retrieveTargetIntegrationRequirementWithCompanyAssociations',
+        )
+        .mockResolvedValue(mockRequirement);
 
-    it('should push integration IDs into companyIntegrationIds for each template integration matching the company', async () => {});
+      await service.createIntegrationAsset(
+        companyId,
+        requirementId,
+        creatorId,
+        isSecret,
+        menuId,
+        data,
+      );
 
-    it('should create a company integration asset with correct parameters if all conditions are met', async () => {});
+      expect(
+        service.retrieveTargetIntegrationRequirementWithCompanyAssociations,
+      ).toHaveBeenCalledWith(requirementId, companyId);
+    });
 
-    it('should handle the case where companyIntegrationIds are empty when creating an asset', async () => {});
+    /**
+     * @TODO sharpen up this test
+     */
+    it('should call prismaClient.companyIntegrationAsset.create with the correct arguments', async () => {
+      jest
+        .spyOn(
+          service,
+          'retrieveTargetIntegrationRequirementWithCompanyAssociations',
+        )
+        .mockResolvedValue(mockRequirement);
+      jest
+        .spyOn(prismaClient.companyIntegrationAsset, 'create')
+        .mockResolvedValue({});
 
-    it('should return the created asset', async () => {});
+      await service.createIntegrationAsset(
+        companyId,
+        requirementId,
+        creatorId,
+        isSecret,
+        menuId,
+        data,
+      );
+
+      expect(prismaClient.companyIntegrationAsset.create).toHaveBeenCalledWith(
+        expect.any(Object),
+      );
+    });
+
+    it('should call cateringCompanyDbQueryBuilder.buildCreateCompanyIntegrationAsset with the correct arguments', async () => {
+      jest
+        .spyOn(
+          service,
+          'retrieveTargetIntegrationRequirementWithCompanyAssociations',
+        )
+        .mockResolvedValue(mockRequirement);
+
+      await service.createIntegrationAsset(
+        companyId,
+        requirementId,
+        creatorId,
+        isSecret,
+        menuId,
+        data,
+      );
+
+      expect(
+        cateringCompanyDbQueryBuilder.buildCreateCompanyIntegrationAsset,
+      ).toHaveBeenCalledWith(
+        companyId,
+        mockRequirement.id,
+        mockRequirement.type,
+        mockRequirement.system,
+        isSecret,
+        creatorId,
+        menuId,
+        data,
+        undefined,
+      );
+    });
+
+    it('should return the newly created asset', async () => {
+      const mockAsset = { id: 'new-asset-id' } as any;
+      jest
+        .spyOn(
+          service,
+          'retrieveTargetIntegrationRequirementWithCompanyAssociations',
+        )
+        .mockResolvedValue(mockRequirement);
+      jest
+        .spyOn(prismaClient.companyIntegrationAsset, 'create')
+        .mockResolvedValue(mockAsset);
+
+      const result = await service.createIntegrationAsset(
+        companyId,
+        requirementId,
+        creatorId,
+        isSecret,
+        menuId,
+        data,
+      );
+
+      expect(result).toEqual(mockAsset);
+    });
+
+    it('should handle the case when data is not provided', async () => {
+      jest
+        .spyOn(
+          service,
+          'retrieveTargetIntegrationRequirementWithCompanyAssociations',
+        )
+        .mockResolvedValue(mockRequirement);
+
+      await service.createIntegrationAsset(
+        companyId,
+        requirementId,
+        creatorId,
+        isSecret,
+        menuId,
+      );
+
+      expect(
+        cateringCompanyDbQueryBuilder.buildCreateCompanyIntegrationAsset,
+      ).toHaveBeenCalledWith(
+        companyId,
+        mockRequirement.id,
+        mockRequirement.type,
+        mockRequirement.system,
+        isSecret,
+        creatorId,
+        menuId,
+        undefined,
+        undefined,
+      );
+    });
+
+    it('should handle the case when menuId is not provided', async () => {
+      jest
+        .spyOn(
+          service,
+          'retrieveTargetIntegrationRequirementWithCompanyAssociations',
+        )
+        .mockResolvedValue(mockRequirement);
+
+      await service.createIntegrationAsset(
+        companyId,
+        requirementId,
+        creatorId,
+        isSecret,
+      );
+
+      expect(
+        cateringCompanyDbQueryBuilder.buildCreateCompanyIntegrationAsset,
+      ).toHaveBeenCalledWith(
+        companyId,
+        mockRequirement.id,
+        mockRequirement.type,
+        mockRequirement.system,
+        isSecret,
+        creatorId,
+        undefined,
+        undefined,
+        undefined,
+      );
+    });
+
+    it('should handle the case when requirement.templates is empty', async () => {
+      jest
+        .spyOn(
+          service,
+          'retrieveTargetIntegrationRequirementWithCompanyAssociations',
+        )
+        .mockResolvedValue(mockRequirement);
+
+      await service.createIntegrationAsset(
+        companyId,
+        requirementId,
+        creatorId,
+        isSecret,
+        menuId,
+        data,
+      );
+
+      expect(
+        cateringCompanyDbQueryBuilder.buildCreateCompanyIntegrationAsset,
+      ).toHaveBeenCalledWith(
+        companyId,
+        mockRequirement.id,
+        mockRequirement.type,
+        mockRequirement.system,
+        isSecret,
+        creatorId,
+        menuId,
+        data,
+        undefined,
+      );
+    });
+
+    it('should handle the case when requirement.assets is empty', async () => {
+      jest
+        .spyOn(
+          service,
+          'retrieveTargetIntegrationRequirementWithCompanyAssociations',
+        )
+        .mockResolvedValue(mockRequirement);
+
+      await service.createIntegrationAsset(
+        companyId,
+        requirementId,
+        creatorId,
+        isSecret,
+        menuId,
+        data,
+      );
+
+      expect(
+        cateringCompanyDbQueryBuilder.buildCreateCompanyIntegrationAsset,
+      ).toHaveBeenCalledWith(
+        companyId,
+        mockRequirement.id,
+        mockRequirement.type,
+        mockRequirement.system,
+        isSecret,
+        creatorId,
+        menuId,
+        data,
+        undefined,
+      );
+    });
+
+    /**
+     * Probably should - but is enum
+     */
+    // it('should handle the case when requirement.level is not Company or Menu', async () => {
+    //   mockRequirement.level = 'Other';
+    //   jest
+    //     .spyOn(
+    //       service,
+    //       'retrieveTargetIntegrationRequirementWithCompanyAssociations',
+    //     )
+    //     .mockResolvedValue(mockRequirement);
+
+    //   await service.createIntegrationAsset(
+    //     companyId,
+    //     requirementId,
+    //     creatorId,
+    //     isSecret,
+    //     menuId,
+    //     data,
+    //   );
+
+    //   expect(
+    //     cateringCompanyDbQueryBuilder.buildCreateCompanyIntegrationAsset,
+    //   ).toHaveBeenCalledWith(
+    //     companyId,
+    //     mockRequirement.id,
+    //     mockRequirement.type,
+    //     mockRequirement.system,
+    //     isSecret,
+    //     creatorId,
+    //     menuId,
+    //     data,
+    //     undefined,
+    //   );
+    // });
 
     // Additional tests to consider may include error handling for database or network failures
-    it('should handle PrismaClient known errors gracefully', async () => {});
+    // it('should handle PrismaClient known errors gracefully', async () => {});
 
-    it('should handle unexpected errors during database operations', async () => {});
+    // it('should handle unexpected errors during database operations', async () => {});
+  });
+
+  describe('retrieveTargetIntegrationRequirementWithCompanyAssociations', () => {
+    const validCompanyId = '72eb4e9f-aa04-4857-83e8-5bc37ef2e5b7';
+    const invalidCompanyId = 'invalid-company-id';
+    const requirementId = 1;
+
+    it('should throw an InvalidUUIDError if companyId is not a valid UUID', async () => {
+      jest.spyOn(uuidUtils, 'isUUID').mockReturnValue(false);
+      await expect(
+        service.retrieveTargetIntegrationRequirementWithCompanyAssociations(
+          requirementId,
+          invalidCompanyId,
+        ),
+      ).rejects.toThrow(InvalidUUIDError);
+    });
+    it('should call integrationRequirement.findUniqueOrThrow with the correct arguments', async () => {
+      const resolvedRequirement = {
+        targetKey: 'targetValue',
+      } as unknown as IntegrationRequirementWithCompanyAssociations;
+      const spy = jest
+        .spyOn(prismaClient.integrationRequirement, 'findUniqueOrThrow')
+        .mockResolvedValue(resolvedRequirement);
+
+      await service.retrieveTargetIntegrationRequirementWithCompanyAssociations(
+        requirementId,
+        validCompanyId,
+      );
+      const expectedCallWith = {
+        where: { id: requirementId },
+        include: {
+          // All assets that reference the integration requirement and that belong to the company
+          assets: {
+            where: { validCompanyId },
+            select: { id: true },
+          },
+          // All templates that are referenced by at least one integration that belongs to the company
+          templates: {
+            where: {
+              integrations: {
+                some: { validCompanyId },
+              },
+            },
+            // Include all company integrations which reference the template and that belong to the company
+            include: {
+              integrations: { where: { validCompanyId }, select: { id: true } },
+            },
+          },
+        },
+      };
+
+      expect(spy).toHaveBeenCalledWith(expectedCallWith);
+    });
+    it('should return the result of integrationRequirement.findUniqueOrthrow if successful', async () => {
+      const resolvedRequirement = {
+        targetKey: 'targetValue',
+      } as unknown as IntegrationRequirementWithCompanyAssociations;
+      jest
+        .spyOn(prismaClient.integrationRequirement, 'findUniqueOrThrow')
+        .mockResolvedValue(resolvedRequirement);
+
+      const result =
+        await service.retrieveTargetIntegrationRequirementWithCompanyAssociations(
+          requirementId,
+          validCompanyId,
+        );
+
+      expect(result).toEqual(resolvedRequirement);
+    });
+    it('should propagate any error thrown by integrationRequirement.findUniqueOrThrow', async () => {
+      const expectedError = new Prisma.PrismaClientKnownRequestError(
+        'An operation failed because it depends on one or more records that were required but not found. {cause}',
+        { code: 'P2025', clientVersion: 'n/a' },
+      );
+      jest
+        .spyOn(prismaClient.integrationRequirement, 'findUniqueOrThrow')
+        .mockRejectedValue(expectedError);
+
+      await expect(
+        service.retrieveTargetIntegrationRequirementWithCompanyAssociations(
+          requirementId,
+          validCompanyId,
+        ),
+      ).rejects.toThrow(expectedError);
+    });
   });
 });

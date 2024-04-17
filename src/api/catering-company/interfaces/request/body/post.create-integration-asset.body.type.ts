@@ -14,5 +14,5 @@ type CreateIntegrationAssetRequestBodyUnion =
 
 export type CreateIntegrationAssetRequestBody =
   CreateIntegrationAssetRequestBodyUnion & {
-    menuId?: string;
+    menuId?: number;
   };
