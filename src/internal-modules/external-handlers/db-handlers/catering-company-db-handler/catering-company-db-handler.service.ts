@@ -7,6 +7,7 @@ import {
   CateringCompany,
   IntegrationRequirement,
   IntegrationTemplate,
+  Prisma,
 } from '@prisma/client';
 import { CompanyIntegrationListItem } from '../../../../common/types/company-integration-list-item.type';
 import uuidUtils from '../../../../utility/functions/uuid-utils';
@@ -95,13 +96,16 @@ export class CateringCompanyDbHandlerService
     return ct;
   }
 
+  /**
+   * @TODO update tests
+   */
   async createIntegration(
     companyId: string,
     templateId: number,
     creatorId: string,
   ): Promise<CreatedCompanyIntegration> {
     try {
-      if (!uuidUtils.isUUID(companyId)) {
+      if (!uuidUtils.isUUID(companyId) && uuidUtils.isUUID(creatorId)) {
         throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
       }
 
@@ -131,6 +135,74 @@ export class CateringCompanyDbHandlerService
             },
           },
         });
+
+      const assetIds: string[] = [];
+      const blargarr: IntegrationRequirement[] = [];
+      const invalidRequirements: IntegrationRequirement[] = [];
+      const creates: Prisma.CompanyIntegrationAssetUncheckedCreateWithoutIntegrationsInput[] =
+        [];
+      const connects: Prisma.CompanyIntegrationAssetWhereUniqueInput[] = [];
+
+      const menus = await this.prismaClient.companyMenu.findMany({
+        where: { companyId },
+      });
+
+      for (const requirement of integration.requirements) {
+        const { assets, ...integrationRequirement } = requirement;
+        if (requirement.level === $Enums.IntegrationRequirementLevel.Company) {
+          if (assets.length === 1) {
+            const data: Prisma.CompanyIntegrationAssetWhereUniqueInput = {
+              id: assets[0].id,
+            };
+            connects.push(data);
+          } else {
+            const data: Prisma.CompanyIntegrationAssetUncheckedCreateWithoutIntegrationsInput =
+              {
+                companyId,
+                integrationRequirementId: integrationRequirement.id,
+                type: integrationRequirement.type,
+                system: integrationRequirement.system,
+                creatorId,
+              };
+            // This should be the requirements for create & connect asset
+            creates.push(data);
+          }
+        } else if (
+          requirement.level === $Enums.IntegrationRequirementLevel.Menu
+        ) {
+          // What to do if menus is empty?
+          if (menus.length === 0) {
+            // Menu-level requirement requires a menu id - the created integration could never run without this
+            invalidRequirements.push(integrationRequirement);
+          } else {
+            for (const menu of menus) {
+              // Find matching requirement asset
+              const matchingAsset = assets.find(
+                (asset) => asset.menuId === menu.id,
+              );
+              if (matchingAsset) {
+                const data: Prisma.CompanyIntegrationAssetWhereUniqueInput = {
+                  id: matchingAsset.id,
+                };
+                connects.push(data);
+              } else {
+                const data: Prisma.CompanyIntegrationAssetUncheckedCreateWithoutIntegrationsInput =
+                  {
+                    companyId,
+                    integrationRequirementId: integrationRequirement.id,
+                    type: integrationRequirement.type,
+                    system: integrationRequirement.system,
+                    creatorId,
+                    menuId: menu.id,
+                  };
+                creates.push(data);
+              }
+            }
+          }
+        }
+      }
+
+      await this.prismaClient.companyIntegration.create({});
 
       const metRequirements = integration.requirements.filter(
         (requirement) => requirement.assets.length > 0,

@@ -63,6 +63,7 @@ export class CateringCompanyDbQueryBuilderService
     event: $Enums.IntegrationEvent,
     creatorId: string,
     existingAssetIds?: string[],
+    creates?: Prisma.CompanyIntegrationAssetUncheckedCreateWithoutIntegrationsInput[],
   ): Prisma.CompanyIntegrationCreateArgs {
     const data: Prisma.CompanyIntegrationUncheckedCreateInput = {
       companyId,
@@ -71,9 +72,12 @@ export class CateringCompanyDbQueryBuilderService
       creatorId,
     };
 
-    if (existingAssetIds) {
+    if (existingAssetIds || creates) {
       data.assets = {
-        connect: existingAssetIds.map((assetId) => ({ id: assetId })),
+        connect: existingAssetIds
+          ? existingAssetIds.map((assetId) => ({ id: assetId }))
+          : undefined,
+        create: creates,
       };
     }
 
@@ -116,7 +120,7 @@ export class CateringCompanyDbQueryBuilderService
       input.data = data;
     }
 
-    if (companyIntegrationIds) {
+    if (companyIntegrationIds || creates) {
       input.integrations = {
         connect: companyIntegrationIds,
       };
