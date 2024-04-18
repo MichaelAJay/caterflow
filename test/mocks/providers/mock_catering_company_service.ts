@@ -4,5 +4,4 @@ export const mockCateringCompanyService: ICateringCompanyService = {
   createCateringCompany: jest.fn(),
   retrieveIntegrationsList: jest.fn(),
   createIntegration: jest.fn(),
-  createIntegrationAsset: jest.fn(),
 };

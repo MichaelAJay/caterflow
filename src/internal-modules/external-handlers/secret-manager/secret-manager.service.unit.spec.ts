@@ -53,7 +53,7 @@ describe('SecretManagerService', () => {
         'companyId',
         'companyIntegrationAssetId',
       );
-      expect(secretName).toBe('companyId_companyIntegrationId');
+      expect(secretName).toBe('companyId_companyIntegrationAssetId');
     });
   });
 

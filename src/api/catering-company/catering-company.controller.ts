@@ -24,7 +24,6 @@ import { ERROR_CODE } from '../../common/codes/error-codes';
 import { SUCCESS_CODE } from '../../common/codes/success-codes';
 import { IBuildRetrieveCompanyIntegrationListArgs } from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
 import { $Enums } from '@prisma/client';
-import { validateCreateIntegrationAssetBody } from './validators/post.create-integration-asset';
 
 @Controller('caterer')
 export class CateringCompanyController implements ICateringCompanyController {
@@ -107,28 +106,6 @@ export class CateringCompanyController implements ICateringCompanyController {
       user.companyId,
       templateId,
       user.id,
-    );
-  }
-
-  @Post('integration/create-asset-from/:requirementId')
-  @SetMetadata('permissions', [$Enums.PermissionName.ManageIntegrationAssets])
-  async createIntegrationAsset(
-    req: AuthenticatedRequestForCompanyUser,
-    @Param('requirementId', ParseIntPipe) requirementId: number,
-    @Body() body: any,
-  ): Promise<any> {
-    if (!validateCreateIntegrationAssetBody(body)) {
-      throw new BadRequestException(
-        'Invalid create integration asset request body',
-      );
-    }
-
-    const { user } = req;
-    return this.cateringCompanyService.createIntegrationAsset(
-      user.companyId,
-      requirementId,
-      user.id,
-      body,
     );
   }
 }

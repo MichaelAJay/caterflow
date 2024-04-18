@@ -24,9 +24,4 @@ export interface ICateringCompanyController {
     req: AuthenticatedRequestForCompanyUser,
     templateId: number,
   ): Promise<any>;
-  createIntegrationAsset(
-    req: AuthenticatedRequestForCompanyUser,
-    requirementId: number,
-    body: any,
-  ): Promise<any>;
 }

@@ -15,6 +15,8 @@ import {
 } from '../../common/types/company-integration-list-item.type';
 import { IBuildRetrieveCompanyIntegrationListArgs } from '../external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
 import { CreatedCompanyIntegration } from '../external-handlers/db-handlers/catering-company-db-handler/types/return/create-company-integration.return.type';
+import { SecretManagerService } from '../external-handlers/secret-manager/secret-manager.service';
+import { mockSecretManagerService } from '../../../test/mocks/providers/mock_secret_manager';
 
 describe('CateringCompanyService', () => {
   let service: CateringCompanyService;
@@ -22,6 +24,7 @@ describe('CateringCompanyService', () => {
   let userDbHandler: UserDbHandlerService;
   let companyRoleDbHandler: CompanyRoleAndPermissionDbHandlerService;
   let companyMapper: CompanyMapperService;
+  let secretManagerService: SecretManagerService;
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -38,6 +41,7 @@ describe('CateringCompanyService', () => {
           useValue: mockCompanyRoleAndPermissionDbHandler,
         },
         { provide: CompanyMapperService, useValue: mockCompanyMapper },
+        { provide: SecretManagerService, useValue: mockSecretManagerService },
       ],
     }).compile();
 
@@ -268,9 +272,9 @@ describe('CateringCompanyService', () => {
           isActive: false,
           creatorId,
           createdAt: new Date(),
+          assets: [],
         },
-        metRequirements: [],
-        unmetRequirements: [{ id: '123' } as any],
+        invalidMenuRequirements: [],
       };
       jest
         .spyOn(cateringCompanyDbHandler, 'createIntegration')

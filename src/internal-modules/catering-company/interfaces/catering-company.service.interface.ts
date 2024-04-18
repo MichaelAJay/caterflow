@@ -18,10 +18,4 @@ export interface ICateringCompanyService {
     templateId: number,
     creatorId: string,
   ): Promise<CreatedCompanyIntegration>;
-  createIntegrationAsset(
-    companyId: string,
-    requirementId: number,
-    creatorId: string,
-    asset: CreateIntegrationAssetRequestBody,
-  ): Promise<any>;
 }
