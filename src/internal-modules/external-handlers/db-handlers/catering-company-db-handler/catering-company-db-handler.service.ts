@@ -225,10 +225,31 @@ export class CateringCompanyDbHandlerService
         creatorId,
         menuId,
         data,
+        // Determines integrations to include (below)
         companyIntegrationIds.length > 0 ? companyIntegrationIds : undefined,
       ),
       include: {
-        integrations: true,
+        // Includes all integrations created directly above
+        integrations: {
+          include: {
+            // Assets on integration
+            assets: true,
+            template: {
+              include: {
+                requirements: {
+                  include: {
+                    // Assets which should be on integration
+                    assets: {
+                      where: {
+                        companyId,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     });
 

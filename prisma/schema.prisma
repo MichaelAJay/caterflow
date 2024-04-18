@@ -57,6 +57,7 @@ model CompanyIntegrationAsset {
   companyId                String               @map("company_id")
   menuId                   Int?                 @map("menu_id")
   integrationRequirementId Int                  @map("integration_requirement_id")
+  hasData                  Boolean              @default(false) @map("has_data")
   type                     IntegrationAssetType
   system                   ExternalSystem?
   isSecret                 Boolean              @default(true) @map("is_secret")
