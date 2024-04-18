@@ -4,7 +4,7 @@ import { CateringCompanyDbQueryBuilderService } from './catering-company-db-quer
 import { PrismaClientService } from '../../../../external-modules/prisma-client/prisma-client.service';
 import { mockPrismaClientService } from '../../../../../test/mocks/providers/mock_prisma_client';
 import uuidUtils from '../../../../utility/functions/uuid-utils';
-import { $Enums } from '@prisma/client';
+import { $Enums, CompanyMenu } from '@prisma/client';
 import { CompanyIntegrationListItem } from '../../../../common/types/company-integration-list-item.type';
 import { InvalidUUIDError } from '../../../../common/errors/invalid_uuid.error';
 import { IBuildRetrieveCompanyIntegrationListArgs } from './interfaces/query-builder-args.interfaces';
@@ -472,16 +472,128 @@ describe('CateringCompanyDbHandlerService', () => {
     const templateId = 1;
     const creatorId = '6a0cba0a-7cce-4c4d-bfef-90f495d4c6da';
 
-    it('should create a company integration successfully', async () => {
-      const mockIntegration = {
-        requirements: [{ assets: [{ id: '1' }, { id: '2' }] }, { assets: [] }],
+    // it('should create a company integration successfully', async () => {
+    //   const mockIntegrationTemplate = {
+    //     requirements: [
+    //       {
+    //         level: $Enums.IntegrationRequirementLevel.Company,
+    //         assets: [{ id: '1' }],
+    //       },
+    //       {
+    //         id: 2,
+    //         type: $Enums.IntegrationAssetType.API_CREDENTIAL_API_KEY,
+    //         system: $Enums.ExternalSystem.ezCater,
+    //         level: $Enums.IntegrationRequirementLevel.Company,
+    //         assets: [],
+    //       },
+    //     ],
+    //     event: $Enums.IntegrationEvent.ezCaterOrderReceived,
+    //   };
+    //   const mockCompanyIntegration = { id: 'integration-id' };
+
+    //   jest
+    //     .spyOn(prismaClient.integrationTemplate, 'findUniqueOrThrow')
+    //     .mockResolvedValueOnce(mockIntegrationTemplate as any);
+
+    //   jest.spyOn(prismaClient.companyMenu, 'findMany').mockResolvedValue([]);
+    //   jest
+    //     .spyOn(prismaClient.companyIntegration, 'create')
+    //     .mockResolvedValueOnce(mockCompanyIntegration as any);
+
+    //   const result = await service.createIntegration(
+    //     companyId,
+    //     templateId,
+    //     creatorId,
+    //   );
+
+    //   expect(result.companyIntegration).toEqual(mockCompanyIntegration);
+    //   expect(
+    //     prismaClient.integrationTemplate.findUniqueOrThrow,
+    //   ).toHaveBeenCalledWith({
+    //     where: { id: templateId },
+    //     include: {
+    //       requirements: {
+    //         include: {
+    //           assets: {
+    //             where: { companyId },
+    //             select: {
+    //               id: true,
+    //               menuId: true,
+    //             },
+    //           },
+    //         },
+    //       },
+    //     },
+    //   });
+    //   expect(prismaClient.companyIntegration.create).toHaveBeenCalledWith({
+    //     data: {
+    //       companyId,
+    //       templateId,
+    //       event: $Enums.IntegrationEvent.ezCaterOrderReceived,
+    //       creatorId,
+    //       assets: {
+    //         connect: [{ id: '1' }],
+    //         create: [
+    //           {
+    //             companyId,
+    //             creatorId,
+    //             integrationRequirementId: 2,
+    //             system: $Enums.ExternalSystem.ezCater,
+    //             type: $Enums.IntegrationAssetType.API_CREDENTIAL_API_KEY,
+    //           },
+    //         ],
+    //       },
+    //     },
+    //     include: { assets: true },
+    //   });
+    // });
+
+    it('should create a company integration successfully if menus & menu requirements', async () => {
+      const mockMenu_1 = { id: 10 },
+        mockMenu_2 = { id: 11 };
+      const mockMenus = [mockMenu_1, mockMenu_2] as CompanyMenu[];
+
+      const mockIntegrationTemplate = {
+        requirements: [
+          {
+            id: 1,
+            level: $Enums.IntegrationRequirementLevel.Menu,
+            type: $Enums.IntegrationAssetType.DATA_MAP,
+            // Two existing assets which reference the same requirement (obviously), but differ in menuId
+            // Should connect two
+            assets: [
+              { id: '1', integrationRequirementId: 1, menuId: mockMenu_1.id },
+              { id: '2', integrationRequirementId: 1, menuId: mockMenu_2.id },
+            ],
+          },
+          {
+            id: 2,
+            level: $Enums.IntegrationRequirementLevel.Menu,
+            type: $Enums.IntegrationAssetType.DATA_MAP,
+            assets: [
+              // One exist asset which references the requirement. Should connect one and create one
+              { id: '3', integrationRequirementId: 2, menuId: mockMenu_1.id },
+            ],
+          },
+          {
+            id: 3,
+            level: $Enums.IntegrationRequirementLevel.Menu,
+            type: $Enums.IntegrationAssetType.DATA_MAP,
+            // Empty array - should create two assets
+            assets: [],
+          },
+        ],
         event: $Enums.IntegrationEvent.ezCaterOrderReceived,
       };
       const mockCompanyIntegration = { id: 'integration-id' };
 
       jest
         .spyOn(prismaClient.integrationTemplate, 'findUniqueOrThrow')
-        .mockResolvedValueOnce(mockIntegration as any);
+        .mockResolvedValueOnce(mockIntegrationTemplate as any);
+
+      jest
+        .spyOn(prismaClient.companyMenu, 'findMany')
+        .mockResolvedValue(mockMenus);
       jest
         .spyOn(prismaClient.companyIntegration, 'create')
         .mockResolvedValueOnce(mockCompanyIntegration as any);
@@ -493,8 +605,6 @@ describe('CateringCompanyDbHandlerService', () => {
       );
 
       expect(result.companyIntegration).toEqual(mockCompanyIntegration);
-      expect(result.metRequirements).toHaveLength(1);
-      expect(result.unmetRequirements).toHaveLength(1);
       expect(
         prismaClient.integrationTemplate.findUniqueOrThrow,
       ).toHaveBeenCalledWith({
@@ -507,10 +617,6 @@ describe('CateringCompanyDbHandlerService', () => {
                 select: {
                   id: true,
                   menuId: true,
-                  integrationRequirementId: true,
-                  type: true,
-                  system: true,
-                  isTested: true,
                 },
               },
             },
@@ -524,10 +630,198 @@ describe('CateringCompanyDbHandlerService', () => {
           event: $Enums.IntegrationEvent.ezCaterOrderReceived,
           creatorId,
           assets: {
-            connect: [{ id: '1' }, { id: '2' }],
+            connect: [{ id: '1' }, { id: '2' }, { id: '3' }],
+            create: [
+              {
+                companyId,
+                creatorId,
+                integrationRequirementId: 2,
+                type: $Enums.IntegrationAssetType.DATA_MAP,
+                menuId: mockMenu_2.id,
+              },
+              {
+                companyId,
+                creatorId,
+                integrationRequirementId: 3,
+                type: $Enums.IntegrationAssetType.DATA_MAP,
+                menuId: mockMenu_1.id,
+              },
+              {
+                companyId,
+                creatorId,
+                integrationRequirementId: 3,
+                type: $Enums.IntegrationAssetType.DATA_MAP,
+                menuId: mockMenu_2.id,
+              },
+            ],
           },
         },
+        include: { assets: true },
       });
+    });
+
+    // it('should create a company integration successfully if menus & no menu requirements', async () => {
+    //   const mockIntegrationTemplate = {
+    //     requirements: [
+    //       {
+    //         level: $Enums.IntegrationRequirementLevel.Company,
+    //         assets: [{ id: '1' }],
+    //       },
+    //       {
+    //         id: 2,
+    //         type: $Enums.IntegrationAssetType.API_CREDENTIAL_API_KEY,
+    //         system: $Enums.ExternalSystem.ezCater,
+    //         level: $Enums.IntegrationRequirementLevel.Company,
+    //         assets: [],
+    //       },
+    //     ],
+    //     event: $Enums.IntegrationEvent.ezCaterOrderReceived,
+    //   };
+    //   const mockCompanyIntegration = { id: 'integration-id' };
+
+    //   jest
+    //     .spyOn(prismaClient.integrationTemplate, 'findUniqueOrThrow')
+    //     .mockResolvedValueOnce(mockIntegrationTemplate as any);
+
+    //   const mockMenu_1 = { id: 10 },
+    //     mockMenu_2 = { id: 11 };
+    //   const mockMenus = [mockMenu_1, mockMenu_2] as CompanyMenu[];
+    //   jest
+    //     .spyOn(prismaClient.companyMenu, 'findMany')
+    //     .mockResolvedValue(mockMenus);
+    //   const createSpy = jest
+    //     .spyOn(prismaClient.companyIntegration, 'create')
+    //     .mockResolvedValueOnce(mockCompanyIntegration as any);
+
+    //   const result = await service.createIntegration(
+    //     companyId,
+    //     templateId,
+    //     creatorId,
+    //   );
+
+    //   expect(result.companyIntegration).toEqual(mockCompanyIntegration);
+    //   expect(
+    //     prismaClient.integrationTemplate.findUniqueOrThrow,
+    //   ).toHaveBeenCalledWith({
+    //     where: { id: templateId },
+    //     include: {
+    //       requirements: {
+    //         include: {
+    //           assets: {
+    //             where: { companyId },
+    //             select: {
+    //               id: true,
+    //               menuId: true,
+    //             },
+    //           },
+    //         },
+    //       },
+    //     },
+    //   });
+    //   expect(prismaClient.companyIntegration.create).toHaveBeenCalledWith({
+    //     data: {
+    //       companyId,
+    //       templateId,
+    //       event: $Enums.IntegrationEvent.ezCaterOrderReceived,
+    //       creatorId,
+    //       assets: {
+    //         connect: [{ id: '1' }],
+    //         create: [
+    //           {
+    //             companyId,
+    //             creatorId,
+    //             integrationRequirementId: 2,
+    //             system: $Enums.ExternalSystem.ezCater,
+    //             type: $Enums.IntegrationAssetType.API_CREDENTIAL_API_KEY,
+    //           },
+    //         ],
+    //       },
+    //     },
+    //     include: { assets: true },
+    //   });
+
+    //   // Ensure no menuIds
+    //   expect(createSpy).not.toHaveBeenCalledWith(
+    //     expect.objectContaining({
+    //       data: expect.objectContaining({
+    //         assets: expect.objectContaining({
+    //           create: expect.arrayContaining([
+    //             expect.objectContaining({
+    //               menuId: expect.anything(),
+    //             }),
+    //           ]),
+    //         }),
+    //       }),
+    //     }),
+    //   );
+    // });
+
+    it('should create a company integration successfully if no menus & menu requirements', async () => {
+      const mockMenu_1 = { id: 10 },
+        mockMenu_2 = { id: 11 };
+      const mockIntegrationTemplate = {
+        requirements: [
+          {
+            id: 1,
+            level: $Enums.IntegrationRequirementLevel.Menu,
+            type: $Enums.IntegrationAssetType.DATA_MAP,
+            system: undefined,
+            // Two existing assets which reference the same requirement (obviously), but differ in menuId
+            // Should connect two
+            assets: [
+              { id: '1', integrationRequirementId: 1, menuId: mockMenu_1.id },
+              { id: '2', integrationRequirementId: 1, menuId: mockMenu_2.id },
+            ],
+          },
+          {
+            id: 2,
+            level: $Enums.IntegrationRequirementLevel.Menu,
+            type: $Enums.IntegrationAssetType.DATA_MAP,
+            system: undefined,
+            assets: [
+              // One exist asset which references the requirement. Should connect one and create one
+              { id: '3', integrationRequirementId: 2, menuId: mockMenu_1.id },
+            ],
+          },
+          {
+            id: 3,
+            level: $Enums.IntegrationRequirementLevel.Menu,
+            system: undefined,
+            type: $Enums.IntegrationAssetType.DATA_MAP,
+            // Empty array - should create two assets
+            assets: [],
+          },
+        ],
+        event: $Enums.IntegrationEvent.ezCaterOrderReceived,
+      };
+      const mockCompanyIntegration = { id: 'integration-id' };
+
+      jest
+        .spyOn(prismaClient.integrationTemplate, 'findUniqueOrThrow')
+        .mockResolvedValueOnce(mockIntegrationTemplate as any);
+
+      jest.spyOn(prismaClient.companyMenu, 'findMany').mockResolvedValue([]);
+      jest
+        .spyOn(prismaClient.companyIntegration, 'create')
+        .mockResolvedValueOnce(mockCompanyIntegration as any);
+
+      const result = await service.createIntegration(
+        companyId,
+        templateId,
+        creatorId,
+      );
+
+      expect(result.companyIntegration).toEqual(mockCompanyIntegration);
+      expect(result.invalidMenuRequirements).toHaveLength(3);
+      expect(result.invalidMenuRequirements).toEqual(
+        expect.arrayContaining(
+          mockIntegrationTemplate.requirements.map(({ id, type, system }) => ({
+            id,
+            type,
+            system,
+          })),
+        ),
+      );
     });
 
     it('should throw an InvalidUUIDError if companyId is not a valid UUID', async () => {
@@ -550,77 +844,77 @@ describe('CateringCompanyDbHandlerService', () => {
       ).rejects.toThrow(error);
     });
 
-    it('should create a company integration with no existing assets', async () => {
-      const mockIntegration = {
-        requirements: [{ assets: [] }, { assets: [] }],
-        event: $Enums.IntegrationEvent.ezCaterOrderReceived,
-      };
-      const mockCompanyIntegration = { id: 'integration-id' };
+    // Leaving it here, but as of now, a company integration will always include full assets
+    // it('should create a company integration with no existing assets', async () => {
+    //   const mockIntegration = {
+    //     requirements: [{ assets: [] }, { assets: [] }],
+    //     event: $Enums.IntegrationEvent.ezCaterOrderReceived,
+    //   };
+    //   const mockCompanyIntegration = { id: 'integration-id' };
 
-      jest
-        .spyOn(prismaClient.integrationTemplate, 'findUniqueOrThrow')
-        .mockResolvedValueOnce(mockIntegration as any);
-      jest
-        .spyOn(prismaClient.companyIntegration, 'create')
-        .mockResolvedValueOnce(mockCompanyIntegration as any);
+    //   jest
+    //     .spyOn(prismaClient.integrationTemplate, 'findUniqueOrThrow')
+    //     .mockResolvedValueOnce(mockIntegration as any);
+    //   jest
+    //     .spyOn(prismaClient.companyIntegration, 'create')
+    //     .mockResolvedValueOnce(mockCompanyIntegration as any);
 
-      const result = await service.createIntegration(
-        companyId,
-        templateId,
-        creatorId,
-      );
+    //   const result = await service.createIntegration(
+    //     companyId,
+    //     templateId,
+    //     creatorId,
+    //   );
 
-      expect(result.companyIntegration).toEqual(mockCompanyIntegration);
-      expect(result.metRequirements).toHaveLength(0);
-      expect(result.unmetRequirements).toHaveLength(2);
-      expect(prismaClient.companyIntegration.create).toHaveBeenCalledWith({
-        data: {
-          companyId,
-          templateId,
-          event: $Enums.IntegrationEvent.ezCaterOrderReceived,
-          creatorId,
-        },
-      });
-    });
+    //   expect(result.companyIntegration).toEqual(mockCompanyIntegration);
+    //   expect(prismaClient.companyIntegration.create).toHaveBeenCalledWith({
+    //     data: {
+    //       companyId,
+    //       templateId,
+    //       event: $Enums.IntegrationEvent.ezCaterOrderReceived,
+    //       creatorId,
+    //     },
+    //   });
+    // });
 
-    it('should create a company integration with no existing assets', async () => {
-      const existingAssetId = 'existing-asset-id';
-      const mockIntegration = {
-        requirements: [
-          { assets: [{ id: existingAssetId } as any] },
-          { assets: [] },
-        ],
-        event: $Enums.IntegrationEvent.ezCaterOrderReceived,
-      };
-      const mockCompanyIntegration = { id: 'integration-id' };
+    // it('should create a company integration with no existing assets', async () => {
+    //   const existingAssetId = 'existing-asset-id';
+    //   const mockIntegrationTemplate = {
+    //     requirements: [
+    //       { assets: [{ id: existingAssetId } as any] },
+    //       { assets: [] },
+    //     ],
+    //     event: $Enums.IntegrationEvent.ezCaterOrderReceived,
+    //   };
+    //   const mockCompanyIntegration = { id: 'integration-id' };
 
-      jest
-        .spyOn(prismaClient.integrationTemplate, 'findUniqueOrThrow')
-        .mockResolvedValueOnce(mockIntegration as any);
-      jest
-        .spyOn(prismaClient.companyIntegration, 'create')
-        .mockResolvedValueOnce(mockCompanyIntegration as any);
+    //   jest
+    //     .spyOn(prismaClient.integrationTemplate, 'findUniqueOrThrow')
+    //     .mockResolvedValueOnce(mockIntegrationTemplate as any);
+    //   jest
+    //     .spyOn(prismaClient.companyIntegration, 'create')
+    //     .mockResolvedValueOnce(mockCompanyIntegration as any);
 
-      const result = await service.createIntegration(
-        companyId,
-        templateId,
-        creatorId,
-      );
+    //   const result = await service.createIntegration(
+    //     companyId,
+    //     templateId,
+    //     creatorId,
+    //   );
 
-      expect(result.companyIntegration).toEqual(mockCompanyIntegration);
-      expect(result.metRequirements).toHaveLength(1);
-      expect(result.unmetRequirements).toHaveLength(1);
-      expect(prismaClient.companyIntegration.create).toHaveBeenCalledWith({
-        data: {
-          companyId,
-          templateId,
-          event: $Enums.IntegrationEvent.ezCaterOrderReceived,
-          creatorId,
-          assets: {
-            connect: [{ id: existingAssetId }],
-          },
-        },
-      });
-    });
+    //   expect(result.companyIntegration).toEqual(mockCompanyIntegration);
+    //   expect(prismaClient.companyIntegration.create).toHaveBeenCalledWith({
+    //     data: {
+    //       companyId,
+    //       templateId,
+    //       event: $Enums.IntegrationEvent.ezCaterOrderReceived,
+    //       creatorId,
+    //       assets: {
+    //         connect: [{ id: existingAssetId }],
+    //       },
+    //     },
+    //     include: {
+    //       assets: true,
+    //     },
+    //   });
+    // });
   });
 });

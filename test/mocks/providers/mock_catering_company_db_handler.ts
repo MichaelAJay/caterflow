@@ -5,6 +5,5 @@ export const mockCateringCompanyDbHandlerService: ICateringCompanyDbHandler = {
   retrieveCompanyIntegrationsList: jest.fn(),
   countCompanyIntegrations: jest.fn(),
   createIntegration: jest.fn(),
-  createIntegrationAsset: jest.fn(),
   retrieveTargetIntegrationRequirementWithCompanyAssociations: jest.fn(),
 };

@@ -1,4 +1,4 @@
-import { $Enums, IntegrationRequirement, Prisma } from '@prisma/client';
+import { $Enums, Prisma } from '@prisma/client';
 import {
   IBuildCreateCateringCompanyArgs,
   IBuildRetrieveCompanyIntegrationListArgs,
@@ -21,12 +21,6 @@ export interface ICateringCompanyDbQueryBuilder {
     connects?: Prisma.CompanyIntegrationAssetWhereUniqueInput[],
     creates?: Prisma.CompanyIntegrationAssetUncheckedCreateWithoutIntegrationsInput[],
   ): Prisma.CompanyIntegrationCreateArgs;
-  buildCreateCompanyIntegrationAssetCreate(
-    companyId: string,
-    integrationRequirement: IntegrationRequirement,
-    creatorId: string,
-    menuId?: number,
-  ): Prisma.CompanyIntegrationAssetUncheckedCreateWithoutIntegrationsInput;
   buildCreateCompanyIntegrationAsset(
     companyId: string,
     integrationRequirementId: number,

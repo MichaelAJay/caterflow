@@ -19,6 +19,7 @@ import { CreatedCompanyIntegration } from './types/return/create-company-integra
 import { JsonValue } from '@prisma/client/runtime/library';
 import { IntegrationRequirementWithCompanyAssociations } from './types/integration-requirement-with-company-associations.type';
 import { CompanyIntegrationAssetWithIntegrations } from './types/return/asset-with-integrations.return.type';
+import companyDbHandlerUtilities from './utilities/db-handler-utilities';
 
 @Injectable()
 export class CateringCompanyDbHandlerService
@@ -132,78 +133,20 @@ export class CateringCompanyDbHandlerService
           },
         });
 
-      // invalidMenuRequirement will contain each requirement with level "menu" only if menus (below) length is 0
-      const invalidMenuRequirements: IntegrationRequirement[] = [];
-      const creates: Prisma.CompanyIntegrationAssetUncheckedCreateWithoutIntegrationsInput[] =
-        [];
-      const connects: Prisma.CompanyIntegrationAssetWhereUniqueInput[] = [];
-
       const menus = await this.prismaClient.companyMenu.findMany({
         where: { companyId },
+        select: { id: true },
       });
 
-      /**
-       * For each requirement:
-       * If it has 'company' level
-       * - If it is associated with an existing company asset, connect that asset to the created integration
-       * - Else, create an asset with menuId null
-       * Else if it has 'menu' level
-       * - If company has no menus, add requirement to invalid menu requirements (for return)
-       * - Else for each menu, create or connect assets.
-       * -- Find matching asset by menuId
-       * --- If found, connect that asset to the created integration
-       * --- Else, create an asset, including the menu's id
-       */
-      for (const requirement of integration.requirements) {
-        const { assets, ...integrationRequirement } = requirement;
-        if (requirement.level === $Enums.IntegrationRequirementLevel.Company) {
-          if (assets.length === 1) {
-            connects.push({
-              id: assets[0].id,
-            });
-          } else {
-            const data: Prisma.CompanyIntegrationAssetUncheckedCreateWithoutIntegrationsInput =
-              {
-                companyId,
-                integrationRequirementId: integrationRequirement.id,
-                type: integrationRequirement.type,
-                system: integrationRequirement.system,
-                creatorId,
-              };
-            // This should be the requirements for create & connect asset
-            creates.push(data);
-          }
-        } else if (
-          requirement.level === $Enums.IntegrationRequirementLevel.Menu
-        ) {
-          // What to do if menus is empty?
-          if (menus.length === 0) {
-            // Menu-level requirement requires a menu id - the created integration could never run without this
-            invalidMenuRequirements.push(integrationRequirement);
-          } else {
-            for (const menu of menus) {
-              // Find matching requirement asset
-              const matchingAsset = assets.find(
-                (asset) => asset.menuId === menu.id,
-              );
-              if (matchingAsset) {
-                connects.push({ id: matchingAsset.id });
-              } else {
-                creates.push(
-                  this.cateringCompanyDbQueryBuilder.buildCreateCompanyIntegrationAssetCreate(
-                    companyId,
-                    integrationRequirement,
-                    creatorId,
-                    menu.id,
-                  ),
-                );
-              }
-            }
-          }
-        }
-      }
+      const { connects, creates, invalidMenuRequirements } =
+        companyDbHandlerUtilities.buildCreateIntegration_AssetCreatesAndConnects(
+          companyId,
+          integration.requirements,
+          menus,
+          creatorId,
+        );
 
-      // Create company integration and attach all assets
+      // Create company integration and connect or create all assets
       const companyIntegration =
         await this.prismaClient.companyIntegration.create({
           ...this.cateringCompanyDbQueryBuilder.buildCreateCompanyIntegration(
@@ -220,108 +163,10 @@ export class CateringCompanyDbHandlerService
       return { companyIntegration, invalidMenuRequirements };
     } catch (err) {
       // Known Prisma error on findUniqueOrThrow 'P2025'
-      console.error('err', err);
+      // Known Prisma error on uniqueness constraint (asset with non-unique integrationRequirementId and (null) menuId)
+      // console.error('err', err);
       throw err;
     }
-  }
-
-  async createIntegrationAsset(
-    companyId: string,
-    requirementId: number,
-    creatorId: string,
-    isSecret: boolean,
-    menuId?: number,
-    data?: JsonValue,
-  ): Promise<CompanyIntegrationAssetWithIntegrations> {
-    if (!(uuidUtils.isUUID(companyId) && uuidUtils.isUUID(creatorId))) {
-      throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
-    }
-
-    // Throws if not found (Prisma known error P2025)
-    const requirement: IntegrationRequirement & {
-      assets: { id: string }[];
-      templates: (IntegrationTemplate & { integrations: { id: string }[] })[];
-    } = await this.retrieveTargetIntegrationRequirementWithCompanyAssociations(
-      requirementId,
-      companyId,
-    );
-
-    if (isSecret !== requirement.isSecret) {
-      throw new Error('Non-matching secret flag');
-    }
-
-    // If company requirement with asset is found, that's an error
-    if (
-      requirement.level === $Enums.IntegrationRequirementLevel.Company &&
-      requirement.assets.length > 0
-    ) {
-      throw new Error(
-        'Each "Company" type requirement may be referenced by only one company asset. Do you want to remove your previous asset and replace it with this one?',
-      );
-    }
-
-    if (
-      requirement.level === $Enums.IntegrationRequirementLevel.Menu &&
-      !menuId
-    ) {
-      throw new Error(
-        'This requirement is a Menu type requirement, and a menuId was not provided',
-      );
-    }
-
-    // Uniqueness ensured since each integration references exactly one template
-    const companyIntegrationIds: { id: string }[] = [];
-    // Favors reduced memory overhead
-    requirement.templates.forEach((template) => {
-      template.integrations.forEach((integration) =>
-        companyIntegrationIds.push({ id: integration.id }),
-      );
-    });
-
-    // add updated assets
-    const asset = await this.prismaClient.companyIntegrationAsset.create({
-      ...this.cateringCompanyDbQueryBuilder.buildCreateCompanyIntegrationAsset(
-        companyId,
-        requirement.id,
-        requirement.type,
-        requirement.system,
-        isSecret,
-        creatorId,
-        menuId,
-        data,
-        // Determines integrations to include (below)
-        companyIntegrationIds.length > 0 ? companyIntegrationIds : undefined,
-      ),
-      include: {
-        // Includes all integrations created directly above
-        integrations: {
-          include: {
-            // Assets on integration
-            assets: true,
-            template: {
-              include: {
-                requirements: {
-                  include: {
-                    // Assets which should be on integration
-                    assets: {
-                      where: {
-                        companyId,
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
-
-    // Think about something like - the following integrations were updated.
-
-    // Actually, with regard to the integrations... it would maybe be worth confirming whether or not they're completed after this asset comes in
-
-    return asset;
   }
 
   async retrieveTargetIntegrationRequirementWithCompanyAssociations(

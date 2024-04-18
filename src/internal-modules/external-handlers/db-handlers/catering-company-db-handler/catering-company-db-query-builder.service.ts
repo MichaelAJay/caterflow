@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ICateringCompanyDbQueryBuilder } from './interfaces/catering-company-db-query-builder.service.interface';
-import { $Enums, IntegrationRequirement, Prisma } from '@prisma/client';
+import { $Enums, Prisma } from '@prisma/client';
 import { DefaultArgs } from '@prisma/client/runtime/library';
 import {
   IBuildCreateCateringCompanyArgs,
@@ -80,22 +80,6 @@ export class CateringCompanyDbQueryBuilderService
     }
 
     return { data };
-  }
-
-  buildCreateCompanyIntegrationAssetCreate(
-    companyId: string,
-    integrationRequirement: IntegrationRequirement,
-    creatorId: string,
-    menuId?: number,
-  ): Prisma.CompanyIntegrationAssetUncheckedCreateWithoutIntegrationsInput {
-    return {
-      companyId,
-      integrationRequirementId: integrationRequirement.id,
-      type: integrationRequirement.type,
-      system: integrationRequirement.system,
-      creatorId,
-      menuId,
-    };
   }
 
   buildCreateCompanyIntegrationAsset(
