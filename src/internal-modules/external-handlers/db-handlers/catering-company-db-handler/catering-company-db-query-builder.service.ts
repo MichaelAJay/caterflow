@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ICateringCompanyDbQueryBuilder } from './interfaces/catering-company-db-query-builder.service.interface';
-import { $Enums, Prisma } from '@prisma/client';
+import { $Enums, IntegrationRequirement, Prisma } from '@prisma/client';
 import { DefaultArgs } from '@prisma/client/runtime/library';
 import {
   IBuildCreateCateringCompanyArgs,
@@ -62,7 +62,7 @@ export class CateringCompanyDbQueryBuilderService
     templateId: number,
     event: $Enums.IntegrationEvent,
     creatorId: string,
-    existingAssetIds?: string[],
+    connects?: Prisma.CompanyIntegrationAssetWhereUniqueInput[],
     creates?: Prisma.CompanyIntegrationAssetUncheckedCreateWithoutIntegrationsInput[],
   ): Prisma.CompanyIntegrationCreateArgs {
     const data: Prisma.CompanyIntegrationUncheckedCreateInput = {
@@ -72,16 +72,30 @@ export class CateringCompanyDbQueryBuilderService
       creatorId,
     };
 
-    if (existingAssetIds || creates) {
+    if (connects || creates) {
       data.assets = {
-        connect: existingAssetIds
-          ? existingAssetIds.map((assetId) => ({ id: assetId }))
-          : undefined,
+        connect: connects,
         create: creates,
       };
     }
 
     return { data };
+  }
+
+  buildCreateCompanyIntegrationAssetCreate(
+    companyId: string,
+    integrationRequirement: IntegrationRequirement,
+    creatorId: string,
+    menuId?: number,
+  ): Prisma.CompanyIntegrationAssetUncheckedCreateWithoutIntegrationsInput {
+    return {
+      companyId,
+      integrationRequirementId: integrationRequirement.id,
+      type: integrationRequirement.type,
+      system: integrationRequirement.system,
+      creatorId,
+      menuId,
+    };
   }
 
   buildCreateCompanyIntegrationAsset(
@@ -120,7 +134,7 @@ export class CateringCompanyDbQueryBuilderService
       input.data = data;
     }
 
-    if (companyIntegrationIds || creates) {
+    if (companyIntegrationIds) {
       input.integrations = {
         connect: companyIntegrationIds,
       };
