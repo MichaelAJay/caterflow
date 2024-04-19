@@ -3,6 +3,7 @@ import { CompanyIntegrationListItem } from 'src/common/types/company-integration
 import { IBuildRetrieveCompanyIntegrationListArgs } from './query-builder-args.interfaces';
 import { CreatedCompanyIntegration } from '../types/return/create-company-integration.return.type';
 import { IntegrationRequirementWithCompanyAssociations } from '../types/integration-requirement-with-company-associations.type';
+import { GetCompanyIntegrationWithAssets } from '../types/return/get-company-integration-with-assets.return.type';
 
 export interface ICateringCompanyDbHandler {
   createCateringCompany(
@@ -14,6 +15,9 @@ export interface ICateringCompanyDbHandler {
     companyId: string,
     query?: IBuildRetrieveCompanyIntegrationListArgs,
   ): Promise<CompanyIntegrationListItem[]>;
+  retrieveCompanyIntegration(
+    integrationId: string,
+  ): Promise<GetCompanyIntegrationWithAssets | null>;
 
   countCompanyIntegrations(companyId: string): Promise<number>;
   createIntegration(

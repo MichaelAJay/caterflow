@@ -1,14 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { ICateringCompanyDbHandler } from './interfaces/catering-company-db-handler.service.interface';
 import { CateringCompanyDbQueryBuilderService } from './catering-company-db-query-builder.service';
 import { PrismaClientService } from '../../../../external-modules/prisma-client/prisma-client.service';
-import {
-  $Enums,
-  CateringCompany,
-  IntegrationRequirement,
-  IntegrationTemplate,
-  Prisma,
-} from '@prisma/client';
+import { CateringCompany } from '@prisma/client';
 import { CompanyIntegrationListItem } from '../../../../common/types/company-integration-list-item.type';
 import uuidUtils from '../../../../utility/functions/uuid-utils';
 import { InvalidUUIDError } from '../../../../common/errors/invalid_uuid.error';
@@ -16,10 +10,11 @@ import { ERROR_CODE } from '../../../../common/codes/error-codes';
 import { IBuildRetrieveCompanyIntegrationListArgs } from './interfaces/query-builder-args.interfaces';
 import { SystemIntegrationDbQueryBuilderService } from './system-integration-db-query-builder.service';
 import { CreatedCompanyIntegration } from './types/return/create-company-integration.return.type';
-import { JsonValue } from '@prisma/client/runtime/library';
 import { IntegrationRequirementWithCompanyAssociations } from './types/integration-requirement-with-company-associations.type';
-import { CompanyIntegrationAssetWithIntegrations } from './types/return/asset-with-integrations.return.type';
 import companyDbHandlerUtilities from './utilities/db-handler-utilities';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { KNOWN_PRISMA_ERROR_MAP } from 'src/external-modules/prisma-client/resources/known-prisma-error-map';
+import { GetCompanyIntegrationWithAssets } from './types/return/get-company-integration-with-assets.return.type';
 
 @Injectable()
 export class CateringCompanyDbHandlerService
@@ -82,6 +77,22 @@ export class CateringCompanyDbHandlerService
     return records;
   }
 
+  async retrieveCompanyIntegration(
+    integrationId: string,
+  ): Promise<GetCompanyIntegrationWithAssets | null> {
+    if (uuidUtils.isUUID(integrationId)) {
+      throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
+    }
+
+    const record = await this.prismaClient.companyIntegration.findUnique({
+      where: { id: integrationId },
+      include: {
+        assets: true,
+      },
+    });
+    return record;
+  }
+
   async countCompanyIntegrations(companyId: string): Promise<number> {
     if (!uuidUtils.isUUID(companyId)) {
       throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
@@ -130,6 +141,7 @@ export class CateringCompanyDbHandlerService
                 },
               },
             },
+            // Consider attaching the company record, to mitigate risk of unique constraint violation, and to have something to return
           },
         });
 
@@ -162,6 +174,28 @@ export class CateringCompanyDbHandlerService
         });
       return { companyIntegration, invalidMenuRequirements };
     } catch (err) {
+      if (err instanceof PrismaClientKnownRequestError) {
+        switch (err.code) {
+          case KNOWN_PRISMA_ERROR_MAP.UniquenessConstraintViolation:
+            let message = 'Unique record violation';
+
+            let target: string[] = [];
+
+            if (err.meta && Array.isArray(err.meta.target)) {
+              target = err.meta.target;
+            }
+
+            if (
+              target.length === 2 &&
+              target.includes('company_id') &&
+              target.includes('template_id')
+            ) {
+              message = 'Your company has already configured this integration';
+            }
+
+            throw new ConflictException(message);
+        }
+      }
       // Known Prisma error on findUniqueOrThrow 'P2025'
       // Known Prisma error on uniqueness constraint (asset with non-unique integrationRequirementId and (null) menuId)
       // console.error('err', err);
