@@ -12,68 +12,107 @@ datasource db {
 
 // MODELS (A-Z)
 model CateringCompany {
-  id                String                    @id @default(uuid())
-  name              String
-  isActive          Boolean                   @default(false) @map("is_active")
-  ownerId           String                    @unique @map("owner_id")
-  createdAt         DateTime                  @default(now()) @map("created_at")
-  updatedAt         DateTime                  @updatedAt @map("updated_at")
-  users             User[]                    @relation("company_users")
-  owner             User                      @relation("owner", fields: [ownerId], references: [id])
-  integrations      CompanyIntegration[]
-  integrationAssets CompanyIntegrationAsset[]
-  issues            CompanyIssue[]
-  menus             CompanyMenu[]
-  stores            CompanyStore[]
-  roles             Role[]
-  userCompanyRoles  UserCompanyRole[]
-  userSystemActions UserSystemAction[]
+  id                       String                               @id @default(uuid())
+  name                     String
+  isActive                 Boolean                              @default(false) @map("is_active")
+  ownerId                  String                               @unique @map("owner_id")
+  createdAt                DateTime                             @default(now()) @map("created_at")
+  updatedAt                DateTime                             @updatedAt @map("updated_at")
+  users                    User[]                               @relation("company_users")
+  owner                    User                                 @relation("owner", fields: [ownerId], references: [id])
+  externalSystemConnection CompanyExternalSystemConnection[]
+  integrations             CompanyIntegration[]
+  integrationAssets        CompanyIntegrationRequirementAsset[]
+  issues                   CompanyIssue[]
+  menus                    CompanyMenu[]
+  stores                   CompanyStore[]
+  roles                    Role[]
+  userCompanyRoles         UserCompanyRole[]
+  userSystemActions        UserSystemAction[]
 
   @@map("catering_companies")
 }
 
+model CompanyExternalSystemConnection {
+  id           String @id @default(uuid())
+  companyId    String @map("company_id")
+  systemId     Int    @map("system_id")
+  systemUIName String @map("system_ui_name")
+
+  company          CateringCompany                        @relation(fields: [companyId], references: [id])
+  connectionAssets CompanyExternalSystemConnectionAsset[]
+  externalSystem   ExternalSystem                         @relation(fields: [systemId], references: [id])
+  srcFor           CompanyIntegration[]                   @relation("SrcCompanyConnection")
+  targetFor        CompanyIntegration[]                   @relation("TargetCompanyConnection")
+
+  @@unique([companyId, systemId])
+  @@index([companyId])
+  @@map("company_external_system_connections")
+}
+
+model CompanyExternalSystemConnectionAsset {
+  id                  String @id @default(uuid())
+  connectionId        String @map("connection_id")
+  systemRequirementId Int    @map("system_requirement_id")
+  uiName              String
+  uiDescription       String
+
+  connection        CompanyExternalSystemConnection     @relation(fields: [connectionId], references: [id])
+  systemRequirement ExternalSystemConnectionRequirement @relation(fields: [systemRequirementId], references: [id])
+
+  @@unique([connectionId, systemRequirementId])
+  @@index([connectionId])
+  @@map("company_external_system_connection_assets")
+}
+
 model CompanyIntegration {
-  id           String           @id @default(uuid())
-  companyId    String           @map("company_id")
-  templateId   Int              @map("template_id")
+  id                 String @id @default(uuid())
+  companyId          String @map("company_id")
+  templateId         Int    @map("template_id")
+  srcConnectionId    String @map("src_connection_id")
+  targetConnectionId String @map("target_connection_id")
+
   event        IntegrationEvent
   isConfigured Boolean          @default(false) @map("is_configured")
   isActive     Boolean          @default(false) @map("is_active")
   creatorId    String           @map("creator_id")
   createdAt    DateTime         @default(now()) @map("created_at")
 
-  company  CateringCompany           @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  template IntegrationTemplate       @relation(fields: [templateId], references: [id])
-  assets   CompanyIntegrationAsset[]
-  creator  User                      @relation(fields: [creatorId], references: [id])
+  company          CateringCompany                      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  template         IntegrationTemplate                  @relation(fields: [templateId], references: [id])
+  assets           CompanyIntegrationRequirementAsset[]
+  creator          User                                 @relation(fields: [creatorId], references: [id])
+  srcConnection    CompanyExternalSystemConnection      @relation("SrcCompanyConnection", fields: [srcConnectionId], references: [id])
+  targetConnection CompanyExternalSystemConnection      @relation("TargetCompanyConnection", fields: [targetConnectionId], references: [id])
 
   @@unique([companyId, templateId], name: "company_integration_unique", map: "company_integration_unique")
   @@index([companyId])
   @@map("company_integrations")
 }
 
-model CompanyIntegrationAsset {
-  id                       String               @id @default(uuid())
-  companyId                String               @map("company_id")
-  menuId                   Int?                 @map("menu_id")
-  integrationRequirementId Int                  @map("integration_requirement_id")
-  hasData                  Boolean              @default(false) @map("has_data")
-  type                     IntegrationAssetType
-  system                   ExternalSystem?
-  isSecret                 Boolean              @default(true) @map("is_secret")
-  data                     Json?
-  isTested                 Boolean              @default(false) @map("is_tested")
-  creatorId                String               @map("creator_id")
+model CompanyIntegrationRequirementAsset {
+  id            String  @id @default(uuid())
+  companyId     String  @map("company_id")
+  requirementId Int     @map("requirement_id")
+  menuId        Int?    @map("menu_id")
+  hasData       Boolean @default(false) @map("has_data")
+  isSecret      Boolean @map("is_secret")
+  data          Json?
+  isTested      Boolean @default(false) @map("is_tested")
+  creatorId     String  @map("creator_id")
+  uiName        String
+  uiDescription String
 
-  company                CateringCompany        @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  menu                   CompanyMenu?           @relation(fields: [menuId], references: [id], onDelete: Cascade)
-  integrationRequirement IntegrationRequirement @relation(fields: [integrationRequirementId], references: [id])
-  integrations           CompanyIntegration[]
-  creator                User                   @relation("creator", fields: [creatorId], references: [id])
+  company     CateringCompany        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  menu        CompanyMenu?           @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  requirement IntegrationRequirement @relation(fields: [requirementId], references: [id])
 
-  @@unique([menuId, integrationRequirementId], name: "assetRequirementUnique", map: "asset_requirement_unique")
+  integrations CompanyIntegration[]
+  creator      User                 @relation("creator", fields: [creatorId], references: [id])
+
+  @@unique([requirementId, menuId])
   @@index([companyId])
-  @@map("company_integration_assets")
+  @@map("company_integration_requirement_assets")
 }
 
 model CompanyIssue {
@@ -95,8 +134,8 @@ model CompanyMenu {
   companyId     String  @map("company_id")
   ezCaterMenuId String? @map("ezcater_menu_id")
 
-  company CateringCompany           @relation(fields: [companyId], references: [id])
-  assets  CompanyIntegrationAsset[]
+  company CateringCompany                      @relation(fields: [companyId], references: [id])
+  assets  CompanyIntegrationRequirementAsset[]
 
   @@index([companyId])
   @@map("company_menus")
@@ -113,33 +152,67 @@ model CompanyStore {
   @@map("company_stores")
 }
 
+model ExternalSystem {
+  id            Int                @id @default(autoincrement())
+  name          ExternalSystemName
+  uiName        String             @map("ui_name")
+  uiDescription String             @map("ui_description")
+
+  companyConnections     CompanyExternalSystemConnection[]
+  connectionRequirements ExternalSystemConnectionRequirement[]
+  srcFor                 IntegrationTemplate[]                 @relation("SourceSystemRelation")
+  targetFor              IntegrationTemplate[]                 @relation("TargetSystemRelation")
+
+  @@unique([name])
+  @@map("external_systems")
+}
+
+model ExternalSystemConnectionRequirement {
+  id               Int @id @default(autoincrement())
+  externalSystemId Int @map("external_system_id")
+
+  type          ExternalSystemConnectionRequirementType
+  uiName        String                                  @map("ui_name")
+  uiDescription String                                  @map("ui_description")
+  isSecret      Boolean                                 @map("is_secret")
+
+  companyConnectionAssets CompanyExternalSystemConnectionAsset[]
+  system                  ExternalSystem                         @relation(fields: [externalSystemId], references: [id])
+
+  @@unique([externalSystemId, type])
+  @@map("external_system_connection_requirements")
+}
+
 model IntegrationRequirement {
   id            Int                         @id @default(autoincrement())
-  type          IntegrationAssetType
-  system        ExternalSystem?
+  type          IntegrationRequirementType
+  name          IntegrationRequirementName
+  level         IntegrationRequirementLevel
   uiName        String                      @map("ui_name")
   uiDescription String                      @map("ui_description")
-  level         IntegrationRequirementLevel
-  isSecret      Boolean                     @default(true) @map("is_secret")
+  isSecret      Boolean
 
-  templates IntegrationTemplate[]
-  assets    CompanyIntegrationAsset[]
+  requiredFor   IntegrationTemplate[]
+  companyAssets CompanyIntegrationRequirementAsset[]
 
-  @@map("integration_template_requirements")
+  @@unique([name])
+  @@map("integration_requirements")
 }
 
 model IntegrationTemplate {
-  id           Int              @id @default(autoincrement())
-  event        IntegrationEvent
-  srcSystem    ExternalSystem   @map("src_system")
-  srcEntity    ExternalEntity   @map("src_entity")
-  targetSystem ExternalSystem   @map("target_system")
-  targetEntity ExternalEntity   @map("target_entity")
+  id             Int              @id @default(autoincrement())
+  event          IntegrationEvent
+  srcSystemId    Int              @map("src_system_id")
+  srcEntity      ExternalEntity   @map("src_entity")
+  targetSystemId Int              @map("target_system_id")
+  targetEntity   ExternalEntity   @map("target_entity")
 
+  srcSystem    ExternalSystem           @relation("SourceSystemRelation", fields: [srcSystemId], references: [id])
+  targetSystem ExternalSystem           @relation("TargetSystemRelation", fields: [targetSystemId], references: [id])
   requirements IntegrationRequirement[]
   integrations CompanyIntegration[]
 
-  @@unique([event, targetSystem, targetEntity])
+  @@unique([event, targetSystemId, targetEntity])
   @@map("integration_templates")
 }
 
@@ -180,13 +253,13 @@ model User {
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
-  company                  CateringCompany?          @relation(name: "company_users", fields: [companyId], references: [id], onDelete: Cascade)
-  ownerOf                  CateringCompany?          @relation("owner")
-  userCompanyRoles         UserCompanyRole[]         @relation("user")
-  createdUserCompanyRoles  UserCompanyRole[]         @relation("creator")
+  company                  CateringCompany?                     @relation(name: "company_users", fields: [companyId], references: [id], onDelete: Cascade)
+  ownerOf                  CateringCompany?                     @relation("owner")
+  userCompanyRoles         UserCompanyRole[]                    @relation("user")
+  createdUserCompanyRoles  UserCompanyRole[]                    @relation("creator")
   createdRoles             Role[]
   createdIntegrations      CompanyIntegration[]
-  createdIntegrationAssets CompanyIntegrationAsset[] @relation("creator")
+  createdIntegrationAssets CompanyIntegrationRequirementAsset[] @relation("creator")
   systemActions            UserSystemAction[]
 
   @@index([extAuthUID])
@@ -232,15 +305,14 @@ enum ExternalEntity {
   Lead
 }
 
-enum ExternalSystem {
-  ezCater
-  Nutshell
+enum ExternalSystemConnectionRequirementType {
+  API_KEY
+  USERNAME
 }
 
-enum IntegrationAssetType {
-  API_CREDENTIAL_API_KEY
-  API_CREDENTIAL_USERNAME
-  DATA_MAP
+enum ExternalSystemName {
+  EZ_CATER
+  NUTSHELL
 }
 
 enum IntegrationEvent {
@@ -250,6 +322,14 @@ enum IntegrationEvent {
 enum IntegrationRequirementLevel {
   Company
   Menu
+}
+
+enum IntegrationRequirementName {
+  EZ_CATER_ORDER_TO_NUTSHELL_LEAD_DM
+}
+
+enum IntegrationRequirementType {
+  DATA_MAP
 }
 
 enum PermissionName {
