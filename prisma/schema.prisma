@@ -12,14 +12,15 @@ datasource db {
 
 // MODELS (A-Z)
 model CateringCompany {
-  id                       String                               @id @default(uuid())
+  id                       String                                 @id @default(uuid())
   name                     String
-  isActive                 Boolean                              @default(false) @map("is_active")
-  ownerId                  String                               @unique @map("owner_id")
-  createdAt                DateTime                             @default(now()) @map("created_at")
-  updatedAt                DateTime                             @updatedAt @map("updated_at")
-  users                    User[]                               @relation("company_users")
-  owner                    User                                 @relation("owner", fields: [ownerId], references: [id])
+  isActive                 Boolean                                @default(false) @map("is_active")
+  ownerId                  String                                 @unique @map("owner_id")
+  createdAt                DateTime                               @default(now()) @map("created_at")
+  updatedAt                DateTime                               @updatedAt @map("updated_at")
+  users                    User[]                                 @relation("company_users")
+  owner                    User                                   @relation("owner", fields: [ownerId], references: [id])
+  connectionAssets         CompanyExternalSystemConnectionAsset[]
   externalSystemConnection CompanyExternalSystemConnection[]
   integrations             CompanyIntegration[]
   integrationAssets        CompanyIntegrationRequirementAsset[]
@@ -52,15 +53,17 @@ model CompanyExternalSystemConnection {
 
 model CompanyExternalSystemConnectionAsset {
   id                  String @id @default(uuid())
+  companyId           String
   connectionId        String @map("connection_id")
   systemRequirementId Int    @map("system_requirement_id")
   uiName              String
   uiDescription       String
 
+  company           CateringCompany                     @relation(fields: [companyId], references: [id])
   connection        CompanyExternalSystemConnection     @relation(fields: [connectionId], references: [id])
   systemRequirement ExternalSystemConnectionRequirement @relation(fields: [systemRequirementId], references: [id])
 
-  @@unique([connectionId, systemRequirementId])
+  @@unique([companyId, systemRequirementId])
   @@index([connectionId])
   @@map("company_external_system_connection_assets")
 }

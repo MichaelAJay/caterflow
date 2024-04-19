@@ -2,7 +2,6 @@ import {
   AuthenticatedRequest,
   AuthenticatedRequestForCompanyUser,
 } from 'src/api/interfaces/authenticated-request.interface';
-import { CompanyIntegrationOutputItem } from 'src/common/types/company-integration-list-item.type';
 import { IBuildRetrieveCompanyIntegrationListArgs } from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
 
 export interface ICateringCompanyController {
@@ -18,7 +17,7 @@ export interface ICateringCompanyController {
   getIntegrations(
     req: AuthenticatedRequestForCompanyUser,
     query: IBuildRetrieveCompanyIntegrationListArgs,
-  ): Promise<CompanyIntegrationOutputItem[]>;
+  ): Promise<any[]>;
   getIntegrationAssets(): Promise<any>;
   createIntegration(
     req: AuthenticatedRequestForCompanyUser,
