@@ -17,17 +17,19 @@ export class CateringCompanyService implements ICateringCompanyService {
     private readonly secretManager: SecretManagerService,
   ) {}
 
+  /**
+   * Refactor 20 Apr 24
+   */
   async createCateringCompany(name: string, ownerId: string): Promise<any> {
-    // const company = await this.cateringCompanyDbHandler.createCateringCompany(
-    //   name,
-    //   ownerId,
-    // );
-    // await this.companyRoleDbHandler.initializeRolesAndAssignOwner(
-    //   company.id,
-    //   ownerId,
-    // );
-    // await this.userDbHandler.updateUser(ownerId, { companyId: company.id });
-    // return;
+    const company = await this.cateringCompanyDbHandler.createCateringCompany(
+      name,
+      ownerId,
+    );
+    await this.companyRoleDbHandler.initializeRolesAndAssignOwner(
+      company.id,
+      ownerId,
+    );
+    return;
   }
 
   /**
