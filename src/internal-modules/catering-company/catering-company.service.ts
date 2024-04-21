@@ -50,6 +50,7 @@ export class CateringCompanyService implements ICateringCompanyService {
     // const mappedList =
     //   this.companyMapper.mapCompanyIntegrationListForOutput(records);
     // return mappedList;
+    // return records;
   }
 
   async createIntegration(

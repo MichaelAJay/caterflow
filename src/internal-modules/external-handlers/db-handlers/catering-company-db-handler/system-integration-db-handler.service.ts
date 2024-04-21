@@ -11,4 +11,37 @@ export class SystemIntegrationDbHandlerService
     private readonly prismaClient: PrismaClientService,
     private readonly systemIntegrationDbQueryBuilder: SystemIntegrationDbQueryBuilderService,
   ) {}
+
+  async getSystemIntegrations(query?: any) {
+    /**
+     * @TODO query stuff
+     */
+
+    const records = await this.prismaClient.integrationTemplate.findMany({
+      include: {
+        srcSystem: {
+          include: { connectionRequirements: true },
+        },
+        targetSystem: {
+          include: { connectionRequirements: true },
+        },
+        requirements: true,
+      },
+    });
+    return records;
+  }
+
+  async getExternalSystems(query?: any) {
+    /**
+     * @TODO query stuff
+     */
+    const records = await this.prismaClient.externalSystem.findMany({
+      include: {
+        srcFor: true,
+        targetFor: true,
+        connectionRequirements: true,
+      },
+    });
+    return records;
+  }
 }

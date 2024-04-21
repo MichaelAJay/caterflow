@@ -11,6 +11,24 @@ export class IntegrationsService {
   async getSystemIntegrations(
     query?: IBuildRetrieveIntegrationListArgs,
   ): Promise<any[]> {
-    return [];
+    const records =
+      await this.systemIntegrationDbHandler.getSystemIntegrations(query);
+
+    /**
+     * @TODO map
+     *
+     */
+
+    return records;
+  }
+
+  async getExternalSystems(query?: any) {
+    const records =
+      await this.systemIntegrationDbHandler.getExternalSystems(query);
+
+    /**
+     * @TODO map
+     */
+    return records;
   }
 }

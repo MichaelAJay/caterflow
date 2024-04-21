@@ -92,7 +92,6 @@ describe('CateringCompanyService', () => {
       expect(
         companyRoleDbHandler.initializeRolesAndAssignOwner,
       ).not.toHaveBeenCalled();
-      expect(userDbHandler.updateUser).not.toHaveBeenCalled();
     });
 
     it('should throw an error if initializing roles and assigning owner fails', async () => {

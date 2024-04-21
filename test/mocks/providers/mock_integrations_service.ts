@@ -2,4 +2,5 @@ import { IIntegrationsService } from 'src/internal-modules/integrations/interfac
 
 export const mockIntegrationsService: IIntegrationsService = {
   getSystemIntegrations: jest.fn(),
+  getExternalSystems: jest.fn(),
 };

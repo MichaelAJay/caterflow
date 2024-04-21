@@ -4,4 +4,5 @@ export interface IIntegrationsService {
   getSystemIntegrations(
     query?: IBuildRetrieveIntegrationListArgs,
   ): Promise<any[]>;
+  getExternalSystems(query?: any): Promise<any>;
 }

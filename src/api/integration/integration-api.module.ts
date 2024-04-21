@@ -7,10 +7,11 @@ import {
 import { IntegrationController } from './integration.controller';
 import { GetSystemIntegrationsValidatorTransformerMiddleware } from './middleware/get-integrations-validator-transformer/get-integrations-validator-transformer.middleware';
 import { IntegrationsModule } from 'src/internal-modules/integrations/integrations.module';
+import { ExternalSystemController } from './external-system.controller';
 
 @Module({
   imports: [IntegrationsModule],
-  controllers: [IntegrationController],
+  controllers: [IntegrationController, ExternalSystemController],
 })
 export class IntegrationAPIModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
