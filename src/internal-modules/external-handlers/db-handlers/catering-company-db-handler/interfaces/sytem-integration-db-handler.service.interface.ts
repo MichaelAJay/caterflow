@@ -1,8 +1,6 @@
-import { IBuildRetrieveIntegrationListArgs } from './query-builder-args.interfaces';
+import { IBuildGetManyQueryInputArgs } from './query-builder-args.interfaces';
 
 export interface ISystemIntegrationDbHandler {
-  getSystemIntegrations(
-    query?: IBuildRetrieveIntegrationListArgs,
-  ): Promise<any>;
+  getSystemIntegrations(query?: IBuildGetManyQueryInputArgs): Promise<any>;
   getExternalSystems(query?: any): Promise<any>;
 }

@@ -25,8 +25,8 @@ describe('GetIntegrationsValidatorTransformerMiddleware', () => {
       filter_configured: 'true',
       filter_active: 'false',
       created_since: 'last_week',
-      template_src: 'ezCater',
-      template_target: 'Nutshell',
+      // template_src: 'ezCater',
+      // template_target: 'Nutshell',
       sort: 'created_asc',
     };
 
@@ -36,8 +36,8 @@ describe('GetIntegrationsValidatorTransformerMiddleware', () => {
       isConfigured: true,
       isActive: false,
       createdSince: expect.any(Date),
-      templateSrcSystem: 'ezCater',
-      templateTargetSystem: 'Nutshell',
+      // templateSrcSystem: 'ezCater',
+      // templateTargetSystem: 'Nutshell',
       sort: 'created_asc',
     };
 

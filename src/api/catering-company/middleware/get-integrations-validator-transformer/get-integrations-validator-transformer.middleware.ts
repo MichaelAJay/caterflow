@@ -6,7 +6,7 @@ import {
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { validateGetCompanyIntegrationsListQuery } from '../../validators/get.integration-lists';
 import dateUtils from '../../../../utility/functions/date-utils';
-import { IBuildRetrieveCompanyIntegrationListArgs } from '../../../../internal-modules/external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
+import { IBuildGetCompanyIntegrationListArgs } from '../../../../internal-modules/external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
 
 @Injectable()
 export class GetCompanyIntegrationsValidatorTransformerMiddleware
@@ -22,7 +22,7 @@ export class GetCompanyIntegrationsValidatorTransformerMiddleware
       });
     }
 
-    const transformedQuery: IBuildRetrieveCompanyIntegrationListArgs = {
+    const transformedQuery: IBuildGetCompanyIntegrationListArgs = {
       pg: query.pg ? parseInt(query.pg, 10) : undefined,
       perPage: query.per_page ? parseInt(query.per_page, 10) : undefined,
       isConfigured: query.filter_configured
@@ -34,8 +34,8 @@ export class GetCompanyIntegrationsValidatorTransformerMiddleware
       createdSince: query.created_since
         ? dateUtils.transformCreatedSinceToDate(query.created_since)
         : undefined,
-      templateSrcSystem: query.template_src,
-      templateTargetSystem: query.template_target,
+      // templateSrcSystem: query.template_src,
+      // templateTargetSystem: query.template_target,
       sort: query.sort,
     };
 

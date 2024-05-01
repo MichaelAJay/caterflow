@@ -4,7 +4,7 @@ import { SystemIntegrationDbHandlerService } from '../external-handlers/db-handl
 import { mockSystemIntegrationDbHandler } from '../../../test/mocks/providers/mock_system_integration_db_handler';
 import { mockIntegrationsMapper } from '../../../test/mocks/providers/mock_integrations_mapper_service';
 import { IntegrationsMapperService } from './integrations-mapper.service';
-import { IBuildRetrieveIntegrationListArgs } from '../external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
+import { IBuildGetManyQueryInputArgs } from '../external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
 
 describe('IntegrationService', () => {
   let service: IntegrationsService;
@@ -45,7 +45,7 @@ describe('IntegrationService', () => {
 
   describe('getSystemIntegrations', () => {
     it('should call db handler with correct argument if provided', async () => {
-      const validQuery: IBuildRetrieveIntegrationListArgs = {
+      const validQuery: IBuildGetManyQueryInputArgs = {
         perPage: 5,
         pg: 2,
       };
@@ -74,7 +74,7 @@ describe('IntegrationService', () => {
   });
   describe('getExternalSystems', () => {
     it('should call db handler with correct argument if provided', async () => {
-      const validQuery: IBuildRetrieveIntegrationListArgs = {
+      const validQuery: IBuildGetManyQueryInputArgs = {
         perPage: 5,
         pg: 2,
       };

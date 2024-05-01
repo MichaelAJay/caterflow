@@ -4,7 +4,7 @@ import { PrismaClientService } from '../../../../external-modules/prisma-client/
 import { SystemIntegrationDbQueryBuilderService } from './system-integration-db-query-builder.service';
 import { mockPrismaClientService } from '../../../../../test/mocks/providers/mock_prisma_client';
 import { mockSystemIntegrationDbQueryBuilder } from '../../../../../test/mocks/providers/mock_system_integration_db_querybuilder';
-import { IBuildRetrieveIntegrationListArgs } from './interfaces/query-builder-args.interfaces';
+import { IBuildGetManyQueryInputArgs } from './interfaces/query-builder-args.interfaces';
 import { Prisma } from '@prisma/client';
 
 describe('SystemIntegrationDbHandlerService', () => {
@@ -42,39 +42,9 @@ describe('SystemIntegrationDbHandlerService', () => {
     expect(service).toBeDefined();
   });
 
-  describe('retrieveList', () => {
-    it('should call buildRetrieveIntegrationsListQueryWithoutInclude with the provided query', async () => {
-      const query: IBuildRetrieveIntegrationListArgs = {
-        pg: 1,
-        perPage: 10,
-        templateSrcSystem: 'ezCater',
-        templateTargetSystem: 'Nutshell',
-      };
-      const expectedQueryWithoutInclude: Prisma.IntegrationTemplateFindManyArgs =
-        {
-          take: 10,
-          where: {
-            srcSystem: 'ezCater',
-            targetSystem: 'Nutshell',
-          },
-        };
-
-      jest
-        .spyOn(
-          systemIntegrationDbQueryBuilder,
-          'buildRetrieveIntegrationsListQueryWithoutInclude',
-        )
-        .mockReturnValue(expectedQueryWithoutInclude);
-
-      await service.retrieveList(query);
-
-      expect(
-        systemIntegrationDbQueryBuilder.buildRetrieveIntegrationsListQueryWithoutInclude,
-      ).toHaveBeenCalledWith(query);
-    });
-
+  describe('getSystemIntegrations', () => {
     it('should call prismaClient.integrationTemplate.findMany with the correct query', async () => {
-      const query: IBuildRetrieveIntegrationListArgs = {
+      const query: IBuildGetManyQueryInputArgs = {
         pg: 1,
         perPage: 10,
         templateSrcSystem: 'ezCater',
@@ -100,7 +70,7 @@ describe('SystemIntegrationDbHandlerService', () => {
         .spyOn(prismaClient.integrationTemplate, 'findMany')
         .mockResolvedValue(expectedRecords);
 
-      const result = await service.retrieveList(query);
+      const result = await service.getSystemIntegrations(query);
 
       expect(prismaClient.integrationTemplate.findMany).toHaveBeenCalledWith({
         ...expectedQueryWithoutInclude,
@@ -118,7 +88,7 @@ describe('SystemIntegrationDbHandlerService', () => {
         .spyOn(prismaClient.integrationTemplate, 'findMany')
         .mockResolvedValue(expectedRecords);
 
-      const result = await service.retrieveList();
+      const result = await service.getSystemIntegrations();
 
       expect(result).toEqual(expectedRecords);
     });

@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { SystemIntegrationDbQueryBuilderService } from './system-integration-db-query-builder.service';
 import queryBuilderUtilities from './utilities/query-builder-utilities';
 import { Prisma } from '@prisma/client';
-import { IBuildRetrieveIntegrationListArgs } from './interfaces/query-builder-args.interfaces';
+import { IBuildGetManyQueryInputArgs } from './interfaces/query-builder-args.interfaces';
 
 jest.mock('./utilities/query-builder-utilities');
 
@@ -54,7 +54,7 @@ describe('SystemIntegrationDbQueryBuilderService', () => {
     });
 
     it('should include the where clause when templateSrcSystem or templateTargetSystem is provided', () => {
-      const queryInput: IBuildRetrieveIntegrationListArgs = {
+      const queryInput: IBuildGetManyQueryInputArgs = {
         templateSrcSystem: 'ezCater',
         templateTargetSystem: 'Nutshell',
       };
@@ -88,7 +88,7 @@ describe('SystemIntegrationDbQueryBuilderService', () => {
     });
 
     it('should return the correct Omit<Prisma.IntegrationTemplateFindManyArgs, "include"> type', () => {
-      const queryInput: IBuildRetrieveIntegrationListArgs = {
+      const queryInput: IBuildGetManyQueryInputArgs = {
         pg: 2,
         perPage: 20,
         templateSrcSystem: 'ezCater',

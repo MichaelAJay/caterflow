@@ -1,5 +1,5 @@
 import { Controller, Get, Query } from '@nestjs/common';
-import { IntegrationsService } from 'src/internal-modules/integrations/integrations.service';
+import { IntegrationsService } from '../../internal-modules/integrations/integrations.service';
 
 @Controller('external-system')
 export class ExternalSystemController {

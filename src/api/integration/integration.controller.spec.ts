@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { IntegrationController } from './integration.controller';
 import { IntegrationsService } from '../../internal-modules/integrations/integrations.service';
 import { mockIntegrationsService } from '../../../test/mocks/providers/mock_integrations_service';
-import { IBuildRetrieveIntegrationListArgs } from '../../internal-modules/external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
+import { IBuildGetManyQueryInputArgs } from '../../internal-modules/external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
 
 describe('IntegrationController', () => {
   let controller: IntegrationController;
@@ -30,11 +30,9 @@ describe('IntegrationController', () => {
 
   describe('getIntegrations', () => {
     it('should call integrationsService.getSystemIntegrations with the provided query parameters', async () => {
-      const query: IBuildRetrieveIntegrationListArgs = {
+      const query: IBuildGetManyQueryInputArgs = {
         pg: 1,
         perPage: 10,
-        templateSrcSystem: 'ezCater',
-        templateTargetSystem: 'Nutshell',
       };
 
       await controller.getIntegrations(query);
@@ -76,36 +74,10 @@ describe('IntegrationController', () => {
       );
     });
 
-    it('should handle templateSrcSystem query parameter correctly', async () => {
-      const query: IBuildRetrieveIntegrationListArgs = {
-        templateSrcSystem: 'ezCater',
-      };
-
-      await controller.getIntegrations(query);
-
-      expect(integrationService.getSystemIntegrations).toHaveBeenCalledWith(
-        query,
-      );
-    });
-
-    it('should handle templateTargetSystem query parameter correctly', async () => {
-      const query: IBuildRetrieveIntegrationListArgs = {
-        templateTargetSystem: 'Nutshell',
-      };
-
-      await controller.getIntegrations(query);
-
-      expect(integrationService.getSystemIntegrations).toHaveBeenCalledWith(
-        query,
-      );
-    });
-
     it('should handle all query parameters correctly', async () => {
-      const query: IBuildRetrieveIntegrationListArgs = {
+      const query: IBuildGetManyQueryInputArgs = {
         pg: 2,
         perPage: 20,
-        templateSrcSystem: 'ezCater',
-        templateTargetSystem: 'ezCater',
       };
 
       await controller.getIntegrations(query);

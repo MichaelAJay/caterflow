@@ -1,4 +1,4 @@
-import { IBuildRetrieveCompanyIntegrationListArgs } from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
+import { IBuildGetCompanyIntegrationListArgs } from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
 
 export interface ICateringCompanyService {
   /**
@@ -8,7 +8,7 @@ export interface ICateringCompanyService {
   createCateringCompany(name: string, ownerId: string): Promise<any>;
   retrieveIntegrationsList(
     companyId: string,
-    query?: IBuildRetrieveCompanyIntegrationListArgs,
+    query?: IBuildGetCompanyIntegrationListArgs,
   ): Promise<any>;
   createIntegration(
     companyId: string,

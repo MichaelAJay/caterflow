@@ -2,7 +2,7 @@ import { BadRequestException } from '@nestjs/common';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { GetSystemIntegrationsValidatorTransformerMiddleware } from './get-integrations-validator-transformer.middleware';
 import dateUtils from '../../../../utility/functions/date-utils';
-import { IBuildRetrieveIntegrationListArgs } from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
+import { IBuildGetManyQueryInputArgs } from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
 
 describe('GetIntegrationsValidatorTransformerMiddleware', () => {
   let middleware: GetSystemIntegrationsValidatorTransformerMiddleware;
@@ -31,7 +31,7 @@ describe('GetIntegrationsValidatorTransformerMiddleware', () => {
       template_target: 'Nutshell',
     };
 
-    const transformedQuery: IBuildRetrieveIntegrationListArgs = {
+    const transformedQuery: IBuildGetManyQueryInputArgs = {
       pg: 1,
       perPage: 10,
       templateSrcSystem: 'ezCater',

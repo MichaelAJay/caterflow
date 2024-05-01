@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { IBuildRetrieveIntegrationListArgs } from '../external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
+import { IBuildGetManyQueryInputArgs } from '../external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
 import { SystemIntegrationDbHandlerService } from '../external-handlers/db-handlers/catering-company-db-handler/system-integration-db-handler.service';
 
 @Injectable()
@@ -9,7 +9,7 @@ export class IntegrationsService {
   ) {}
 
   async getSystemIntegrations(
-    query?: IBuildRetrieveIntegrationListArgs,
+    query?: IBuildGetManyQueryInputArgs,
   ): Promise<any[]> {
     const records =
       await this.systemIntegrationDbHandler.getSystemIntegrations(query);

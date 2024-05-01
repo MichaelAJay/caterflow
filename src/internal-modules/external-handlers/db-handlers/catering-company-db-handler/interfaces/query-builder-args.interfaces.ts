@@ -5,15 +5,13 @@ export type IBuildCreateCateringCompanyArgs = Pick<
   'name' | 'ownerId'
 >;
 
-export interface IBuildRetrieveIntegrationListArgs {
+export interface IBuildGetManyQueryInputArgs {
   pg?: number;
   perPage?: number;
-  templateSrcSystem?: 'ezCater';
-  templateTargetSystem?: 'ezCater' | 'Nutshell';
 }
 
-export interface IBuildRetrieveCompanyIntegrationListArgs
-  extends IBuildRetrieveIntegrationListArgs {
+export interface IBuildGetCompanyIntegrationListArgs
+  extends IBuildGetManyQueryInputArgs {
   isConfigured?: boolean;
   isActive?: boolean;
   createdSince?: Date;

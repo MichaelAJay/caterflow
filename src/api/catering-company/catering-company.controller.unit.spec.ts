@@ -6,9 +6,8 @@ import { SUCCESS_CODE } from '../../common/codes/success-codes';
 import { BadRequestException, ConflictException } from '@nestjs/common';
 import { FirebaseAdminService } from '../../external-modules/firebase-admin/firebase-admin.service';
 import { mockFirebaseAdminService } from '../../../test/mocks/providers/mock_firebase_admin';
-import { IBuildRetrieveCompanyIntegrationListArgs } from '../../internal-modules/external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
+import { IBuildGetCompanyIntegrationListArgs } from '../../internal-modules/external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
 import { AuthenticatedRequestForCompanyUser } from '../interfaces/authenticated-request.interface';
-import { CompanyIntegrationOutputItem } from '../../common/types/company-integration-list-item.type';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { validateCreateCateringCompanyRequestBody } from './validators/post.caterer';
 
@@ -124,8 +123,8 @@ describe('CateringCompanyController', () => {
       const result = [
         {
           key: 'val',
-        } as unknown as CompanyIntegrationOutputItem,
-      ] as CompanyIntegrationOutputItem[];
+        } as unknown as any,
+      ] as any[];
       jest
         .spyOn(cateringCompanyService, 'retrieveIntegrationsList')
         .mockResolvedValue(result);
@@ -139,15 +138,15 @@ describe('CateringCompanyController', () => {
     });
 
     it('should call retrieveIntegrationsList with companyId and query parameters when provided', async () => {
-      const query: IBuildRetrieveCompanyIntegrationListArgs = {
+      const query: IBuildGetCompanyIntegrationListArgs = {
         perPage: 10,
         pg: 1,
       };
       const result = [
         {
           key: 'val',
-        } as unknown as CompanyIntegrationOutputItem,
-      ] as CompanyIntegrationOutputItem[];
+        } as unknown as any,
+      ] as any[];
       jest
         .spyOn(cateringCompanyService, 'retrieveIntegrationsList')
         .mockResolvedValue(result);

@@ -9,7 +9,7 @@ import { mockCompanyRoleAndPermissionDbHandler } from '../../../test/mocks/provi
 import { CompanyMapperService } from './company-mapper.service';
 import { mockCompanyMapper } from '../../../test/mocks/providers/mock_company_mapper_service';
 import { $Enums } from '@prisma/client';
-import { IBuildRetrieveCompanyIntegrationListArgs } from '../external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
+import { IBuildGetCompanyIntegrationListArgs } from '../external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
 import { SecretManagerService } from '../external-handlers/secret-manager/secret-manager.service';
 import { mockSecretManagerService } from '../../../test/mocks/providers/mock_secret_manager';
 
