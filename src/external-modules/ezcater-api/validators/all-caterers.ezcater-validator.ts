@@ -1,5 +1,6 @@
 import { JSONSchemaType } from 'ajv';
 import { AllCaterersResponse } from '../types/ezcater-response/all-caterers.response.type';
+import ajvSingleton from 'src/system/singletons/ajv.singleton';
 
 const schema: JSONSchemaType<AllCaterersResponse> = {
   type: 'object',
@@ -46,4 +47,4 @@ const schema: JSONSchemaType<AllCaterersResponse> = {
   additionalProperties: false,
 };
 
-console.log(schema);
+export const validateAllCaterersQuery = ajvSingleton.compile(schema);

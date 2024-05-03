@@ -8,8 +8,10 @@ import {
   GetOrderByIdResponse,
   GetOrderByIdResponseData,
   OrderEventResponse,
+  OrderItemCustomization,
 } from '../types/ezcater-response/get-order-by-id.response.type';
 import { EzCaterAddress } from '../types/ezcater-address.type';
+import ajvSingleton from 'src/system/singletons/ajv.singleton';
 
 const EzCaterAddressSchema: JSONSchemaType<EzCaterAddress> = {
   type: 'object',
@@ -41,6 +43,16 @@ const CatererResponseSchema: JSONSchemaType<CatererResponse> = {
   additionalProperties: false,
 };
 
+const OrderItemCustomizationSchema: JSONSchemaType<OrderItemCustomization> = {
+  type: 'object',
+  properties: {
+    customizationTypeName: { type: 'string' },
+    name: { type: 'string' },
+    quantity: { type: 'number' },
+  },
+  required: ['customizationTypeName', 'name', 'quantity'],
+};
+
 const EzCaterOrderItemSchema: JSONSchemaType<EzCaterOrderItem> = {
   type: 'object',
   properties: {
@@ -54,14 +66,29 @@ const EzCaterOrderItemSchema: JSONSchemaType<EzCaterOrderItem> = {
       required: ['subunits'],
       additionalProperties: false,
     },
-    customizations: { type: 'array', items: { type: 'unknown' } },
+    customizations: {
+      type: 'array',
+      items: OrderItemCustomizationSchema,
+    },
     tableware: {
       type: 'object',
       properties: {
-        specialInstructions: { type: 'unknown', nullable: true },
-        tablewareChoices: { type: 'array', items: { type: 'unknown' } },
+        specialInstructions: { type: 'string', nullable: true },
+        tablewareChoices: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              choiceUuid: { type: 'string' },
+              isIncluded: { type: 'boolean' },
+              itemCount: { type: 'number' },
+              name: { type: 'string' },
+            },
+            required: ['choiceUuid', 'isIncluded', 'itemCount', 'name'],
+          },
+        },
       },
-      required: ['specialInstructions', 'tablewareChoices'],
+      required: ['tablewareChoices'],
       additionalProperties: false,
     },
     totals: {
@@ -84,10 +111,31 @@ const EzCaterOrderItemSchema: JSONSchemaType<EzCaterOrderItem> = {
   additionalProperties: false,
 };
 
+const EzCaterMoneyResponseSchema: JSONSchemaType<EzCaterMoneyResponse> = {
+  type: 'object',
+  properties: {
+    currency: { type: 'string' },
+    subunits: { type: 'number' },
+    subunitsV2: { type: 'string' },
+  },
+  required: ['currency', 'subunits', 'subunitsV2'],
+  additionalProperties: false,
+};
+
 const CatererCartResponseSchema: JSONSchemaType<CatererCartResponse> = {
   type: 'object',
   properties: {
-    feesAndDiscounts: { type: 'array', items: { type: 'unknown' } },
+    feesAndDiscounts: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          cost: EzCaterMoneyResponseSchema,
+        },
+        required: ['name', 'cost'],
+      },
+    },
     orderItems: { type: 'array', items: EzCaterOrderItemSchema },
   },
   required: ['feesAndDiscounts', 'orderItems'],
@@ -97,7 +145,7 @@ const CatererCartResponseSchema: JSONSchemaType<CatererCartResponse> = {
 const OrderEventResponseSchema: JSONSchemaType<OrderEventResponse> = {
   type: 'object',
   properties: {
-    address: { type: 'any' },
+    address: EzCaterAddressSchema,
     catererHandoffFoodTime: { type: 'string' },
     contact: {
       type: 'object',
@@ -105,13 +153,12 @@ const OrderEventResponseSchema: JSONSchemaType<OrderEventResponse> = {
         name: { type: 'string', nullable: true },
         phone: { type: 'string', nullable: true },
       },
-      required: ['name', 'phone'],
       additionalProperties: false,
     },
     customerProvidedName: { type: 'string', nullable: true },
-    headcount: { type: 'any', nullable: true },
+    headcount: { type: 'number', nullable: true },
     orderType: { type: 'string' },
-    thirdPartyDeliveryPartner: { type: 'unknown' },
+    thirdPartyDeliveryPartner: { type: 'string', nullable: true },
     timeZoneIdentifier: { type: 'string' },
     timeZoneOffset: { type: 'string' },
     timestamp: { type: 'string' },
@@ -125,17 +172,6 @@ const OrderEventResponseSchema: JSONSchemaType<OrderEventResponse> = {
     'timeZoneOffset',
     'timestamp',
   ],
-  additionalProperties: false,
-};
-
-const EzCaterMoneyResponseSchema: JSONSchemaType<EzCaterMoneyResponse> = {
-  type: 'object',
-  properties: {
-    currency: { type: 'string' },
-    subunits: { type: 'number' },
-    subunitsV2: { type: 'string' },
-  },
-  required: ['currency', 'subunits', 'subunitsV2'],
   additionalProperties: false,
 };
 
@@ -225,4 +261,6 @@ const GetOrderByIdResponseSchema: JSONSchemaType<GetOrderByIdResponse> = {
   additionalProperties: false,
 };
 
-console.log(GetOrderByIdResponseSchema);
+export const validateGetOrderByIdQuery = ajvSingleton.compile(
+  GetOrderByIdResponseSchema,
+);

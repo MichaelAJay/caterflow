@@ -5,6 +5,12 @@ import { join } from 'path';
 import { CloudSecretManagerError } from 'src/common/errors/cloud_secret_manager.error';
 import { SecretManagerService } from 'src/internal-modules/external-handlers/secret-manager/secret-manager.service';
 import { CustomConfigService } from 'src/utility/services/custom-config/custom-config.service';
+import { validateAllSubscribersQuery } from './validators/all-subscribers.ezcater-validator';
+import { SubscriberResponse } from './types/ezcater-response/all-subscribers.response.type';
+import { validateAllCaterersQuery } from './validators/all-caterers.ezcater-validator';
+import { CatererResponse } from './types/ezcater-response/caterer.response.type';
+import { validateGetOrderByIdQuery } from './validators/get-order-by-id.ezcater-validator';
+import { EzCaterCompleteOrder } from './types/ezcater-response/get-order-by-id.response.type';
 
 @Injectable()
 export class EzCaterApiService {
@@ -66,13 +72,21 @@ export class EzCaterApiService {
    * @param companyId
    * @param companyAssetId - CompanyExternalSystemConnectionAsset.id
    */
-  async getSubscribers(companyId: string, companyAssetId: string) {
+  async getSubscribers(
+    companyId: string,
+    companyAssetId: string,
+  ): Promise<SubscriberResponse[]> {
     try {
       const client = await this.getClientWithAuth(companyId, companyAssetId);
 
       const response = client.request(this.getSubscribersQuery);
 
       // Now validate
+      if (!validateAllSubscribersQuery(response)) {
+        throw new Error('Invalid response');
+      }
+
+      return response.data.subscribers;
     } catch (err) {
       if (err instanceof CloudSecretManagerError) {
         // do something special
@@ -119,12 +133,20 @@ export class EzCaterApiService {
     }
   }
 
-  async getCaterers(companyId: string, companyAssetId: string) {
+  async getCaterers(
+    companyId: string,
+    companyAssetId: string,
+  ): Promise<CatererResponse[]> {
     try {
       const client = await this.getClientWithAuth(companyId, companyAssetId);
       const response = client.request(this.getCaterersQuery);
 
       // Validate
+      if (!validateAllCaterersQuery(response)) {
+        throw new Error('Validation error');
+      }
+
+      return response.data.caterers;
     } catch (err) {
       throw err;
     }
@@ -141,12 +163,21 @@ export class EzCaterApiService {
     }
   }
 
-  async getOrder(companyId: string, companyAssetId: string, orderId: string) {
+  async getOrder(
+    companyId: string,
+    companyAssetId: string,
+    orderId: string,
+  ): Promise<EzCaterCompleteOrder> {
     try {
       const client = await this.getClientWithAuth(companyId, companyAssetId);
       const response = client.request(this.getOrderQuery, { orderId });
 
       // Validate
+      if (!validateGetOrderByIdQuery(response)) {
+        throw new Error('validation error');
+      }
+
+      return response.data.order;
     } catch (err) {
       throw err;
     }

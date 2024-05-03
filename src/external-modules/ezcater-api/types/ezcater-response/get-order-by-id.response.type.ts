@@ -6,30 +6,35 @@ export type GetOrderByIdResponse = {
 };
 
 export type GetOrderByIdResponseData = {
-  order: {
-    deliveryId?: string | null;
-    uuid: string;
-    caterer: CatererResponse;
-    catererCart: CatererCartResponse;
-    event: OrderEventResponse;
-    isTaxExempt: boolean;
-    lifecycle: {
-      orderisCurrently: string; // THIS NEEDS EXPLORING
-    };
-    orderCustomer: {
-      firstName: string;
-      fullName: string;
-      lastName: string;
-    };
-    orderNumber: string;
-    orderSourceType: string; // should be able to determine all allowed values
-    taxableAddress: EzCaterAddress;
-    totals: EzCaterOrderTotals;
+  order: EzCaterCompleteOrder;
+};
+
+export type EzCaterCompleteOrder = {
+  deliveryId?: string | null;
+  uuid: string;
+  caterer: CatererResponse;
+  catererCart: CatererCartResponse;
+  event: OrderEventResponse;
+  isTaxExempt: boolean;
+  lifecycle: {
+    orderisCurrently: string; // THIS NEEDS EXPLORING
   };
+  orderCustomer: {
+    firstName: string;
+    fullName: string;
+    lastName: string;
+  };
+  orderNumber: string;
+  orderSourceType: string; // should be able to determine all allowed values
+  taxableAddress: EzCaterAddress;
+  totals: EzCaterOrderTotals;
 };
 
 export type CatererCartResponse = {
-  feesAndDiscounts: unknown[]; // @TODO fix
+  feesAndDiscounts: {
+    name: string;
+    cost: EzCaterMoneyResponse;
+  }[];
   orderItems: EzCaterOrderItem[];
 };
 
@@ -39,9 +44,9 @@ export type EzCaterOrderItem = {
   totalInSubunits: {
     subunits: number; // Smallest monetary unit (e.g. U.S. cent)
   };
-  customizations: unknown[];
+  customizations: OrderItemCustomization[];
   tableware: {
-    specialInstructions?: unknown | null;
+    specialInstructions?: string | null;
     tablewareChoices: EzCaterTablewareChoice[];
   };
   totals: {
@@ -49,19 +54,30 @@ export type EzCaterOrderItem = {
   };
 };
 
-export type EzCaterTablewareChoice = unknown;
+export type OrderItemCustomization = {
+  customizationTypeName: string;
+  name: string;
+  quantity: number;
+};
+
+export type EzCaterTablewareChoice = {
+  choiceUuid: string;
+  isIncluded: boolean;
+  itemCount: number;
+  name: string;
+};
 
 export type OrderEventResponse = {
-  address: any; // @TODO FIX
+  address: EzCaterAddress; // @TODO FIX
   catererHandoffFoodTime: string; // ISO 8601 ex: "2024-04-23T15:30:00Z"
   contact: {
     name?: string | null;
     phone?: string | null;
   };
   customerProvidedName?: string | null;
-  headcount?: any | null; // Guessing number - need to confirm
+  headcount?: number | null; // Guessing number - need to confirm
   orderType: string; // Can probably create string literal. 'TAKEOUT' is one option
-  thirdPartyDeliveryPartner: unknown;
+  thirdPartyDeliveryPartner?: string | null;
   timeZoneIdentifier: string; // Can probably get enumed list e.g. "America/New_York"
   timeZoneOffset: string; // e.g. "-04:00"
   timestamp: string; // ISO 8601 ex: "2024-04-23T15:30:00Z"
