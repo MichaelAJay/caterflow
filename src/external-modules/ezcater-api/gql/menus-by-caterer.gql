@@ -1,0 +1,8 @@
+query menusbyCaterer($catererId: String!) {
+  menu(catererId: $catererId) {
+    endDate
+    id
+    name
+    startDate
+  }
+}

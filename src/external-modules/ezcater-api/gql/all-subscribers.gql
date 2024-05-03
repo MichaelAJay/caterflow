@@ -1,0 +1,13 @@
+query allSubscribers {
+  subscribers {
+    id
+    name
+    subscriptions {
+      eventEntity
+      eventKey
+      parentEntity
+      parentId
+      subscriberId
+    }
+  }
+}

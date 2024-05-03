@@ -21,7 +21,7 @@
     "test:target": "npx jest --testPathPattern=/internal-modules/integrations/.*.unit.spec.ts"
   },
   "dependencies": {
-    "@google-cloud/secret-manager": "^5.1.0",
+    "@google-cloud/secret-manager": "^5.4.0",
     "@nestjs/cache-manager": "^2.2.1",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.2.0",
@@ -34,7 +34,7 @@
     "@sentry/profiling-node": "^7.102.1",
     "ajv": "^8.12.0",
     "cache-manager": "^5.4.0",
-    "firebase-admin": "^12.0.0",
+    "firebase-admin": "^12.1.0",
     "graphql": "^16.8.1",
     "graphql-request": "^6.1.0",
     "jayson": "^4.1.0",
