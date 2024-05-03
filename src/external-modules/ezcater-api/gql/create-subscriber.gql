@@ -1,0 +1,12 @@
+mutation createSubscriber($webhookUrl: String) {
+  createSubscriber(
+    subscriberParams: { name: "Caterflow Integration", webhookUrl: $webhookUrl }
+  ) {
+    subscriber {
+      id
+      name
+      webhookUrl
+      webhookSecret
+    }
+  }
+}

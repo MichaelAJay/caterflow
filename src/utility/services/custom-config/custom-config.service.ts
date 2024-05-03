@@ -6,6 +6,12 @@ import { ICustomConfigService } from './interfaces/custom-config.service.interfa
 export class CustomConfigService implements ICustomConfigService {
   constructor(private readonly configService: ConfigService) {}
 
+  /**
+   * If defaultValue is not provided and environment variable is not found, throws error
+   * @param key
+   * @param [defaultValue]
+   * @returns
+   */
   getEnvVariable<T>(key: string, defaultValue?: T): T {
     const value = this.configService.get<T>(key);
 

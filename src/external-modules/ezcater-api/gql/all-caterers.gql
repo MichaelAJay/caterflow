@@ -1,0 +1,19 @@
+query allCaterers {
+  caterers {
+    live
+    name
+    storeNumber
+    uuid
+    address {
+      city
+      deliveryInstructions
+      name
+      state
+      stateName
+      street
+      street2
+      street3
+      zip
+    }
+  }
+}

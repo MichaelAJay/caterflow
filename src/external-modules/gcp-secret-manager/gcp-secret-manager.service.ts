@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { CustomConfigService } from '../../utility/services/custom-config/custom-config.service';
 import { IExternalSecretManager } from './interfaces/external-secret-manager.service.interface';
 import * as Sentry from '@sentry/node';
+import { CloudSecretManagerError } from 'src/common/errors/cloud_secret_manager.error';
 
 @Injectable()
 export class GcpSecretManagerService implements IExternalSecretManager {
@@ -26,12 +27,16 @@ export class GcpSecretManagerService implements IExternalSecretManager {
         name: `${this.secretPrefix}/${secretName}/versions/latest`,
       })
       .catch((reason) => {
+        /**
+         * @TODO log instead of Sentry
+         */
         Sentry.captureException(reason);
         throw reason;
       });
 
     if (!version.payload?.data) {
-      throw new Error(`Secret ${secretName} not found or has no data.`);
+      // throw new Error(`Secret ${secretName} not found or has no data.`);
+      throw new CloudSecretManagerError(secretName);
     }
 
     return version.payload.data.toString();
