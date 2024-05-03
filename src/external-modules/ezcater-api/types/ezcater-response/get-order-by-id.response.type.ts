@@ -7,7 +7,7 @@ export type GetOrderByIdResponse = {
 
 export type GetOrderByIdResponseData = {
   order: {
-    deliverId: string | null;
+    deliveryId?: string | null;
     uuid: string;
     caterer: CatererResponse;
     catererCart: CatererCartResponse;
@@ -41,7 +41,7 @@ export type EzCaterOrderItem = {
   };
   customizations: unknown[];
   tableware: {
-    specialInstructions: unknown | null;
+    specialInstructions?: unknown | null;
     tablewareChoices: EzCaterTablewareChoice[];
   };
   totals: {
@@ -55,11 +55,11 @@ export type OrderEventResponse = {
   address: any; // @TODO FIX
   catererHandoffFoodTime: string; // ISO 8601 ex: "2024-04-23T15:30:00Z"
   contact: {
-    name: string | null;
-    phone: string | null;
+    name?: string | null;
+    phone?: string | null;
   };
-  customerProvidedName: string | null;
-  headcount: any | null; // Guessing number - need to confirm
+  customerProvidedName?: string | null;
+  headcount?: any | null; // Guessing number - need to confirm
   orderType: string; // Can probably create string literal. 'TAKEOUT' is one option
   thirdPartyDeliveryPartner: unknown;
   timeZoneIdentifier: string; // Can probably get enumed list e.g. "America/New_York"
