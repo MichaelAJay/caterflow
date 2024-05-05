@@ -109,9 +109,42 @@ export class CateringCompanyController implements ICateringCompanyController {
     @Param('templateId', ParseIntPipe) templateId: number,
   ) {
     const { user } = req;
+    // Not implemented
     return this.cateringCompanyService.createIntegration(
       user.companyId,
       templateId,
+      user.id,
+    );
+  }
+
+  @Post('connection/:systemId')
+  @SetMetadata('permissions', [$Enums.PermissionName.ManageIntegrations])
+  async createExternalSystemConnection(
+    @Req() req: AuthenticatedRequestForCompanyUser,
+    @Param('systemId', ParseIntPipe) systemId: number,
+  ) {
+    const { user } = req;
+    return this.cateringCompanyService.createExternalSystemConnection(
+      user.companyId,
+      systemId,
+      user.id,
+    );
+  }
+
+  @Post('connection/:connectionId/asset/:requirementId')
+  @SetMetadata('permissions', [$Enums.PermissionName.ManageIntegrationAssets])
+  async addExternalSystemConnectionAsset(
+    @Req() req: AuthenticatedRequestForCompanyUser,
+    @Param('connectionId') connectionId: string,
+    @Param('requirementId', ParseIntPipe) requirementId: number,
+    @Body() payload: any,
+  ) {
+    const { user } = req;
+    return this.cateringCompanyService.createExternalSystemConnectionAsset(
+      user.companyId,
+      connectionId,
+      requirementId,
+      payload,
       user.id,
     );
   }

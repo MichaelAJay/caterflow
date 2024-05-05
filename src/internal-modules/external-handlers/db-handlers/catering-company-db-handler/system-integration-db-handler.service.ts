@@ -40,4 +40,15 @@ export class SystemIntegrationDbHandlerService
     });
     return records;
   }
+
+  async getExternalSystemRequirement(requirementId: number) {
+    const record =
+      await this.prismaClient.externalSystemConnectionRequirement.findUniqueOrThrow(
+        {
+          where: { id: requirementId },
+        },
+      );
+
+    return record;
+  }
 }

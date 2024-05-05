@@ -8,4 +8,4 @@ import { CustomConfigModule } from 'src/utility/services/custom-config/custom-co
   providers: [EzCaterApiService],
   exports: [EzCaterApiService],
 })
-export class EzcaterApiModule {}
+export class EzCaterApiModule {}

@@ -20,6 +20,7 @@ model CateringCompany {
   updatedAt                DateTime                               @updatedAt @map("updated_at")
   users                    User[]                                 @relation("company_users")
   owner                    User                                   @relation("owner", fields: [ownerId], references: [id])
+  caterers                 CompanyCaterer[]
   connectionAssets         CompanyExternalSystemConnectionAsset[]
   externalSystemConnection CompanyExternalSystemConnection[]
   integrations             CompanyIntegration[]
@@ -34,11 +35,26 @@ model CateringCompany {
   @@map("catering_companies")
 }
 
+model CompanyCaterer {
+  id          String  @id @default(uuid())
+  name        String
+  companyId   String  @map("company_id")
+  ezCaterId   String?
+  storeNumber String?
+
+  company CateringCompany @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
+  @@map("company_caterers")
+}
+
 model CompanyExternalSystemConnection {
-  id           String @id @default(uuid())
-  companyId    String @map("company_id")
-  systemId     Int    @map("system_id")
-  systemUIName String @map("system_ui_name")
+  id                String  @id @default(uuid())
+  companyId         String  @map("company_id")
+  systemId          Int     @map("system_id")
+  systemUIName      String  @map("system_ui_name")
+  isFullyConfigured Boolean @default(false) @map("is_fully_configured")
+  isTested          Boolean @default(false) @map("is_tested")
 
   company          CateringCompany                        @relation(fields: [companyId], references: [id])
   connectionAssets CompanyExternalSystemConnectionAsset[]
@@ -58,6 +74,7 @@ model CompanyExternalSystemConnectionAsset {
   systemRequirementId Int    @map("system_requirement_id")
   uiName              String
   uiDescription       String
+  value               Json? // If value is null, then asset is secret
 
   company           CateringCompany                     @relation(fields: [companyId], references: [id])
   connection        CompanyExternalSystemConnection     @relation(fields: [connectionId], references: [id])
