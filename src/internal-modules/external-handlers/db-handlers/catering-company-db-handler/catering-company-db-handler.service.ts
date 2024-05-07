@@ -3,7 +3,12 @@ import { ICateringCompanyDbHandler } from './interfaces/catering-company-db-hand
 import { CateringCompanyDbQueryBuilderService } from './catering-company-db-query-builder.service';
 import { PrismaClientService } from '../../../../external-modules/prisma-client/prisma-client.service';
 import { SystemIntegrationDbQueryBuilderService } from './system-integration-db-query-builder.service';
-import { CateringCompany, Prisma } from '@prisma/client';
+import {
+  $Enums,
+  CateringCompany,
+  CompanyIntegration,
+  Prisma,
+} from '@prisma/client';
 import uuidUtils from '../../../../utility/functions/uuid-utils';
 import { InvalidUUIDError } from '../../../../common/errors/invalid_uuid.error';
 import { ERROR_CODE } from '../../../../common/codes/error-codes';
@@ -41,6 +46,115 @@ export class CateringCompanyDbHandlerService
   /**
    * Integrations and Connections
    */
+  async getIntegrations() {}
+
+  async getConnections(companyId: string, query?: any) {
+    if (!uuidUtils.isUUID(companyId)) {
+      throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
+    }
+
+    // Should at least sort, limit, and skip
+
+    const records =
+      await this.prismaClient.companyExternalSystemConnection.findMany({
+        where: { companyId },
+      });
+    return records;
+  }
+
+  async getConnection(
+    connectionId: string,
+    include: Prisma.CompanyExternalSystemConnectionInclude = {
+      connectionAssets: true,
+      srcFor: true, // CompanyIntegration[]
+      targetFor: true, // CompanyIntegration[]
+      externalSystem: {
+        include: {
+          connectionRequirements: true,
+        },
+      },
+    },
+  ) {
+    if (!uuidUtils.isUUID(connectionId)) {
+      throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
+    }
+
+    const record =
+      await this.prismaClient.companyExternalSystemConnection.findUnique({
+        where: { id: connectionId },
+        include,
+      });
+
+    return record;
+  }
+
+  async createIntegration(
+    companyId: string,
+    templateId: number,
+    creatorId: string,
+  ) {
+    if (!(uuidUtils.isUUID(companyId) && uuidUtils.isUUID(creatorId))) {
+      throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
+    }
+
+    const template =
+      await this.prismaClient.integrationTemplate.findUniqueOrThrow({
+        where: { id: templateId },
+        include: {
+          // ExternalSystem
+          srcSystem: {
+            include: {
+              // CompanyConnections[] - max length should be 1
+              companyConnections: {
+                where: { companyId },
+              },
+            },
+          },
+          // ExternalSystem
+          targetSystem: {
+            include: {
+              // CompanyConnections[] - max length should be 1
+              companyConnections: {
+                where: { companyId },
+              },
+            },
+          },
+        },
+      });
+
+    const { srcSystem, targetSystem } = template;
+    // Confirm uniqueness of srcSystem/targetSystem companyConnections - there should only be one per company
+    if (
+      srcSystem.companyConnections.length > 1 ||
+      targetSystem.companyConnections.length > 1
+    ) {
+      // Log and throw
+      throw new Error('Uniqueness constraint has been validated');
+    }
+
+    const input: Prisma.CompanyIntegrationUncheckedCreateInput = {
+      companyId,
+      templateId,
+      uiName: template.uiName,
+      event: template.event,
+      creatorId,
+    };
+
+    // If the srcSystem is referenced by a CompanyExternalSystemConnection record with matching companyId, add that connection
+    if (srcSystem.companyConnections.length === 1) {
+      input.srcConnectionId = srcSystem.companyConnections[0].id;
+    }
+
+    // If the targetSystem is referenced by a CompanyExternalSystemConnection record with matching companyId, add that connection
+    if (targetSystem.companyConnections.length === 1) {
+      input.targetConnectionId = targetSystem.companyConnections[0].id;
+    }
+
+    await this.prismaClient.companyIntegration.create({
+      data: input,
+    });
+  }
+
   async updateIntegrations(
     integrationIds: string[],
     updates: Pick<
@@ -54,48 +168,113 @@ export class CateringCompanyDbHandlerService
     });
   }
 
-  async createExternalSystemConnection(
-    companyId: string,
-    systemId: number,
-    ownerId: string,
-    srcFor: { id: string }[],
-    targetFor: { id: string }[],
-  ) {
-    if (!(uuidUtils.isUUID(companyId) && uuidUtils.isUUID(ownerId))) {
-      throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
-    }
-
+  /**
+   * This would be the most performant method - but may be overkill, and also doesn't provide which company integrations may be updated
+   */
+  async createConnectionRaw(companyId: string, systemId: number) {
+    // Retrieve simple external system
     const { uiName: systemUIName } =
       await this.prismaClient.externalSystem.findUniqueOrThrow({
         where: { id: systemId },
         select: { uiName: true },
       });
 
-    const record =
+    // Create simple connection
+    const { id: connectionId } =
       await this.prismaClient.companyExternalSystemConnection.create({
         data: {
           companyId,
           systemId,
           systemUIName,
-          srcFor: {
-            connect: srcFor,
-          },
-          targetFor: {
-            connect: targetFor,
-          },
         },
+        select: { id: true },
+      });
+
+    // Complex CompanyIntegration updates
+    const [
+      numSrcUpdatedCompanyIntegrations,
+      numTargetUpdatedCompanyIntegrations,
+    ] = await Promise.all([
+      this.prismaClient.$executeRawUnsafe(
+        `
+        UPDATE "company_integrations" ci
+        SET "src_connection_id" = ${connectionId}
+        FROM "integration_templates" it
+        WHERE ci."template_id" = it.id AND "src_system_id" = ${systemId}
+      `,
+      ),
+      this.prismaClient.$executeRawUnsafe(
+        `
+        UPDATE "company_integrations" ci
+        SET "target_connection_id" = ${connectionId}
+        FROM "integration_templates" it
+        WHERE ci."template_id" = it.id AND "target_system_id" = ${systemId}
+        `,
+      ),
+    ]);
+  }
+
+  /**
+   * Create a CompanyExternalSystemConnection record and update all CompanyIntegrations which should rely on it
+   * @param companyId
+   * @param systemId
+   * @returns Object with srcFor and targetFor, company integration records for which the created connection is applied
+   */
+  async createExternalSystemConnection(
+    companyId: string,
+    systemId: number,
+  ): Promise<{
+    srcFor: Pick<CompanyIntegration, 'id' | 'uiName' | 'event'>[];
+    targetFor: Pick<CompanyIntegration, 'id' | 'uiName' | 'event'>[];
+  }> {
+    if (!uuidUtils.isUUID(companyId)) {
+      throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
+    }
+
+    // Retrieve ExternalSystem & references to all CompanyIntegration records belonging to the company and which reference IntegrationTemplates which reference the ExternalSystem
+
+    // @TODO this should actually be query builder return
+    const integrationTemplateWhereInput: Prisma.IntegrationTemplateWhereInput =
+      {
+        integrations: {
+          some: { companyId },
+        },
+      };
+
+    const systemWithIntegrations =
+      await this.prismaClient.externalSystem.findUniqueOrThrow({
+        where: { id: systemId },
         include: {
-          externalSystem: {
+          // IntegrationTemplate[]
+          srcFor: {
+            where: integrationTemplateWhereInput,
+            // Pick<CompanyIntegration, 'id' | 'uiName' | 'event'>[]
             include: {
-              connectionRequirements: true,
-              srcFor: {
-                include: {
-                  integrations: { where: { companyId }, select: { id: true } },
+              integrations: {
+                where: {
+                  companyId,
+                },
+                select: {
+                  id: true,
+                  uiName: true,
+                  event: true,
                 },
               },
-              targetFor: {
-                include: {
-                  integrations: { where: { companyId }, select: { id: true } },
+            },
+          },
+          // IntegrationTemplate[]
+          targetFor: {
+            where: integrationTemplateWhereInput,
+            // Pick<CompanyIntegration, 'id' | 'uiName' | 'event'>[]
+            include: {
+              integrations: {
+                where: {
+                  companyId,
+                },
+                select: {
+                  id: true,
+                  uiName: true,
+                  event: true,
                 },
               },
             },
@@ -103,8 +282,32 @@ export class CateringCompanyDbHandlerService
         },
       });
 
-    // uniqueness constraint on companyId, systemId
-    return record;
+    const { srcFor, targetFor } = systemWithIntegrations;
+    // Get required CompanyIntegrations to update (must maintain split between src and target)
+    const srcForCompanyIntegrations = srcFor.flatMap((s) => s.integrations);
+    const targetForCompanyIntegrations = targetFor.flatMap(
+      (t) => t.integrations,
+    );
+
+    // Create record and connect
+    await this.prismaClient.companyExternalSystemConnection.create({
+      data: {
+        companyId,
+        systemId,
+        systemUIName: systemWithIntegrations.uiName,
+        srcFor: {
+          connect: srcForCompanyIntegrations,
+        },
+        targetFor: {
+          connect: targetForCompanyIntegrations,
+        },
+      },
+    });
+
+    return {
+      srcFor: srcForCompanyIntegrations,
+      targetFor: targetForCompanyIntegrations,
+    };
   }
 
   async createExternalSystemConnectionAsset(
@@ -149,5 +352,39 @@ export class CateringCompanyDbHandlerService
         },
       });
     return record;
+  }
+
+  async getAsset(
+    companyId: string,
+    systemRequirementType: $Enums.ExternalSystemConnectionRequirementType,
+    systemName: $Enums.ExternalSystemName,
+  ) {
+    const asset =
+      await this.prismaClient.companyExternalSystemConnectionAsset.findFirst({
+        where: {
+          companyId,
+          systemRequirement: {
+            type: systemRequirementType,
+            system: {
+              name: systemName,
+            },
+          },
+        },
+        include: { connection: true },
+      });
+    return asset;
+  }
+
+  // Append companyId (ONE) to each caterer record and create many CompanyCaterer records
+  async createCaterers(
+    companyId: string,
+    caterers: Pick<
+      Prisma.CompanyCatererCreateManyInput,
+      'name' | 'ezCaterId' | 'storeNumber'
+    >[],
+  ) {
+    await this.prismaClient.companyCaterer.createMany({
+      data: caterers.map((caterer) => ({ ...caterer, companyId })),
+    });
   }
 }

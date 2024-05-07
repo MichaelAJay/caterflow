@@ -5,6 +5,7 @@ import { UserDbHandlerModule } from '../external-handlers/db-handlers/user-db-ha
 import { CompanyRoleAndPermissionDbHandlerModule } from '../external-handlers/db-handlers/company-role-and-permission-db-handler/company-role-and-permission-db-handler.module';
 import { CompanyMapperService } from './company-mapper.service';
 import { SecretManagerModule } from '../external-handlers/secret-manager/secret-manager.module';
+import { EzcaterHandlerModule } from '../external-handlers/ezcater-handler/ezcater-handler.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { SecretManagerModule } from '../external-handlers/secret-manager/secret-
     UserDbHandlerModule,
     CompanyRoleAndPermissionDbHandlerModule,
     SecretManagerModule,
+    EzcaterHandlerModule,
   ],
   providers: [CateringCompanyService, CompanyMapperService],
   exports: [CateringCompanyService],

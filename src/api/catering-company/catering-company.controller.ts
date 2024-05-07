@@ -97,6 +97,18 @@ export class CateringCompanyController implements ICateringCompanyController {
     );
   }
 
+  @Get('connections')
+  @SetMetadata('permissions', [$Enums.PermissionName.ManageIntegrations])
+  async getConnections(
+    @Req() req: AuthenticatedRequestForCompanyUser,
+    @Query() query: IBuildGetCompanyIntegrationListArgs,
+  ) {
+    return this.cateringCompanyService.retrieveIntegrationsList(
+      req.user.companyId,
+      Object.keys(query).length > 0 ? query : undefined,
+    );
+  }
+
   @Get('integration-assets')
   async getIntegrationAssets() {
     throw new NotImplementedException('Not implemented');
@@ -117,7 +129,7 @@ export class CateringCompanyController implements ICateringCompanyController {
     );
   }
 
-  @Post('connection/:systemId')
+  @Post('connection/create-from/:systemId')
   @SetMetadata('permissions', [$Enums.PermissionName.ManageIntegrations])
   async createExternalSystemConnection(
     @Req() req: AuthenticatedRequestForCompanyUser,
@@ -127,7 +139,6 @@ export class CateringCompanyController implements ICateringCompanyController {
     return this.cateringCompanyService.createExternalSystemConnection(
       user.companyId,
       systemId,
-      user.id,
     );
   }
 
@@ -146,6 +157,17 @@ export class CateringCompanyController implements ICateringCompanyController {
       requirementId,
       payload,
       user.id,
+    );
+  }
+
+  @Post('import-caterers-from-ezcater')
+  @SetMetadata('permissions', [$Enums.PermissionName.ManageCompanyCaterers])
+  async importCompanyCaterersFromEzCater(
+    @Req() req: AuthenticatedRequestForCompanyUser,
+  ) {
+    const { user } = req;
+    return this.cateringCompanyService.importCaterersFromEzCater(
+      user.companyId,
     );
   }
 }

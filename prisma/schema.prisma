@@ -86,11 +86,12 @@ model CompanyExternalSystemConnectionAsset {
 }
 
 model CompanyIntegration {
-  id                 String @id @default(uuid())
-  companyId          String @map("company_id")
-  templateId         Int    @map("template_id")
-  srcConnectionId    String @map("src_connection_id")
-  targetConnectionId String @map("target_connection_id")
+  id                 String  @id @default(uuid())
+  companyId          String  @map("company_id")
+  templateId         Int     @map("template_id")
+  uiName             String  @map("ui_name")
+  srcConnectionId    String? @map("src_connection_id")
+  targetConnectionId String? @map("target_connection_id")
 
   event        IntegrationEvent
   isConfigured Boolean          @default(false) @map("is_configured")
@@ -102,8 +103,8 @@ model CompanyIntegration {
   template         IntegrationTemplate                  @relation(fields: [templateId], references: [id])
   assets           CompanyIntegrationRequirementAsset[]
   creator          User                                 @relation(fields: [creatorId], references: [id])
-  srcConnection    CompanyExternalSystemConnection      @relation("SrcCompanyConnection", fields: [srcConnectionId], references: [id])
-  targetConnection CompanyExternalSystemConnection      @relation("TargetCompanyConnection", fields: [targetConnectionId], references: [id])
+  srcConnection    CompanyExternalSystemConnection?     @relation("SrcCompanyConnection", fields: [srcConnectionId], references: [id])
+  targetConnection CompanyExternalSystemConnection?     @relation("TargetCompanyConnection", fields: [targetConnectionId], references: [id])
 
   @@unique([companyId, templateId], name: "company_integration_unique", map: "company_integration_unique")
   @@index([companyId])
@@ -221,6 +222,8 @@ model IntegrationRequirement {
 
 model IntegrationTemplate {
   id             Int              @id @default(autoincrement())
+  uiName         String
+  uiDescription  String
   event          IntegrationEvent
   srcSystemId    Int              @map("src_system_id")
   srcEntity      ExternalEntity   @map("src_entity")
@@ -354,6 +357,7 @@ enum IntegrationRequirementType {
 
 enum PermissionName {
   ManageBilling
+  ManageCompanyCaterers
   ManageCompanyRoles
   ManageIntegrations
   ManageIntegrationAssets

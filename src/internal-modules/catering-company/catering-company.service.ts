@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { ICateringCompanyService } from './interfaces/catering-company.service.interface';
 import { CateringCompanyDbHandlerService } from '../external-handlers/db-handlers/catering-company-db-handler/catering-company-db-handler.service';
 import { UserDbHandlerService } from '../external-handlers/db-handlers/user-db-handler/user-db-handler.service';
@@ -7,6 +11,9 @@ import { CompanyMapperService } from './company-mapper.service';
 import { IBuildGetCompanyIntegrationListArgs } from '../external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
 import { SecretManagerService } from '../external-handlers/secret-manager/secret-manager.service';
 import { SystemIntegrationDbHandlerService } from '../external-handlers/db-handlers/catering-company-db-handler/system-integration-db-handler.service';
+import { EzCaterHandlerService } from '../external-handlers/ezcater-handler/ezcater-handler.service';
+import { $Enums } from '@prisma/client';
+import { ERROR_CODE } from 'src/common/codes/error-codes';
 
 @Injectable()
 export class CateringCompanyService implements ICateringCompanyService {
@@ -17,6 +24,7 @@ export class CateringCompanyService implements ICateringCompanyService {
     private readonly companyRoleDbHandler: CompanyRoleAndPermissionDbHandlerService,
     private readonly companyMapper: CompanyMapperService,
     private readonly secretManager: SecretManagerService,
+    private readonly ezCaterHandler: EzCaterHandlerService,
   ) {}
 
   /**
@@ -67,6 +75,11 @@ export class CateringCompanyService implements ICateringCompanyService {
     // return records;
   }
 
+  async retrieveConnectionsList(
+    companyId: string,
+    query?: IBuildGetCompanyIntegrationListArgs,
+  ): Promise<any> {}
+
   async createIntegration(
     companyId: string,
     templateId: number,
@@ -78,47 +91,15 @@ export class CateringCompanyService implements ICateringCompanyService {
     //   creatorId,
     // );
     // return results;
+    // When an integration is created, it's quite similar to how an external system connection is created, but in reverse
   }
 
-  async createExternalSystemConnection(
-    companyId: string,
-    systemId: number,
-    userId: string,
-  ) {
-    // It may be better to actually get the integration templates first, so I know what potential integrationr ecorsd to connect the connection to
-
+  async createExternalSystemConnection(companyId: string, systemId: number) {
     const record =
       await this.cateringCompanyDbHandler.createExternalSystemConnection(
         companyId,
         systemId,
-        userId,
-        [],
-        [],
       );
-
-    // When the external system connection record is created, then it should be connected to all company integrations that require it.
-    // To retrieve all company integrations that require it...
-    const { externalSystem } = record;
-    const { srcFor, targetFor } = externalSystem;
-
-    const srcForIntegrationIds = srcFor.flatMap((e) =>
-      e.integrations.map(({ id }) => id),
-    );
-    const targetForIntegrationIds = targetFor.flatMap((e) =>
-      e.integrations.map(({ id }) => id),
-    );
-
-    // Update all CompanyIntegration - either the srcConnectionId or the targetConnectionId
-    await this.cateringCompanyDbHandler.updateIntegrations(
-      srcForIntegrationIds,
-      {
-        srcConnectionId: record.id,
-      },
-    );
-    await this.cateringCompanyDbHandler.updateIntegrations(
-      targetForIntegrationIds,
-      { targetConnectionId: record.id },
-    );
 
     return record;
   }
@@ -130,7 +111,7 @@ export class CateringCompanyService implements ICateringCompanyService {
     value: any,
     userId: string,
   ) {
-    // since the behavior will differ based on whether the requirement is a secret, we must first get the requirement
+    // Since the behavior will differ based on whether the requirement is a secret, we must first get the requirement
     const { uiName, uiDescription, isSecret } =
       await this.systemIntegrationDbHandler.getExternalSystemRequirement(
         requirementId,
@@ -176,5 +157,47 @@ export class CateringCompanyService implements ICateringCompanyService {
     }
 
     return;
+  }
+
+  async importCaterersFromEzCater(companyId: string) {
+    // Retrieve company asset
+    const asset = await this.cateringCompanyDbHandler.getAsset(
+      companyId,
+      $Enums.ExternalSystemConnectionRequirementType.API_KEY,
+      $Enums.ExternalSystemName.EZ_CATER,
+    );
+
+    if (asset == null) {
+      throw new NotFoundException('Company asset not found');
+    }
+
+    // Confirm ezCater connection is ready to use
+    if (!asset.connection.isFullyConfigured) {
+      throw new ConflictException(
+        ERROR_CODE.IncompleteExternalSystemConnection,
+      );
+    }
+
+    if (!asset.connection.isTested) {
+      // First, try to carry out test. If it doesn't pass, throw an error
+    }
+
+    // Retrieve caterer records
+    const caterers = await this.ezCaterHandler.getCaterers(companyId, asset.id);
+    if (caterers.length === 0) {
+      // Ensure user understands that no caterer records were returned
+      return 'No caterers to add';
+    }
+
+    // This could potentially cause a problem because caterers is iterated over once here, and again in the db handler
+    // How many is "a lot" of caterers for a company, and what's the performance impact of that?
+    await this.cateringCompanyDbHandler.createCaterers(
+      companyId,
+      caterers.map((caterer) => ({
+        name: caterer.name,
+        storeNumber: caterer.storeNumber,
+        ezCaterId: caterer.uuid,
+      })),
+    );
   }
 }

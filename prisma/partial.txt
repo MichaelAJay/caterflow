@@ -1,0 +1,71 @@
+model CompanyIntegration {
+  id                 String @id @default(uuid())
+  companyId          String
+  templateId         Int
+  srcConnectionId    String
+  targetConnectionId String
+
+  event        IntegrationEvent
+  isConfigured Boolean          @default(false)
+  isActive     Boolean          @default(false)
+  creatorId    String           
+  createdAt    DateTime         @default(now())
+
+  company          CateringCompany                      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  template         IntegrationTemplate                  @relation(fields: [templateId], references: [id])
+  assets           CompanyIntegrationRequirementAsset[]
+  creator          User                                 @relation(fields: [creatorId], references: [id])
+  srcConnection    CompanyExternalSystemConnection      @relation("SrcCompanyConnection", fields: [srcConnectionId], references: [id])
+  targetConnection CompanyExternalSystemConnection      @relation("TargetCompanyConnection", fields: [targetConnectionId], references: [id])
+
+  @@unique([companyId, templateId], name: "company_integration_unique", map: "company_integration_unique")
+  @@index([companyId])
+}
+
+model CompanyExternalSystemConnection {
+  id                String  @id @default(uuid())
+  companyId         String
+  systemId          Int
+  systemUIName      String
+  isFullyConfigured Boolean @default(false)
+  isTested          Boolean @default(false)
+
+  company          CateringCompany                        @relation(fields: [companyId], references: [id])
+  connectionAssets CompanyExternalSystemConnectionAsset[]
+  externalSystem   ExternalSystem                         @relation(fields: [systemId], references: [id])
+  srcFor           CompanyIntegration[]                   @relation("SrcCompanyConnection")
+  targetFor        CompanyIntegration[]                   @relation("TargetCompanyConnection")
+
+  @@unique([companyId, systemId])
+  @@index([companyId])
+}
+
+model IntegrationTemplate {
+  id             Int              @id @default(autoincrement())
+  event          IntegrationEvent
+  srcSystemId    Int
+  srcEntity      ExternalEntity
+  targetSystemId Int
+  targetEntity   ExternalEntity
+
+  srcSystem    ExternalSystem           @relation("SourceSystemRelation", fields: [srcSystemId], references: [id])
+  targetSystem ExternalSystem           @relation("TargetSystemRelation", fields: [targetSystemId], references: [id])
+  requirements IntegrationRequirement[]
+  integrations CompanyIntegration[]
+
+  @@unique([event, targetSystemId, targetEntity])
+}
+
+model ExternalSystem {
+  id            Int                @id @default(autoincrement())
+  name          ExternalSystemName
+  uiName        String
+  uiDescription String
+
+  companyConnections     CompanyExternalSystemConnection[]
+  connectionRequirements ExternalSystemConnectionRequirement[]
+  srcFor                 IntegrationTemplate[]                 @relation("SourceSystemRelation")
+  targetFor              IntegrationTemplate[]                 @relation("TargetSystemRelation")
+
+  @@unique([name])
+}
