@@ -14,6 +14,7 @@ import { SystemIntegrationDbHandlerService } from '../external-handlers/db-handl
 import { EzCaterHandlerService } from '../external-handlers/ezcater-handler/ezcater-handler.service';
 import { $Enums } from '@prisma/client';
 import { ERROR_CODE } from 'src/common/codes/error-codes';
+import { CompanyExternalSystemService } from './company-external-system/company-external-system.service';
 
 @Injectable()
 export class CateringCompanyService implements ICateringCompanyService {
@@ -25,6 +26,7 @@ export class CateringCompanyService implements ICateringCompanyService {
     private readonly companyMapper: CompanyMapperService,
     private readonly secretManager: SecretManagerService,
     private readonly ezCaterHandler: EzCaterHandlerService,
+    private readonly companyExternalSystemService: CompanyExternalSystemService,
   ) {}
 
   /**
@@ -152,6 +154,10 @@ export class CateringCompanyService implements ICateringCompanyService {
     if (requirementMap.every((requirement) => requirement.isRequirementMet)) {
       // Prepare to update connection record with 'isFullyConfigured' true
       // Perform specific test
+      const testResult = await this.companyExternalSystemService.testConnection(
+        companyId,
+        externalSystem,
+      );
       // If specific test passes, update connection record with isFullyConfigured true and isTested true
       // This should cascade all the way up to company integrations
     }
@@ -160,6 +166,8 @@ export class CateringCompanyService implements ICateringCompanyService {
   }
 
   async importCaterersFromEzCater(companyId: string) {
+    // Check cache first
+
     // Retrieve company asset
     const asset = await this.cateringCompanyDbHandler.getAsset(
       companyId,
