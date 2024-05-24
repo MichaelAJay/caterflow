@@ -11,6 +11,13 @@ import { validateAllCaterersQuery } from './validators/all-caterers.ezcater-vali
 import { CatererResponse } from './types/ezcater-response/caterer.response.type';
 import { validateGetOrderByIdQuery } from './validators/get-order-by-id.ezcater-validator';
 import { EzCaterCompleteOrder } from './types/ezcater-response/get-order-by-id.response.type';
+import {
+  allCaterers,
+  allSubscribers,
+  getOrderById,
+  menusByCaterer,
+} from './gql/queries';
+import { createSubscriber, createSubscription } from './gql/mutations';
 
 @Injectable()
 export class EzCaterApiService {
@@ -30,24 +37,12 @@ export class EzCaterApiService {
       // Will throw if undefined
       this.customConfigService.getEnvVariable<string>('ezCaterApiUrl');
 
-    const gqlBasePath = join(__dirname, './gql');
-    console.log(gqlBasePath);
-
-    // Read queries into class properties
-    this.getSubscribersQuery = getQueryStringFromFile('all-subscribers.gql');
-    this.createSubscriberMutation = getQueryStringFromFile(
-      'create-subscriber.gql',
-    );
-    this.createSubscriptionMutation = getQueryStringFromFile(
-      'create-subscription.gql',
-    );
-    this.getCaterersQuery = getQueryStringFromFile('all-caterers.gql');
-    this.getMenusQuery = getQueryStringFromFile('menus-by-caterer.gql');
-    this.getOrderQuery = getQueryStringFromFile('get-order-by-id.gql');
-
-    function getQueryStringFromFile(fileName: string): string {
-      return readFileSync(join(gqlBasePath, fileName), 'utf8');
-    }
+    this.getSubscribersQuery = allSubscribers;
+    this.createSubscriberMutation = createSubscriber;
+    this.createSubscriptionMutation = createSubscription;
+    this.getCaterersQuery = allCaterers;
+    this.getMenusQuery = menusByCaterer;
+    this.getOrderQuery = getOrderById;
   }
 
   private async getClientWithAuth(
