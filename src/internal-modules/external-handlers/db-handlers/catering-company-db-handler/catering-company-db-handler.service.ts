@@ -17,6 +17,36 @@ import { ERROR_CODE } from '../../../../common/codes/error-codes';
 export class CateringCompanyDbHandlerService
   implements ICateringCompanyDbHandler
 {
+  async updateExternalySystemConnection(
+    connectionId: string,
+    updates: Pick<
+      Prisma.CompanyExternalSystemConnectionUncheckedUpdateInput,
+      'isFullyConfigured' | 'isTested'
+    >,
+    // include?: Prisma.CompanyExternalSystemConnectionInclude,
+  ) {
+    await this.prismaClient.companyExternalSystemConnection.update({
+      where: { id: connectionId },
+      data: updates,
+    });
+  }
+
+  async getAllCompanyIntegrationsByConnectionId(connectionId: string) {
+    await this.prismaClient.companyIntegration.findMany({
+      where: {
+        OR: [
+          { srcConnectionId: connectionId },
+          { targetConnectionId: connectionId },
+        ],
+      },
+    });
+
+    // Include the connections
+    // For each company integration
+    // If ci.source is fully configured AND ci.target is fully configured, update company integration
+    // Or provide a general status update
+  }
+
   constructor(
     private readonly cateringCompanyDbQueryBuilder: CateringCompanyDbQueryBuilderService,
     private readonly systemIntegrationDbQueryBuilder: SystemIntegrationDbQueryBuilderService,

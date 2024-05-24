@@ -12,6 +12,7 @@ const FULL_PERMISSIONS: Record<$Enums.PermissionName, string> = {
   ManageIntegrationAssets: 'Manage Integration Assets',
   ManageRoleAssignments: 'Manage Role Assignments',
   ViewMessages: 'View Messages',
+  ManageCompanyCaterers: 'Manage Company Caterers',
 };
 
 export const ALL_PERMISSIONS = Object.keys(

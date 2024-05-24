@@ -31,6 +31,7 @@ export class EzCaterApiService {
       this.customConfigService.getEnvVariable<string>('ezCaterApiUrl');
 
     const gqlBasePath = join(__dirname, './gql');
+    console.log(gqlBasePath);
 
     // Read queries into class properties
     this.getSubscribersQuery = getQueryStringFromFile('all-subscribers.gql');

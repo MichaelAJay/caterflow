@@ -1,0 +1,132 @@
+import { Injectable } from '@nestjs/common';
+import { CompanyExternalSystemService } from '../company-external-system/company-external-system.service';
+import { IBuildGetCompanyIntegrationListArgs } from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
+import { CateringCompanyDbHandlerService } from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/catering-company-db-handler.service';
+import { SecretManagerService } from 'src/internal-modules/external-handlers/secret-manager/secret-manager.service';
+import { SystemIntegrationDbHandlerService } from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/system-integration-db-handler.service';
+import { Prisma } from '@prisma/client';
+
+@Injectable()
+export class CompanyIntegrationAndConnectionService {
+  constructor(
+    private readonly companyExternalSystemService: CompanyExternalSystemService,
+    private readonly cateringCompanyDbHandler: CateringCompanyDbHandlerService,
+    private readonly systemIntegrationDbHandler: SystemIntegrationDbHandlerService,
+    private readonly secretManager: SecretManagerService,
+  ) {}
+
+  // methodz
+  async retrieveIntegrationsList(
+    companyId: string,
+    query?: IBuildGetCompanyIntegrationListArgs,
+  ) {}
+
+  async retrieveConnectionsList(
+    companyId: string,
+    query?: IBuildGetCompanyIntegrationListArgs,
+  ) {}
+
+  async createIntegration(
+    companyId: string,
+    templateId: number,
+    creatorId: string,
+  ) {}
+
+  async updateIntegration(
+    integrationId: string,
+    updates: Pick<
+      Prisma.CompanyIntegrationUncheckedUpdateManyInput,
+      'srcConnectionId' | 'targetConnectionId' | 'isConfigured' | 'isActive'
+    >,
+  ) {
+    const res = await this.cateringCompanyDbHandler.updateIntegrations(
+      [integrationId],
+      updates,
+    );
+    return res;
+  }
+
+  async createExternalSystemConnection(companyId: string, systemId: number) {
+    return this.cateringCompanyDbHandler.createExternalSystemConnection(
+      companyId,
+      systemId,
+    );
+  }
+
+  async updateExternalSystemConnection(
+    connectionId: string,
+    updates: Pick<
+      Prisma.CompanyExternalSystemConnectionUncheckedUpdateInput,
+      'isFullyConfigured' | 'isTested'
+    >,
+  ) {
+    await this.cateringCompanyDbHandler.updateExternalySystemConnection(
+      connectionId,
+      updates,
+    );
+  }
+
+  async createExternalSystemConnectionAsset(
+    companyId: string,
+    connectionId: string,
+    requirementId: number,
+    value: any,
+  ) {
+    // Since the behavior will differ based on whether the requirement is a secret, we must first get the requirement
+    const { uiName, uiDescription, isSecret } =
+      await this.systemIntegrationDbHandler.getExternalSystemRequirement(
+        requirementId,
+      );
+
+    // Create record
+    const asset =
+      await this.cateringCompanyDbHandler.createExternalSystemConnectionAsset(
+        companyId,
+        connectionId,
+        requirementId,
+        uiName,
+        uiDescription,
+        isSecret ? undefined : value,
+      );
+
+    // If secret, store secret
+    if (isSecret) {
+      const secretName = this.secretManager.getSecretName(companyId, asset.id);
+      await this.secretManager.upsertSecret(secretName, Buffer.from(value));
+    }
+
+    // Determine if asset means that the matching connection is fully configured
+    // This should be a method in another class
+    const { connection } = asset;
+    const { externalSystem } = connection;
+    const { connectionRequirements } = externalSystem;
+    const requirementMap = connectionRequirements.map((requirement) => {
+      return {
+        uiName: requirement.uiName,
+        uiDescription: requirement.uiDescription,
+        isSecret: requirement.isSecret,
+        isRequirementMet: requirement.companyConnectionAssets.length > 0,
+      };
+    });
+
+    // are all requirements met?
+    if (requirementMap.every((requirement) => requirement.isRequirementMet)) {
+      const testResult = await this.companyExternalSystemService.testConnection(
+        companyId,
+        externalSystem,
+      );
+      // If specific test passes, update connection record with isFullyConfigured true and isTested true
+      if (testResult) {
+        await this.updateExternalSystemConnection(connectionId, {
+          isFullyConfigured: true,
+          isTested: true,
+        });
+
+        // Now, if the external system connection was updated, it's possible that any integrations associated with this connection are also ready to use
+        // We need all external services for which the connection is the source or the target
+        // We need to check all of those external services and we need to return any which are eligible for activating
+      }
+      // This should cascade all the way up to company integrations
+    }
+  }
+}

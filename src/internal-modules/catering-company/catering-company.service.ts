@@ -15,6 +15,7 @@ import { EzCaterHandlerService } from '../external-handlers/ezcater-handler/ezca
 import { $Enums } from '@prisma/client';
 import { ERROR_CODE } from 'src/common/codes/error-codes';
 import { CompanyExternalSystemService } from './company-external-system/company-external-system.service';
+import { CompanyIntegrationAndConnectionService } from './company-integration-and-connection/company-integration-and-connection.service';
 
 @Injectable()
 export class CateringCompanyService implements ICateringCompanyService {
@@ -27,6 +28,7 @@ export class CateringCompanyService implements ICateringCompanyService {
     private readonly secretManager: SecretManagerService,
     private readonly ezCaterHandler: EzCaterHandlerService,
     private readonly companyExternalSystemService: CompanyExternalSystemService,
+    private readonly companyIntegrationAndConnectionService: CompanyIntegrationAndConnectionService,
   ) {}
 
   /**
@@ -98,7 +100,7 @@ export class CateringCompanyService implements ICateringCompanyService {
 
   async createExternalSystemConnection(companyId: string, systemId: number) {
     const record =
-      await this.cateringCompanyDbHandler.createExternalSystemConnection(
+      await this.companyIntegrationAndConnectionService.createExternalSystemConnection(
         companyId,
         systemId,
       );
@@ -113,54 +115,12 @@ export class CateringCompanyService implements ICateringCompanyService {
     value: any,
     userId: string,
   ) {
-    // Since the behavior will differ based on whether the requirement is a secret, we must first get the requirement
-    const { uiName, uiDescription, isSecret } =
-      await this.systemIntegrationDbHandler.getExternalSystemRequirement(
-        requirementId,
-      );
-
-    // Create record
-    const asset =
-      await this.cateringCompanyDbHandler.createExternalSystemConnectionAsset(
-        companyId,
-        connectionId,
-        requirementId,
-        uiName,
-        uiDescription,
-        isSecret ? undefined : value,
-      );
-
-    // If secret, store secret
-    if (isSecret) {
-      const secretName = this.secretManager.getSecretName(companyId, asset.id);
-      await this.secretManager.upsertSecret(secretName, Buffer.from(value));
-    }
-
-    // Determine if asset means that the matching connection is fully configured
-    // This should be a method in another class
-    const { connection } = asset;
-    const { externalSystem } = connection;
-    const { connectionRequirements } = externalSystem;
-    const requirementMap = connectionRequirements.map((requirement) => {
-      return {
-        uiName: requirement.uiName,
-        uiDescription: requirement.uiDescription,
-        isSecret: requirement.isSecret,
-        isRequirementMet: requirement.companyConnectionAssets.length > 0,
-      };
-    });
-
-    // are all requirements met?
-    if (requirementMap.every((requirement) => requirement.isRequirementMet)) {
-      // Prepare to update connection record with 'isFullyConfigured' true
-      // Perform specific test
-      const testResult = await this.companyExternalSystemService.testConnection(
-        companyId,
-        externalSystem,
-      );
-      // If specific test passes, update connection record with isFullyConfigured true and isTested true
-      // This should cascade all the way up to company integrations
-    }
+    await this.companyIntegrationAndConnectionService.createExternalSystemConnectionAsset(
+      companyId,
+      connectionId,
+      requirementId,
+      value,
+    );
 
     return;
   }
