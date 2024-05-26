@@ -253,91 +253,30 @@ export class CateringCompanyDbHandlerService
   async createExternalSystemConnection(
     companyId: string,
     systemId: number,
-  ): Promise<{
-    srcFor: Pick<CompanyIntegration, 'id' | 'uiName' | 'event'>[];
-    targetFor: Pick<CompanyIntegration, 'id' | 'uiName' | 'event'>[];
-  }> {
+  ): Promise<any> {
     if (!uuidUtils.isUUID(companyId)) {
       throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
     }
 
-    // Retrieve ExternalSystem & references to all CompanyIntegration records belonging to the company and which reference IntegrationTemplates which reference the ExternalSystem
-
-    // @TODO this should actually be query builder return
-    const integrationTemplateWhereInput: Prisma.IntegrationTemplateWhereInput =
-      {
-        integrations: {
-          some: { companyId },
-        },
-      };
-
     const systemWithIntegrations =
       await this.prismaClient.externalSystem.findUniqueOrThrow({
         where: { id: systemId },
-        include: {
-          // IntegrationTemplate[]
-          srcFor: {
-            where: integrationTemplateWhereInput,
-            // Pick<CompanyIntegration, 'id' | 'uiName' | 'event'>[]
-            include: {
-              integrations: {
-                where: {
-                  companyId,
-                },
-                select: {
-                  id: true,
-                  uiName: true,
-                  event: true,
-                },
-              },
-            },
-          },
-          // IntegrationTemplate[]
-          targetFor: {
-            where: integrationTemplateWhereInput,
-            // Pick<CompanyIntegration, 'id' | 'uiName' | 'event'>[]
-            include: {
-              integrations: {
-                where: {
-                  companyId,
-                },
-                select: {
-                  id: true,
-                  uiName: true,
-                  event: true,
-                },
-              },
-            },
-          },
+        select: {
+          uiName: true,
         },
       });
 
-    const { srcFor, targetFor } = systemWithIntegrations;
-    // Get required CompanyIntegrations to update (must maintain split between src and target)
-    const srcForCompanyIntegrations = srcFor.flatMap((s) => s.integrations);
-    const targetForCompanyIntegrations = targetFor.flatMap(
-      (t) => t.integrations,
-    );
-
     // Create record and connect
-    await this.prismaClient.companyExternalSystemConnection.create({
-      data: {
-        companyId,
-        systemId,
-        systemUIName: systemWithIntegrations.uiName,
-        srcFor: {
-          connect: srcForCompanyIntegrations,
+    const record =
+      await this.prismaClient.companyExternalSystemConnection.create({
+        data: {
+          companyId,
+          systemId,
+          systemUIName: systemWithIntegrations.uiName,
         },
-        targetFor: {
-          connect: targetForCompanyIntegrations,
-        },
-      },
-    });
+      });
 
-    return {
-      srcFor: srcForCompanyIntegrations,
-      targetFor: targetForCompanyIntegrations,
-    };
+    return record;
   }
 
   async createExternalSystemConnectionAsset(
