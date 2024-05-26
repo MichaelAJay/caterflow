@@ -276,6 +276,8 @@ export class CateringCompanyDbHandlerService
         },
       });
 
+    // Could throw unique error
+
     return record;
   }
 
