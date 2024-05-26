@@ -31,4 +31,11 @@ export class IntegrationsService {
      */
     return records;
   }
+
+  async getExternalSystemById(externalSystemId: number, companyId?: string) {
+    return this.systemIntegrationDbHandler.getExternalSystem(
+      externalSystemId,
+      companyId,
+    );
+  }
 }

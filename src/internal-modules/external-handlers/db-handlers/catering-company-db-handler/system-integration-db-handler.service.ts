@@ -41,6 +41,23 @@ export class SystemIntegrationDbHandlerService
     return records;
   }
 
+  async getExternalSystem(externalSystemId: number, companyId?: string) {
+    const record = await this.prismaClient.externalSystem.findUniqueOrThrow({
+      where: {
+        id: externalSystemId,
+      },
+      include: {
+        companyConnections: {
+          where: { companyId },
+        },
+        connectionRequirements: true,
+        srcFor: true,
+        targetFor: true,
+      },
+    });
+    return record;
+  }
+
   async getExternalSystemRequirement(requirementId: number) {
     const record =
       await this.prismaClient.externalSystemConnectionRequirement.findUniqueOrThrow(
