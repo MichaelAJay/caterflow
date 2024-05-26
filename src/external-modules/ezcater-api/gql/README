@@ -1,0 +1,2 @@
+The .gql files serve as reference, and are not including in the build.
+To add/update/remove a query or mutation, perform that action on the associated .gql file and also update the associated TS constant (found in either mutations.ts or queries.ts)

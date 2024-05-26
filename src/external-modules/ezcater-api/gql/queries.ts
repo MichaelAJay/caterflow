@@ -1,4 +1,8 @@
-export const allCaterers = `query allCaterers {
+/**
+ * To change a query, change the corresponding .gql file and paste it in here.
+ */
+export const queries = {
+  allCaterers: `query allCaterers {
     caterers {
       live
       name
@@ -16,9 +20,8 @@ export const allCaterers = `query allCaterers {
         zip
       }
     }
-  }`;
-
-export const allSubscribers = `query allSubscribers {
+  }`,
+  allSubscribers: `query allSubscribers {
     subscribers {
       id
       name
@@ -31,9 +34,8 @@ export const allSubscribers = `query allSubscribers {
       }
     }
   }
-  `;
-
-export const getOrderById = `query getOrderById($orderId: String!) {
+  `,
+  getOrderById: `query getOrderById($orderId: String!) {
     order(id: $orderId) {
       deliveryId
       uuid
@@ -163,9 +165,8 @@ export const getOrderById = `query getOrderById($orderId: String!) {
         }
       }
     }
-  }`;
-
-export const menusByCaterer = `query menusbyCaterer($catererId: String!) {
+  }`,
+  menusByCaterer: `query menusbyCaterer($catererId: String!) {
     menu(catererId: $catererId) {
       endDate
       id
@@ -173,4 +174,5 @@ export const menusByCaterer = `query menusbyCaterer($catererId: String!) {
       startDate
     }
   }
-  `;
+  `,
+};

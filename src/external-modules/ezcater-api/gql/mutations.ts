@@ -1,4 +1,8 @@
-export const createSubscriber = `mutation createSubscriber($webhookUrl: String) {
+/**
+ * To change a mutation, change the corresponding .gql file and paste it in here.
+ */
+export const mutations = {
+  createSubscriber: `mutation createSubscriber($webhookUrl: String) {
     createSubscriber(
       subscriberParams: { name: "Caterflow Integration", webhookUrl: $webhookUrl }
     ) {
@@ -10,9 +14,8 @@ export const createSubscriber = `mutation createSubscriber($webhookUrl: String) 
       }
     }
   }
-  `;
-
-export const createSubscription = `mutation createSubscription(
+  `,
+  createSubscription: `mutation createSubscription(
     $subscriberId: String!
     $eventKey: String!
     $catererId: String!
@@ -34,4 +37,5 @@ export const createSubscription = `mutation createSubscription(
       }
     }
   }
-  `;
+  `,
+};

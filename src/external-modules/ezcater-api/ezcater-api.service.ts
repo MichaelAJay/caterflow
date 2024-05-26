@@ -1,7 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { readFileSync } from 'fs';
 import { GraphQLClient } from 'graphql-request';
-import { join } from 'path';
 import { CloudSecretManagerError } from 'src/common/errors/cloud_secret_manager.error';
 import { SecretManagerService } from 'src/internal-modules/external-handlers/secret-manager/secret-manager.service';
 import { CustomConfigService } from 'src/utility/services/custom-config/custom-config.service';
@@ -11,13 +9,8 @@ import { validateAllCaterersQuery } from './validators/all-caterers.ezcater-vali
 import { CatererResponse } from './types/ezcater-response/caterer.response.type';
 import { validateGetOrderByIdQuery } from './validators/get-order-by-id.ezcater-validator';
 import { EzCaterCompleteOrder } from './types/ezcater-response/get-order-by-id.response.type';
-import {
-  allCaterers,
-  allSubscribers,
-  getOrderById,
-  menusByCaterer,
-} from './gql/queries';
-import { createSubscriber, createSubscription } from './gql/mutations';
+import { queries } from './gql/queries';
+import { mutations } from './gql/mutations';
 
 @Injectable()
 export class EzCaterApiService {
@@ -37,12 +30,12 @@ export class EzCaterApiService {
       // Will throw if undefined
       this.customConfigService.getEnvVariable<string>('ezCaterApiUrl');
 
-    this.getSubscribersQuery = allSubscribers;
-    this.createSubscriberMutation = createSubscriber;
-    this.createSubscriptionMutation = createSubscription;
-    this.getCaterersQuery = allCaterers;
-    this.getMenusQuery = menusByCaterer;
-    this.getOrderQuery = getOrderById;
+    this.getSubscribersQuery = queries.allSubscribers;
+    this.createSubscriberMutation = mutations.createSubscriber;
+    this.createSubscriptionMutation = mutations.createSubscription;
+    this.getCaterersQuery = queries.allCaterers;
+    this.getMenusQuery = queries.menusByCaterer;
+    this.getOrderQuery = queries.getOrderById;
   }
 
   private async getClientWithAuth(
