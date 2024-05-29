@@ -49,7 +49,7 @@ export class EzCaterApiService {
 
     // Throws CloudSecretManagerError if secret not found
     // Should be handled in whatever calls getClientWithAuth
-    const authToken = await this.secretManager.getSecret(secretName);
+    const authToken = await this.secretManager.getSecret(secretName, false);
     const client = new GraphQLClient(this.ezCaterApiUrl, {
       headers: { Authorization: authToken },
     });
@@ -128,7 +128,8 @@ export class EzCaterApiService {
   ): Promise<CatererResponse[]> {
     try {
       const client = await this.getClientWithAuth(companyId, companyAssetId);
-      const response = client.request(this.getCaterersQuery);
+      const response = await client.request(this.getCaterersQuery);
+      // Getting good response locally, but validation is failing
 
       // Validate
       if (!validateAllCaterersQuery(response)) {

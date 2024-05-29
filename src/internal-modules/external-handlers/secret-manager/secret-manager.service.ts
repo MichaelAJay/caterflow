@@ -28,9 +28,10 @@ export class SecretManagerService implements ISecretManager {
     return `CATERFLOW_${this.env === 'development' ? 'DEV' : 'PROD'}_${secretName}`;
   }
 
-  async getSecret(secretName: string): Promise<string> {
+  async getSecret(secretName: string, getFromLocal = true): Promise<string> {
     let secret;
-    if (this.isLocal) {
+    // Some local secrets are supposed to be stored on the cloud
+    if (this.isLocal && getFromLocal) {
       const secretPath = this.customConfigService.getEnvVariable<string>(
         `localPathToSecret[${secretName}]`,
       );

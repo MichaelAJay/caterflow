@@ -8,6 +8,7 @@ import { CloudSecretManagerError } from 'src/common/errors/cloud_secret_manager.
 @Injectable()
 export class GcpSecretManagerService implements IExternalSecretManager {
   private client: SecretManagerServiceClient;
+  private projectPrefix: string;
   private secretPrefix: string;
   private env: string;
   private product: string;
@@ -16,7 +17,8 @@ export class GcpSecretManagerService implements IExternalSecretManager {
     this.client = new SecretManagerServiceClient();
     const projectId =
       this.customConfigService.getEnvVariable<string>('googleProjectId');
-    this.secretPrefix = `projects/${projectId}/secrets`;
+    this.projectPrefix = `projects/${projectId}`;
+    this.secretPrefix = `${this.projectPrefix}/secrets`;
     this.env = this.customConfigService.getEnvVariable<string>('env');
     this.product = this.customConfigService.getEnvVariable<string>('product');
   }
@@ -47,25 +49,27 @@ export class GcpSecretManagerService implements IExternalSecretManager {
     try {
       await this.client.getSecret({ name: secretPath });
     } catch (err) {
-      if (err.code === 5) {
-        await this.client.createSecret({
-          parent: this.secretPrefix,
-          secretId: secretName,
-          secret: {
-            replication: {
-              automatic: {},
+      // For some reason, I thought the error code was 5 - but I'm getting "PERMISSION DENIED", and an added message of "(or it may not exist)"
+      if (err.code === 5 || err.code === 7) {
+        await this.client
+          .createSecret({
+            parent: this.projectPrefix,
+            secretId: secretName,
+            secret: {
+              replication: {
+                automatic: {},
+              },
+              labels: {
+                product: this.product,
+                env: this.env,
+              },
             },
-            labels: {
-              product: this.product,
-              env: this.env,
-            },
-          },
-        });
-      } else if (err.code === 7) {
-        // Log this - it's a server error.
-        throw new InternalServerErrorException(
-          'Server is not appropriately configured to secure secret',
-        );
+          })
+          .catch((reason) => {
+            console.error(reason);
+            // secretmanager.secrets.create denied for resource 'projects/ezman-386111'
+            throw reason;
+          });
       } else {
         // This should be logging instead
         Sentry.captureException(err);
