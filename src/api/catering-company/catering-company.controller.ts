@@ -103,7 +103,7 @@ export class CateringCompanyController implements ICateringCompanyController {
     @Req() req: AuthenticatedRequestForCompanyUser,
     @Query() query: IBuildGetCompanyIntegrationListArgs,
   ) {
-    return this.cateringCompanyService.retrieveIntegrationsList(
+    return this.cateringCompanyService.retrieveConnectionsList(
       req.user.companyId,
       Object.keys(query).length > 0 ? query : undefined,
     );
@@ -150,6 +150,10 @@ export class CateringCompanyController implements ICateringCompanyController {
     @Param('requirementId', ParseIntPipe) requirementId: number,
     @Body() payload: any,
   ) {
+    if (typeof payload === 'undefined') {
+      throw new BadRequestException('Payload undefined.');
+    }
+
     const { user } = req;
     return this.cateringCompanyService.createExternalSystemConnectionAsset(
       user.companyId,
@@ -157,6 +161,18 @@ export class CateringCompanyController implements ICateringCompanyController {
       requirementId,
       payload,
       user.id,
+    );
+  }
+
+  @Get('connection/:connectionId')
+  @SetMetadata('permissions', [$Enums.PermissionName.ManageIntegrationAssets])
+  async getConnectionById(
+    @Req() req: AuthenticatedRequestForCompanyUser,
+    @Param('connectionId') connectionId: string,
+  ) {
+    return this.cateringCompanyService.getConnection(
+      req.user.companyId,
+      connectionId,
     );
   }
 

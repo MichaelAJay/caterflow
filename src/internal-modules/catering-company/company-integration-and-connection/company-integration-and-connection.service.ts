@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { CompanyExternalSystemService } from '../company-external-system/company-external-system.service';
 import { IBuildGetCompanyIntegrationListArgs } from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
 import { CateringCompanyDbHandlerService } from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/catering-company-db-handler.service';
@@ -78,6 +82,8 @@ export class CompanyIntegrationAndConnectionService {
         requirementId,
       );
 
+    // return;
+
     // Create record
     const asset =
       await this.cateringCompanyDbHandler.createExternalSystemConnectionAsset(
@@ -86,25 +92,43 @@ export class CompanyIntegrationAndConnectionService {
         requirementId,
         uiName,
         uiDescription,
+        isSecret,
         isSecret ? undefined : value,
       );
 
     // If secret, store secret
     if (isSecret) {
+      // const { secret } =
+
       const secretName = this.secretManager.getSecretName(companyId, asset.id);
-      await this.secretManager.upsertSecret(secretName, Buffer.from(value));
+      console.log('*** SECRET NAME *** ', secretName);
+
+      try {
+        const secretBuffer = Buffer.from(value);
+        await this.secretManager.upsertSecret(secretName, secretBuffer);
+        // Do something special if this fails. Maybe it should be handled in upsertSecret.
+      } catch (err) {
+        // Should delete created asset
+        // Should log
+        throw new InternalServerErrorException(
+          'The secret could not be stored. The asset has been deleted. Please try again, and if it does not work, contact support.',
+        );
+      }
     }
 
     // Determine if asset means that the matching connection is fully configured
     // This should be a method in another class
     const { connection } = asset;
     const { externalSystem } = connection;
+
+    // connectionRequirements is the system specification
     const { connectionRequirements } = externalSystem;
     const requirementMap = connectionRequirements.map((requirement) => {
       return {
         uiName: requirement.uiName,
         uiDescription: requirement.uiDescription,
         isSecret: requirement.isSecret,
+        // If the requirement is associate with a company connection asset, then the requirement is met
         isRequirementMet: requirement.companyConnectionAssets.length > 0,
       };
     });

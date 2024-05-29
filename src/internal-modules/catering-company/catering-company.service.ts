@@ -19,6 +19,12 @@ import { CompanyIntegrationAndConnectionService } from './company-integration-an
 
 @Injectable()
 export class CateringCompanyService implements ICateringCompanyService {
+  async getConnection(companyId: string, connectionId: string) {
+    // First, try to carry out test. If it doesn't pass, throw an error
+    const record =
+      await this.cateringCompanyDbHandler.getConnection(connectionId);
+    return record;
+  }
   constructor(
     private readonly cateringCompanyDbHandler: CateringCompanyDbHandlerService,
     private readonly systemIntegrationDbHandler: SystemIntegrationDbHandlerService,
@@ -82,7 +88,13 @@ export class CateringCompanyService implements ICateringCompanyService {
   async retrieveConnectionsList(
     companyId: string,
     query?: IBuildGetCompanyIntegrationListArgs,
-  ): Promise<any> {}
+  ): Promise<any> {
+    const records = await this.cateringCompanyDbHandler.getConnections(
+      companyId,
+      query,
+    );
+    return records;
+  }
 
   async createIntegration(
     companyId: string,

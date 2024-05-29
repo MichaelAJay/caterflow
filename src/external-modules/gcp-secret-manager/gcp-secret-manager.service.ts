@@ -1,5 +1,5 @@
 import { SecretManagerServiceClient } from '@google-cloud/secret-manager';
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { CustomConfigService } from '../../utility/services/custom-config/custom-config.service';
 import { IExternalSecretManager } from './interfaces/external-secret-manager.service.interface';
 import * as Sentry from '@sentry/node';
@@ -61,7 +61,13 @@ export class GcpSecretManagerService implements IExternalSecretManager {
             },
           },
         });
+      } else if (err.code === 7) {
+        // Log this - it's a server error.
+        throw new InternalServerErrorException(
+          'Server is not appropriately configured to secure secret',
+        );
       } else {
+        // This should be logging instead
         Sentry.captureException(err);
         throw err;
       }
