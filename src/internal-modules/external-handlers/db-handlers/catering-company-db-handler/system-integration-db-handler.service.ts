@@ -17,12 +17,8 @@ export class SystemIntegrationDbHandlerService
     const records = await this.prismaClient.integrationTemplate.findMany({
       ...this.systemIntegrationDbQueryBuilder.buildFindManyQuery(queryInput),
       include: {
-        srcSystem: {
-          include: { connectionRequirements: true },
-        },
-        targetSystem: {
-          include: { connectionRequirements: true },
-        },
+        srcSystem: true,
+        targetSystem: true,
         requirements: true,
       },
     });
@@ -35,7 +31,6 @@ export class SystemIntegrationDbHandlerService
       include: {
         srcFor: true,
         targetFor: true,
-        connectionRequirements: true,
       },
     });
     return records;
@@ -50,22 +45,10 @@ export class SystemIntegrationDbHandlerService
         companyConnections: {
           where: { companyId },
         },
-        connectionRequirements: true,
         srcFor: true,
         targetFor: true,
       },
     });
-    return record;
-  }
-
-  async getExternalSystemRequirement(requirementId: number) {
-    const record =
-      await this.prismaClient.externalSystemConnectionRequirement.findUniqueOrThrow(
-        {
-          where: { id: requirementId },
-        },
-      );
-
     return record;
   }
 }

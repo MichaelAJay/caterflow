@@ -92,14 +92,8 @@ export class CateringCompanyDbHandlerService
   async getConnection(
     connectionId: string,
     include: Prisma.CompanyExternalSystemConnectionInclude = {
-      connectionAssets: true,
       srcFor: true, // CompanyIntegration[]
       targetFor: true, // CompanyIntegration[]
-      externalSystem: {
-        include: {
-          connectionRequirements: true,
-        },
-      },
     },
   ) {
     if (!uuidUtils.isUUID(connectionId)) {
@@ -124,115 +118,7 @@ export class CateringCompanyDbHandlerService
       throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
     }
 
-    const template =
-      await this.prismaClient.integrationTemplate.findUniqueOrThrow({
-        where: { id: templateId },
-        include: {
-          // ExternalSystem
-          srcSystem: {
-            include: {
-              // CompanyConnections[] - max length should be 1
-              companyConnections: {
-                where: { companyId },
-              },
-              connectionRequirements: true,
-            },
-          },
-          // ExternalSystem
-          targetSystem: {
-            include: {
-              // CompanyConnections[] - max length should be 1
-              companyConnections: {
-                where: { companyId },
-              },
-              connectionRequirements: true,
-            },
-          },
-        },
-      });
-
-    const { srcSystem, targetSystem } = template;
-    // Confirm uniqueness of srcSystem/targetSystem companyConnections - there should only be one per company
-    if (
-      srcSystem.companyConnections.length > 1 ||
-      targetSystem.companyConnections.length > 1
-    ) {
-      // Log and throw
-      throw new Error('Uniqueness constraint has been validated');
-    }
-
-    const input: Prisma.CompanyIntegrationUncheckedCreateInput = {
-      companyId,
-      templateId,
-      uiName: template.uiName,
-      event: template.event,
-      creatorId,
-    };
-
-    // If the srcSystem is referenced by a CompanyExternalSystemConnection record with matching companyId, add that connection
-    if (srcSystem.companyConnections.length === 1) {
-      input.srcConnectionId = srcSystem.companyConnections[0].id;
-    } else {
-      // Otherwise create it
-    }
-
-    // If the targetSystem is referenced by a CompanyExternalSystemConnection record with matching companyId, add that connection
-    if (targetSystem.companyConnections.length === 1) {
-      input.targetConnectionId = targetSystem.companyConnections[0].id;
-    }
-
-    await this.prismaClient.companyIntegration.create({
-      data: input,
-    });
-
-    const srcConnectionArg:
-      | Prisma.CompanyExternalSystemConnectionCreateNestedOneWithoutTargetForInput
-      | undefined = {
-      connectOrCreate: {
-        where: {
-          companyId_systemId: { companyId, systemId: template.srcSystemId },
-        },
-        create: {
-          companyId,
-          systemId: template.srcSystemId,
-          systemUIName: template.srcSystem.uiName,
-          isFullyConfigured:
-            template.srcSystem.connectionRequirements.length === 0,
-          isTested: template.srcSystem.connectionRequirements.length === 0,
-        },
-      },
-    };
-
-    const targetConnectionArg: Prisma.CompanyExternalSystemConnectionCreateNestedOneWithoutTargetForInput =
-      {
-        connectOrCreate: {
-          where: {
-            companyId_systemId: {
-              companyId,
-              systemId: template.targetSystemId,
-            },
-          },
-          create: {
-            companyId,
-            systemId: template.targetSystemId,
-            systemUIName: template.targetSystem.uiName,
-            isFullyConfigured:
-              template.targetSystem.connectionRequirements.length === 0,
-          },
-        },
-      };
-
-    await this.prismaClient.companyIntegration.create({
-      data: {
-        companyId,
-        templateId,
-        uiName: template.uiName,
-        event: template.event,
-        creatorId,
-        srcConnection: srcConnectionArg as any,
-        targetConnection: targetConnectionArg as any,
-      },
-    });
+    // Huge refactor - rewrite
   }
 
   async updateIntegrations(
@@ -310,125 +196,21 @@ export class CateringCompanyDbHandlerService
     if (!uuidUtils.isUUID(companyId)) {
       throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
     }
-
-    const systemWithIntegrations =
-      await this.prismaClient.externalSystem.findUniqueOrThrow({
-        where: { id: systemId },
-        include: {
-          connectionRequirements: {
-            select: { id: true },
-          },
-        },
-      });
-
-    try {
-      // Create record and connect
-      const record =
-        await this.prismaClient.companyExternalSystemConnection.create({
-          data: {
-            companyId,
-            systemId,
-            systemUIName: systemWithIntegrations.uiName,
-            isFullyConfigured:
-              systemWithIntegrations.connectionRequirements.length === 0,
-            isTested:
-              systemWithIntegrations.connectionRequirements.length === 0,
-          },
-        });
-
-      // Could throw unique error
-
-      return record;
-    } catch (err) {
-      if (err instanceof PrismaClientKnownRequestError) {
-        if (err.code === KNOWN_PRISMA_ERROR_MAP.UniquenessConstraintViolation) {
-          throw new ConflictException({
-            message: `Your company has already configured the ${systemWithIntegrations.uiName} connection.`,
-            code: ERROR_CODE.Conflict,
-          });
-        }
-      }
-
-      throw err;
-    }
   }
 
-  async createExternalSystemConnectionAsset(
-    companyId: string,
-    connectionId: string,
-    systemRequirementId: number,
-    uiName: string,
-    uiDescription: string,
-    isSecret: boolean,
-    value?: Prisma.InputJsonValue,
-  ) {
-    try {
-      const input: Prisma.CompanyExternalSystemConnectionAssetUncheckedCreateInput =
-        {
-          companyId,
-          connectionId,
-          systemRequirementId,
-          uiName,
-          uiDescription,
-          isSecret,
-        };
-
-      if (value) {
-        input.value = value;
-      }
-      const record =
-        await this.prismaClient.companyExternalSystemConnectionAsset.create({
-          data: input,
-          include: {
-            connection: {
-              include: {
-                externalSystem: {
-                  include: {
-                    connectionRequirements: {
-                      include: {
-                        companyConnectionAssets: {
-                          where: { companyId },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        });
-      return record;
-    } catch (err) {
-      if (err instanceof PrismaClientKnownRequestError) {
-        if (err.code === KNOWN_PRISMA_ERROR_MAP.UniquenessConstraintViolation) {
-          throw new ConflictException({
-            message: `Your company has already created this connection asset. You may update it if you like.`,
-            code: ERROR_CODE.Conflict,
-          });
-        }
-      }
-
-      throw err;
-    }
-  }
-
-  async getAsset(
-    companyId: string,
-    systemRequirementType: $Enums.ExternalSystemConnectionRequirementType,
-    systemName: $Enums.ExternalSystemName,
-  ) {
+  /**
+   *
+   * @param companyId
+   * @param systemName
+   * @returns
+   */
+  async getAssets(companyId: string, systemName: $Enums.ExternalSystemName) {
     const asset =
-      await this.prismaClient.companyExternalSystemConnectionAsset.findFirst({
+      await this.prismaClient.companyExternalSystemConnection.findFirst({
         where: {
           companyId,
-          systemRequirement: {
-            type: systemRequirementType,
-            system: {
-              name: systemName,
-            },
-          },
         },
-        include: { connection: true },
+        select: { assets: true },
       });
     return asset;
   }

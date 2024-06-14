@@ -155,13 +155,14 @@ export class CateringCompanyController implements ICateringCompanyController {
     }
 
     const { user } = req;
-    return this.cateringCompanyService.createExternalSystemConnectionAsset(
-      user.companyId,
-      connectionId,
-      requirementId,
-      payload,
-      user.id,
-    );
+    // Requires refactor - this is now more of an update than it is a create
+    // return this.cateringCompanyService.createExternalSystemConnectionAsset(
+    //   user.companyId,
+    //   connectionId,
+    //   requirementId,
+    //   payload,
+    //   user.id,
+    // );
   }
 
   @Get('connection/:connectionId')

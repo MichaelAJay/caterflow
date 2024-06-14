@@ -120,32 +120,41 @@ export class CateringCompanyService implements ICateringCompanyService {
     return record;
   }
 
-  async createExternalSystemConnectionAsset(
-    companyId: string,
-    connectionId: string,
-    requirementId: number,
-    value: any,
-    userId: string,
-  ) {
-    await this.companyIntegrationAndConnectionService.createExternalSystemConnectionAsset(
-      companyId,
-      connectionId,
-      requirementId,
-      value,
-    );
+  /**
+   * Due to the refactor June 13, 2024, there's no service-level creation of connection assets
+   * Connection assets are in a JSON attribute directly on the connection
+   */
+  // async createExternalSystemConnectionAsset(
+  //   companyId: string,
+  //   connectionId: string,
+  //   requirementId: number,
+  //   value: any,
+  //   userId: string,
+  // ) {
+  //   await this.companyIntegrationAndConnectionService.createExternalSystemConnectionAsset(
+  //     companyId,
+  //     connectionId,
+  //     requirementId,
+  //     value,
+  //   );
 
-    return;
-  }
+  //   return;
+  // }
 
   async importCaterersFromEzCater(companyId: string) {
     // Check cache first
 
     // Retrieve company asset
-    const asset = await this.cateringCompanyDbHandler.getAsset(
+    const assets: any = await this.cateringCompanyDbHandler.getAssets(
       companyId,
-      $Enums.ExternalSystemConnectionRequirementType.API_KEY,
       $Enums.ExternalSystemName.EZ_CATER,
     );
+
+    if (assets == null) {
+      throw new Error('TODO: Change');
+    }
+
+    const asset = assets['API_KEY'];
 
     if (asset == null) {
       throw new NotFoundException('Company asset not found');
