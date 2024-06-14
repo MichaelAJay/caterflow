@@ -12,16 +12,17 @@ datasource db {
 
 // MODELS (A-Z)
 model CateringCompany {
-  id                       String                                 @id @default(uuid())
+  id                       String                                        @id @default(uuid())
   name                     String
-  isActive                 Boolean                                @default(false) @map("is_active")
-  ownerId                  String                                 @unique @map("owner_id")
-  createdAt                DateTime                               @default(now()) @map("created_at")
-  updatedAt                DateTime                               @updatedAt @map("updated_at")
-  users                    User[]                                 @relation("company_users")
-  owner                    User                                   @relation("owner", fields: [ownerId], references: [id])
+  isActive                 Boolean                                       @default(false) @map("is_active")
+  ownerId                  String                                        @unique @map("owner_id")
+  createdAt                DateTime                                      @default(now()) @map("created_at")
+  updatedAt                DateTime                                      @updatedAt @map("updated_at")
+  users                    User[]                                        @relation("company_users")
+  owner                    User                                          @relation("owner", fields: [ownerId], references: [id])
   caterers                 CompanyCaterer[]
   connectionAssets         CompanyExternalSystemConnectionAsset[]
+  connectionWebhookAssets  CompanyExternalSystemConnectionWebhookAsset[]
   externalSystemConnection CompanyExternalSystemConnection[]
   integrations             CompanyIntegration[]
   integrationAssets        CompanyIntegrationRequirementAsset[]
@@ -56,11 +57,12 @@ model CompanyExternalSystemConnection {
   isFullyConfigured Boolean @default(false) @map("is_fully_configured")
   isTested          Boolean @default(false) @map("is_tested")
 
-  company          CateringCompany                        @relation(fields: [companyId], references: [id])
-  connectionAssets CompanyExternalSystemConnectionAsset[]
-  externalSystem   ExternalSystem                         @relation(fields: [systemId], references: [id])
-  srcFor           CompanyIntegration[]                   @relation("SrcCompanyConnection")
-  targetFor        CompanyIntegration[]                   @relation("TargetCompanyConnection")
+  company                 CateringCompany                               @relation(fields: [companyId], references: [id])
+  connectionAssets        CompanyExternalSystemConnectionAsset[]
+  connectionWebhookAssets CompanyExternalSystemConnectionWebhookAsset[]
+  externalSystem          ExternalSystem                                @relation(fields: [systemId], references: [id])
+  srcFor                  CompanyIntegration[]                          @relation("SrcCompanyConnection")
+  targetFor               CompanyIntegration[]                          @relation("TargetCompanyConnection")
 
   @@unique([companyId, systemId])
   @@index([companyId])
@@ -69,12 +71,12 @@ model CompanyExternalSystemConnection {
 
 model CompanyExternalSystemConnectionAsset {
   id                  String  @id @default(uuid())
-  companyId           String
+  companyId           String  @map("company_id")
   connectionId        String  @map("connection_id")
   systemRequirementId Int     @map("system_requirement_id")
-  uiName              String
-  uiDescription       String
-  isSecret            Boolean
+  uiName              String  @map("ui_name")
+  uiDescription       String  @map("ui_description")
+  isSecret            Boolean @map("is_secret")
   value               Json? // If value is null, then asset is secret
 
   company           CateringCompany                     @relation(fields: [companyId], references: [id])
@@ -86,13 +88,28 @@ model CompanyExternalSystemConnectionAsset {
   @@map("company_external_system_connection_assets")
 }
 
+model CompanyExternalSystemConnectionWebhookAsset {
+  id                  String @id @default(uuid())
+  companyId           String @map("company_id")
+  connectionId        String @map("connection_id")
+  systemRequirementId Int    @map("system_requirement_id")
+
+  company                  CateringCompany                            @relation(fields: [companyId], references: [id])
+  connection               CompanyExternalSystemConnection            @relation(fields: [connectionId], references: [id])
+  systemWebhookRequirement ExternalSystemConnectionWebhookRequirement @relation(fields: [systemRequirementId], references: [id])
+
+  @@unique([companyId, systemRequirementId])
+  @@index([connectionId])
+  @@map("company_external_system_connection_webhook_assets")
+}
+
 model CompanyIntegration {
-  id                 String  @id @default(uuid())
-  companyId          String  @map("company_id")
-  templateId         Int     @map("template_id")
-  uiName             String  @map("ui_name")
-  srcConnectionId    String? @map("src_connection_id")
-  targetConnectionId String? @map("target_connection_id")
+  id                 String @id @default(uuid())
+  companyId          String @map("company_id")
+  templateId         Int    @map("template_id")
+  uiName             String @map("ui_name")
+  srcConnectionId    String @map("src_connection_id")
+  targetConnectionId String @map("target_connection_id")
 
   event        IntegrationEvent
   isConfigured Boolean          @default(false) @map("is_configured")
@@ -104,8 +121,8 @@ model CompanyIntegration {
   template         IntegrationTemplate                  @relation(fields: [templateId], references: [id])
   assets           CompanyIntegrationRequirementAsset[]
   creator          User                                 @relation(fields: [creatorId], references: [id])
-  srcConnection    CompanyExternalSystemConnection?     @relation("SrcCompanyConnection", fields: [srcConnectionId], references: [id])
-  targetConnection CompanyExternalSystemConnection?     @relation("TargetCompanyConnection", fields: [targetConnectionId], references: [id])
+  srcConnection    CompanyExternalSystemConnection      @relation("SrcCompanyConnection", fields: [srcConnectionId], references: [id])
+  targetConnection CompanyExternalSystemConnection      @relation("TargetCompanyConnection", fields: [targetConnectionId], references: [id])
 
   @@unique([companyId, templateId], name: "company_integration_unique", map: "company_integration_unique")
   @@index([companyId])
@@ -180,10 +197,11 @@ model ExternalSystem {
   uiName        String             @map("ui_name")
   uiDescription String             @map("ui_description")
 
-  companyConnections     CompanyExternalSystemConnection[]
-  connectionRequirements ExternalSystemConnectionRequirement[]
-  srcFor                 IntegrationTemplate[]                 @relation("SourceSystemRelation")
-  targetFor              IntegrationTemplate[]                 @relation("TargetSystemRelation")
+  companyConnections            CompanyExternalSystemConnection[]
+  connectionRequirements        ExternalSystemConnectionRequirement[]
+  connectionWebhookRequirements ExternalSystemConnectionWebhookRequirement[]
+  srcFor                        IntegrationTemplate[]                        @relation("SourceSystemRelation")
+  targetFor                     IntegrationTemplate[]                        @relation("TargetSystemRelation")
 
   @@unique([name])
   @@map("external_systems")
@@ -203,6 +221,21 @@ model ExternalSystemConnectionRequirement {
 
   @@unique([externalSystemId, type])
   @@map("external_system_connection_requirements")
+}
+
+model ExternalSystemConnectionWebhookRequirement {
+  id               Int                                            @id @default(autoincrement())
+  externalSystemId Int                                            @map("external_system_id")
+  type             ExternalSystemConnectionWebhookRequirementType
+  uiName           String                                         @map("ui_name")
+  uiDescription    String                                         @map("ui_description")
+  isSecret         Boolean                                        @map("is_secret")
+
+  companyConnectionWebhookAssets CompanyExternalSystemConnectionWebhookAsset[]
+  system                         ExternalSystem                                @relation(fields: [externalSystemId], references: [id])
+
+  @@unique([externalSystemId, type])
+  @@map("external_system_connection_webhook_requirements")
 }
 
 model IntegrationRequirement {
@@ -332,6 +365,10 @@ enum ExternalEntity {
 enum ExternalSystemConnectionRequirementType {
   API_KEY
   USERNAME
+}
+
+enum ExternalSystemConnectionWebhookRequirementType {
+  WEBHOOK_SECRET
 }
 
 enum ExternalSystemName {

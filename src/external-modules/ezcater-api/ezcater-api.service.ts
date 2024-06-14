@@ -129,14 +129,13 @@ export class EzCaterApiService {
     try {
       const client = await this.getClientWithAuth(companyId, companyAssetId);
       const response = await client.request(this.getCaterersQuery);
-      // Getting good response locally, but validation is failing
 
       // Validate
       if (!validateAllCaterersQuery(response)) {
         throw new Error('Validation error');
       }
 
-      return response.data.caterers;
+      return response.caterers;
     } catch (err) {
       throw err;
     }

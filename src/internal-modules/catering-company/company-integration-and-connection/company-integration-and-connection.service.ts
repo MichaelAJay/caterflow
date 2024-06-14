@@ -19,7 +19,7 @@ export class CompanyIntegrationAndConnectionService {
     private readonly secretManager: SecretManagerService,
   ) {}
 
-  // methodz
+  // methods
   async retrieveIntegrationsList(
     companyId: string,
     query?: IBuildGetCompanyIntegrationListArgs,
@@ -141,6 +141,8 @@ export class CompanyIntegrationAndConnectionService {
       );
       // If specific test passes, update connection record with isFullyConfigured true and isTested true
       if (testResult) {
+        // Carry out connection initializations
+
         await this.updateExternalSystemConnection(connectionId, {
           isFullyConfigured: true,
           isTested: true,

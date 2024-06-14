@@ -62,6 +62,7 @@ export class CompanyExternalSystemService {
           );
         }
 
+        // Specify required properties
         const apiKeyAsset = usefulMap.get(
           $Enums.ExternalSystemConnectionRequirementType.API_KEY,
         );
@@ -80,4 +81,6 @@ export class CompanyExternalSystemService {
         throw new Error(`Invalid external system ${externalSystemName}`);
     }
   }
+
+  async initializeConnection();
 }

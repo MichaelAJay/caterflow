@@ -1,0 +1,16 @@
+A CompanyExternalSystemConnection is an image of an ExternalSystem record, with the only data difference
+that the Connection record references the ExternalSystem and the Company.
+
+When a Connection record is created, it is based entirely on the ExternalSystem record.
+
+This extends to its assets,  but each of which maps to an external system's requirements,
+with the exception that each asset has a 'status', and may have a value.
+
+connection.assets = externalSystem.requirements.map(requirement => ({
+    ...requirement,
+    status: 'UNCONFIGURED'
+}))
+
+This raises a small issue, because secret assets now no longer have unique identifiers.
+However, since they belong to the connection, the secret name could be something along the lines of:
+`${connectionId}/${asset.type}`

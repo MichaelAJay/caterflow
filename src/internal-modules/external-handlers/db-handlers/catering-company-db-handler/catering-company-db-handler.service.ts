@@ -3,12 +3,7 @@ import { ICateringCompanyDbHandler } from './interfaces/catering-company-db-hand
 import { CateringCompanyDbQueryBuilderService } from './catering-company-db-query-builder.service';
 import { PrismaClientService } from '../../../../external-modules/prisma-client/prisma-client.service';
 import { SystemIntegrationDbQueryBuilderService } from './system-integration-db-query-builder.service';
-import {
-  $Enums,
-  CateringCompany,
-  CompanyIntegration,
-  Prisma,
-} from '@prisma/client';
+import { $Enums, CateringCompany, Prisma } from '@prisma/client';
 import uuidUtils from '../../../../utility/functions/uuid-utils';
 import { InvalidUUIDError } from '../../../../common/errors/invalid_uuid.error';
 import { ERROR_CODE } from '../../../../common/codes/error-codes';
@@ -140,6 +135,7 @@ export class CateringCompanyDbHandlerService
               companyConnections: {
                 where: { companyId },
               },
+              connectionRequirements: true,
             },
           },
           // ExternalSystem
@@ -149,6 +145,7 @@ export class CateringCompanyDbHandlerService
               companyConnections: {
                 where: { companyId },
               },
+              connectionRequirements: true,
             },
           },
         },
@@ -175,6 +172,8 @@ export class CateringCompanyDbHandlerService
     // If the srcSystem is referenced by a CompanyExternalSystemConnection record with matching companyId, add that connection
     if (srcSystem.companyConnections.length === 1) {
       input.srcConnectionId = srcSystem.companyConnections[0].id;
+    } else {
+      // Otherwise create it
     }
 
     // If the targetSystem is referenced by a CompanyExternalSystemConnection record with matching companyId, add that connection
@@ -184,6 +183,55 @@ export class CateringCompanyDbHandlerService
 
     await this.prismaClient.companyIntegration.create({
       data: input,
+    });
+
+    const srcConnectionArg:
+      | Prisma.CompanyExternalSystemConnectionCreateNestedOneWithoutTargetForInput
+      | undefined = {
+      connectOrCreate: {
+        where: {
+          companyId_systemId: { companyId, systemId: template.srcSystemId },
+        },
+        create: {
+          companyId,
+          systemId: template.srcSystemId,
+          systemUIName: template.srcSystem.uiName,
+          isFullyConfigured:
+            template.srcSystem.connectionRequirements.length === 0,
+          isTested: template.srcSystem.connectionRequirements.length === 0,
+        },
+      },
+    };
+
+    const targetConnectionArg: Prisma.CompanyExternalSystemConnectionCreateNestedOneWithoutTargetForInput =
+      {
+        connectOrCreate: {
+          where: {
+            companyId_systemId: {
+              companyId,
+              systemId: template.targetSystemId,
+            },
+          },
+          create: {
+            companyId,
+            systemId: template.targetSystemId,
+            systemUIName: template.targetSystem.uiName,
+            isFullyConfigured:
+              template.targetSystem.connectionRequirements.length === 0,
+          },
+        },
+      };
+
+    await this.prismaClient.companyIntegration.create({
+      data: {
+        companyId,
+        templateId,
+        uiName: template.uiName,
+        event: template.event,
+        creatorId,
+        srcConnection: srcConnectionArg as any,
+        targetConnection: targetConnectionArg as any,
+      },
     });
   }
 
