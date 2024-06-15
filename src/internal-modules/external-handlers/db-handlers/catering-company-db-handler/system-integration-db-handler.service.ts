@@ -3,6 +3,9 @@ import { ISystemIntegrationDbHandler } from './interfaces/sytem-integration-db-h
 import { SystemIntegrationDbQueryBuilderService } from './system-integration-db-query-builder.service';
 import { PrismaClientService } from '../../../../external-modules/prisma-client/prisma-client.service';
 import { IBuildGetManyQueryInputArgs } from './interfaces/query-builder-args.interfaces';
+import { validateExternalSystemRequirements } from './validators/external_system_requirements.validator';
+import { ExternalSystemWithTypedRequirementsAndIntegrations } from './types/return/external-system.type';
+import { validateExternalSystems } from './validators/external-systems.validator';
 
 @Injectable()
 export class SystemIntegrationDbHandlerService
@@ -33,6 +36,12 @@ export class SystemIntegrationDbHandlerService
         targetFor: true,
       },
     });
+
+    if (!validateExternalSystems(records)) {
+      // log
+      throw new Error('Validation error');
+    }
+
     return records;
   }
 

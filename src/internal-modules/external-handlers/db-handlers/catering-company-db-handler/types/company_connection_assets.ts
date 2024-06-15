@@ -1,5 +1,5 @@
 import {
-  ExternalSystemRequirement,
+  ExternalSystemRequirements,
   Requirement,
 } from './external_systems_requirements';
 
@@ -12,7 +12,7 @@ type Asset = Requirement & {
 
 export type CompanyConnectionAsset = Partial<Record<RequirementType, Asset>>;
 
-export const ezCaterRequirements: ExternalSystemRequirement = {
+export const ezCaterRequirements: ExternalSystemRequirements = {
   API_KEY: {
     direction: 'OUT',
     isSecret: true,
@@ -27,7 +27,7 @@ export const ezCaterRequirements: ExternalSystemRequirement = {
   },
 };
 
-export const nutshellRequiremnts: ExternalSystemRequirement = {
+export const nutshellRequiremnts: ExternalSystemRequirements = {
   API_KEY: {
     direction: 'OUT',
     isSecret: true,

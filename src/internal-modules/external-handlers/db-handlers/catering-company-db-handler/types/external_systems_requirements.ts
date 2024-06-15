@@ -7,11 +7,11 @@ export type Requirement = {
   uiDescription: string;
 };
 
-export type ExternalSystemRequirement = Partial<
+export type ExternalSystemRequirements = Partial<
   Record<RequirementType, Requirement>
 >;
 
-export const ezCaterRequirements: ExternalSystemRequirement = {
+export const ezCaterRequirements: ExternalSystemRequirements = {
   API_KEY: {
     direction: 'OUT',
     isSecret: true,
@@ -26,7 +26,7 @@ export const ezCaterRequirements: ExternalSystemRequirement = {
   },
 };
 
-export const nutshellRequiremnts: ExternalSystemRequirement = {
+export const nutshellRequiremnts: ExternalSystemRequirements = {
   API_KEY: {
     direction: 'OUT',
     isSecret: true,

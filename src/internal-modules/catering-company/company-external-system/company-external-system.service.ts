@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { $Enums, ExternalSystem } from '@prisma/client';
 import { CompanyConnectionAsset } from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/types/company_connection_assets';
 import {
-  ExternalSystemRequirement,
+  ExternalSystemRequirements,
   Requirement,
   RequirementType,
 } from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/types/external_systems_requirements';
@@ -38,7 +38,7 @@ export class CompanyExternalSystemService {
   async testConnection(
     companyId: string,
     externalSystemName: $Enums.ExternalSystemName,
-    systemRequirements: ExternalSystemRequirement, // ALL system's requirements must be included
+    systemRequirements: ExternalSystemRequirements, // ALL system's requirements must be included
     companyConnectionAssets: CompanyConnectionAsset,
   ): Promise<boolean> {
     return true;
