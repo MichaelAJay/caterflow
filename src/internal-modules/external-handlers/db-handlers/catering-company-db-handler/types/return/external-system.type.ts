@@ -10,6 +10,6 @@ export type ExternalSystemWithTypedRequirements = Omit<
 
 export type ExternalSystemWithTypedRequirementsAndIntegrations =
   ExternalSystemWithTypedRequirements & {
-    // srcFor: IntegrationTemplate[];
-    // targetFor: IntegrationTemplate[];
+    srcFor: IntegrationTemplate[];
+    targetFor: IntegrationTemplate[];
   };

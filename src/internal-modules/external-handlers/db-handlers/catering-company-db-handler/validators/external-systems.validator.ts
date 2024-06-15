@@ -56,72 +56,78 @@ const externalSystemsSchema: JSONSchemaType<
         },
         additionalProperties: false,
       },
-      // srcFor: {
-      //   type: 'object',
-      //   properties: {
-      //     id: { type: 'number' },
-      //     uiName: { type: 'string' },
-      //     uiDescription: { type: 'string' },
-      //     event: {
-      //       type: 'string',
-      //       enum: Object.values($Enums.IntegrationEvent),
-      //     }, // $Enums.IntegrationEvent
-      //     srcSystemId: { type: 'number' },
-      //     srcEntity: {
-      //       type: 'string',
-      //       enum: Object.values($Enums.ExternalEntity),
-      //     }, // $Enums.ExternalEntity
-      //     targetSystemId: { type: 'number' },
-      //     targetEntity: {
-      //       type: 'string',
-      //       enum: Object.values($Enums.ExternalEntity),
-      //     }, // $Enums.ExternalEntity
-      //   },
-      //   required: [
-      //     'id',
-      //     'uiName',
-      //     'uiDescription',
-      //     'event',
-      //     'srcSystemId',
-      //     'srcEntity',
-      //     'targetSystemId',
-      //     'targetEntity',
-      //   ],
-      //   additionalPropertise: false,
-      // },
-      // targetFor: {
-      //   type: 'object',
-      //   properties: {
-      //     id: { type: 'number' },
-      //     uiName: { type: 'string' },
-      //     uiDescription: { type: 'string' },
-      //     event: {
-      //       type: 'string',
-      //       enum: Object.values($Enums.IntegrationEvent),
-      //     }, // $Enums.IntegrationEvent
-      //     srcSystemId: { type: 'number' },
-      //     srcEntity: {
-      //       type: 'string',
-      //       enum: Object.values($Enums.ExternalEntity),
-      //     }, // $Enums.ExternalEntity
-      //     targetSystemId: { type: 'number' },
-      //     targetEntity: {
-      //       type: 'string',
-      //       enum: Object.values($Enums.ExternalEntity),
-      //     }, // $Enums.ExternalEntity
-      //   },
-      //   required: [
-      //     'id',
-      //     'uiName',
-      //     'uiDescription',
-      //     'event',
-      //     'srcSystemId',
-      //     'srcEntity',
-      //     'targetSystemId',
-      //     'targetEntity',
-      //   ],
-      //   additionalPropertise: false,
-      // },
+      srcFor: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            id: { type: 'number' },
+            uiName: { type: 'string' },
+            uiDescription: { type: 'string' },
+            event: {
+              type: 'string',
+              enum: Object.values($Enums.IntegrationEvent),
+            }, // $Enums.IntegrationEvent
+            srcSystemId: { type: 'number' },
+            srcEntity: {
+              type: 'string',
+              enum: Object.values($Enums.ExternalEntity),
+            }, // $Enums.ExternalEntity
+            targetSystemId: { type: 'number' },
+            targetEntity: {
+              type: 'string',
+              enum: Object.values($Enums.ExternalEntity),
+            }, // $Enums.ExternalEntity
+          },
+          required: [
+            'id',
+            'uiName',
+            'uiDescription',
+            'event',
+            'srcSystemId',
+            'srcEntity',
+            'targetSystemId',
+            'targetEntity',
+          ],
+          additionalProperties: false,
+        },
+      },
+      targetFor: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            id: { type: 'number' },
+            uiName: { type: 'string' },
+            uiDescription: { type: 'string' },
+            event: {
+              type: 'string',
+              enum: Object.values($Enums.IntegrationEvent),
+            }, // $Enums.IntegrationEvent
+            srcSystemId: { type: 'number' },
+            srcEntity: {
+              type: 'string',
+              enum: Object.values($Enums.ExternalEntity),
+            }, // $Enums.ExternalEntity
+            targetSystemId: { type: 'number' },
+            targetEntity: {
+              type: 'string',
+              enum: Object.values($Enums.ExternalEntity),
+            }, // $Enums.ExternalEntity
+          },
+          required: [
+            'id',
+            'uiName',
+            'uiDescription',
+            'event',
+            'srcSystemId',
+            'srcEntity',
+            'targetSystemId',
+            'targetEntity',
+          ],
+          additionalProperties: false,
+        },
+      },
     },
     required: [
       'id',
@@ -129,8 +135,8 @@ const externalSystemsSchema: JSONSchemaType<
       'uiName',
       'uiDescription',
       'requirements',
-      // 'srcFor',
-      // 'targetFor',
+      'srcFor',
+      'targetFor',
     ],
     additionalProperties: false,
   },
