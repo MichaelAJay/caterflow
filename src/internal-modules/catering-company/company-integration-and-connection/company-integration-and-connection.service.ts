@@ -51,10 +51,18 @@ export class CompanyIntegrationAndConnectionService {
   }
 
   async createExternalSystemConnection(companyId: string, systemId: number) {
-    return this.cateringCompanyDbHandler.createExternalSystemConnection(
-      companyId,
-      systemId,
-    );
+    const record =
+      await this.cateringCompanyDbHandler.createExternalSystemConnection(
+        companyId,
+        systemId,
+      );
+
+    // If referenced system has 0 requirements, the connection will be fully configured
+    if (record.isFullyConfigured) {
+      // Test it
+    }
+
+    return record;
   }
 
   async updateExternalSystemConnection(

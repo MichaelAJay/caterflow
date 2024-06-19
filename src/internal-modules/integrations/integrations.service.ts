@@ -1,23 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { IBuildGetManyQueryInputArgs } from '../external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
 import { SystemIntegrationDbHandlerService } from '../external-handlers/db-handlers/catering-company-db-handler/system-integration-db-handler.service';
+import { IntegrationsMapperService } from './integrations-mapper.service';
 
 @Injectable()
 export class IntegrationsService {
   constructor(
     private readonly systemIntegrationDbHandler: SystemIntegrationDbHandlerService,
+    private readonly integrationsMapper: IntegrationsMapperService,
   ) {}
 
-  async getSystemIntegrations(
-    query?: IBuildGetManyQueryInputArgs,
-  ): Promise<any[]> {
+  async getSystemIntegrations(query?: IBuildGetManyQueryInputArgs) {
     const records =
       await this.systemIntegrationDbHandler.getSystemIntegrations(query);
-
-    /**
-     * @TODO map
-     *
-     */
 
     return records;
   }
@@ -26,10 +21,7 @@ export class IntegrationsService {
     const records =
       await this.systemIntegrationDbHandler.getExternalSystems(query);
 
-    /**
-     * @TODO map
-     */
-    return records;
+    return this.integrationsMapper.mapExternalSystemsForResponse(records);
   }
 
   async getExternalSystemById(externalSystemId: number, companyId?: string) {

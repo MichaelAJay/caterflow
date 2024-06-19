@@ -1,9 +1,8 @@
 import {
   ExternalSystemRequirements,
   Requirement,
+  RequirementType,
 } from './external_systems_requirements';
-
-export type RequirementType = 'API_KEY' | 'API_USERNAME' | 'WEBHOOK_SECRET';
 
 type Asset = Requirement & {
   status: 'UNCONFIGURED' | 'UNTESTED' | 'TEST_FAILED' | 'TEST_SUCCEEDED';
@@ -12,6 +11,7 @@ type Asset = Requirement & {
 
 export type CompanyConnectionAsset = Partial<Record<RequirementType, Asset>>;
 
+// These are just examples
 export const ezCaterRequirements: ExternalSystemRequirements = {
   API_KEY: {
     direction: 'OUT',

@@ -1,11 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ISystemIntegrationDbHandler } from './interfaces/sytem-integration-db-handler.service.interface';
 import { SystemIntegrationDbQueryBuilderService } from './system-integration-db-query-builder.service';
 import { PrismaClientService } from '../../../../external-modules/prisma-client/prisma-client.service';
 import { IBuildGetManyQueryInputArgs } from './interfaces/query-builder-args.interfaces';
-import { validateExternalSystemRequirements } from './validators/external_system_requirements.validator';
-import { ExternalSystemWithTypedRequirementsAndIntegrations } from './types/return/external-system.type';
-import { validateExternalSystems } from './validators/external-systems.validator';
+import {
+  ExternalSystemWithTypeRequirementsAndIntegrationsAndCompanyReference,
+  ExternalSystemWithTypedRequirementsAndIntegrations,
+} from './types/return/external-system.type';
+import {
+  validateFullExternalSystem,
+  validateExternalSystems,
+} from './validators/external-systems.validator';
 
 @Injectable()
 export class SystemIntegrationDbHandlerService
@@ -28,10 +33,15 @@ export class SystemIntegrationDbHandlerService
     return records;
   }
 
-  async getExternalSystems(queryInput?: IBuildGetManyQueryInputArgs) {
+  async getExternalSystems(
+    queryInput?: IBuildGetManyQueryInputArgs,
+  ): Promise<ExternalSystemWithTypedRequirementsAndIntegrations[]> {
     const records = await this.prismaClient.externalSystem.findMany({
       ...this.systemIntegrationDbQueryBuilder.buildFindManyQuery(queryInput),
       include: {
+        // These represent minor improvements on performance, but greatly conflate typings
+        // srcFor: { select: { uiName: true, uiDescription: true } },
+        // targetFor: { select: { uiName: true, uiDescription: true } },
         srcFor: true,
         targetFor: true,
       },
@@ -45,7 +55,10 @@ export class SystemIntegrationDbHandlerService
     return records;
   }
 
-  async getExternalSystem(externalSystemId: number, companyId?: string) {
+  async getExternalSystem(
+    externalSystemId: number,
+    companyId?: string,
+  ): Promise<ExternalSystemWithTypeRequirementsAndIntegrationsAndCompanyReference> {
     const record = await this.prismaClient.externalSystem.findUniqueOrThrow({
       where: {
         id: externalSystemId,
@@ -53,11 +66,25 @@ export class SystemIntegrationDbHandlerService
       include: {
         companyConnections: {
           where: { companyId },
+          select: { id: true },
         },
         srcFor: true,
         targetFor: true,
       },
     });
-    return record;
+
+    const { companyConnections, ...baseRecord } = record;
+    if (!validateFullExternalSystem(baseRecord)) {
+      // log
+      throw new InternalServerErrorException(
+        'Unexpected record validation error. Our team is aware of the problem.',
+      );
+    }
+
+    return {
+      ...baseRecord,
+      connectionId:
+        companyConnections.length > 0 ? companyConnections[0].id : undefined,
+    };
   }
 }

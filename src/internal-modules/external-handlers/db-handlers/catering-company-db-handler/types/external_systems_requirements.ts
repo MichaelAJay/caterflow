@@ -1,4 +1,12 @@
-export type RequirementType = 'API_KEY' | 'API_USERNAME' | 'WEBHOOK_SECRET';
+/**
+ * When new requirement types are added, add them to the array only
+ */
+export const requirementTypes = [
+  'API_KEY',
+  'API_USERNAME',
+  'WEBHOOK_SECRET',
+] as const;
+export type RequirementType = (typeof requirementTypes)[number];
 
 export type Requirement = {
   direction: 'IN' | 'OUT';
@@ -39,4 +47,10 @@ export const nutshellRequiremnts: ExternalSystemRequirements = {
     uiName: 'API Username',
     uiDescription: 'Username (email) to use to make request',
   },
+};
+
+export const validateRequirementType = (
+  requirementType: any,
+): requirementType is RequirementType => {
+  return requirementTypes.includes(requirementType);
 };

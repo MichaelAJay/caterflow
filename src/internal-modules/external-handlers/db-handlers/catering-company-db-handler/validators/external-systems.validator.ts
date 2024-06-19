@@ -1,13 +1,27 @@
 import { JSONSchemaType } from 'ajv';
-import { ExternalSystemWithTypedRequirementsAndIntegrations } from '../types/return/external-system.type';
+import {
+  ExternalSystemWithTypedRequirements,
+  ExternalSystemWithTypedRequirementsAndIntegrations,
+} from '../types/return/external-system.type';
 import ajvSingleton from 'src/system/singletons/ajv.singleton';
 import { $Enums } from '@prisma/client';
+import { Requirement } from '../types/external_systems_requirements';
 
-const externalSystemsSchema: JSONSchemaType<
-  ExternalSystemWithTypedRequirementsAndIntegrations[]
-> = {
-  type: 'array',
-  items: {
+const requirementSchema: JSONSchemaType<Requirement> = {
+  type: 'object',
+  nullable: true,
+  properties: {
+    direction: { type: 'string', enum: ['OUT', 'IN'] },
+    isSecret: { type: 'boolean', const: true },
+    uiName: { type: 'string' },
+    uiDescription: { type: 'string' },
+  },
+  required: ['direction', 'isSecret', 'uiName', 'uiDescription'],
+  additionalProperties: false,
+};
+
+const externalSystemSchema: JSONSchemaType<ExternalSystemWithTypedRequirements> =
+  {
     type: 'object',
     properties: {
       id: { type: 'number' },
@@ -17,42 +31,31 @@ const externalSystemsSchema: JSONSchemaType<
       requirements: {
         type: 'object',
         properties: {
-          API_KEY: {
-            type: 'object',
-            nullable: true,
-            properties: {
-              direction: { type: 'string', const: 'OUT' },
-              isSecret: { type: 'boolean', const: true },
-              uiName: { type: 'string' },
-              uiDescription: { type: 'string' },
-            },
-            required: ['direction', 'isSecret', 'uiName', 'uiDescription'],
-            additionalProperties: false,
-          },
-          API_USERNAME: {
-            type: 'object',
-            nullable: true,
-            properties: {
-              direction: { type: 'string', const: 'OUT' },
-              isSecret: { type: 'boolean', const: true },
-              uiName: { type: 'string' },
-              uiDescription: { type: 'string' },
-            },
-            required: ['direction', 'isSecret', 'uiName', 'uiDescription'],
-            additionalProperties: false,
-          },
-          WEBHOOK_SECRET: {
-            type: 'object',
-            nullable: true,
-            properties: {
-              direction: { type: 'string', const: 'IN' },
-              isSecret: { type: 'boolean', const: true },
-              uiName: { type: 'string' },
-              uiDescription: { type: 'string' },
-            },
-            required: ['direction', 'isSecret', 'uiName', 'uiDescription'],
-            additionalProperties: false,
-          },
+          API_KEY: { ...requirementSchema, nullable: true },
+          API_USERNAME: { ...requirementSchema, nullable: true },
+          WEBHOOK_SECRET: { ...requirementSchema, nullable: true },
+        },
+        additionalProperties: false,
+      },
+    },
+    required: ['id', 'name', 'uiName', 'uiDescription', 'requirements'],
+    additionalProperties: false,
+  };
+
+const fullExternalSystemSchema: JSONSchemaType<ExternalSystemWithTypedRequirementsAndIntegrations> =
+  {
+    type: 'object',
+    properties: {
+      id: { type: 'number' },
+      name: { type: 'string' },
+      uiName: { type: 'string' },
+      uiDescription: { type: 'string' },
+      requirements: {
+        type: 'object',
+        properties: {
+          API_KEY: { ...requirementSchema, nullable: true },
+          API_USERNAME: { ...requirementSchema, nullable: true },
+          WEBHOOK_SECRET: { ...requirementSchema, nullable: true },
         },
         additionalProperties: false,
       },
@@ -139,8 +142,21 @@ const externalSystemsSchema: JSONSchemaType<
       'targetFor',
     ],
     additionalProperties: false,
-  },
+  };
+
+const externalSystemsSchema: JSONSchemaType<
+  ExternalSystemWithTypedRequirementsAndIntegrations[]
+> = {
+  type: 'array',
+  items: fullExternalSystemSchema,
 };
+
+export const validateExternalSystem =
+  ajvSingleton.compile(externalSystemSchema);
+
+export const validateFullExternalSystem = ajvSingleton.compile(
+  fullExternalSystemSchema,
+);
 
 export const validateExternalSystems = ajvSingleton.compile(
   externalSystemsSchema,

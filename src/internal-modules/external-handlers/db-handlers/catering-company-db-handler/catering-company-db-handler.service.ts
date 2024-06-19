@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ICateringCompanyDbHandler } from './interfaces/catering-company-db-handler.service.interface';
 import { CateringCompanyDbQueryBuilderService } from './catering-company-db-query-builder.service';
 import { PrismaClientService } from '../../../../external-modules/prisma-client/prisma-client.service';
@@ -7,8 +7,9 @@ import { $Enums, CateringCompany, Prisma } from '@prisma/client';
 import uuidUtils from '../../../../utility/functions/uuid-utils';
 import { InvalidUUIDError } from '../../../../common/errors/invalid_uuid.error';
 import { ERROR_CODE } from '../../../../common/codes/error-codes';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
-import { KNOWN_PRISMA_ERROR_MAP } from 'src/external-modules/prisma-client/resources/known-prisma-error-map';
+import { validateExternalSystem } from './validators/external-systems.validator';
+import { CompanyConnectionAsset } from './types/company_connection_assets';
+import { validateRequirementType } from './types/external_systems_requirements';
 
 @Injectable()
 export class CateringCompanyDbHandlerService
@@ -135,52 +136,6 @@ export class CateringCompanyDbHandlerService
   }
 
   /**
-   * This would be the most performant method - but may be overkill, and also doesn't provide which company integrations may be updated
-   */
-  async createConnectionRaw(companyId: string, systemId: number) {
-    // Retrieve simple external system
-    const { uiName: systemUIName } =
-      await this.prismaClient.externalSystem.findUniqueOrThrow({
-        where: { id: systemId },
-        select: { uiName: true },
-      });
-
-    // Create simple connection
-    const { id: connectionId } =
-      await this.prismaClient.companyExternalSystemConnection.create({
-        data: {
-          companyId,
-          systemId,
-          systemUIName,
-        },
-        select: { id: true },
-      });
-
-    // Complex CompanyIntegration updates
-    const [
-      numSrcUpdatedCompanyIntegrations,
-      numTargetUpdatedCompanyIntegrations,
-    ] = await Promise.all([
-      this.prismaClient.$executeRawUnsafe(
-        `
-        UPDATE "company_integrations" ci
-        SET "src_connection_id" = ${connectionId}
-        FROM "integration_templates" it
-        WHERE ci."template_id" = it.id AND "src_system_id" = ${systemId}
-      `,
-      ),
-      this.prismaClient.$executeRawUnsafe(
-        `
-        UPDATE "company_integrations" ci
-        SET "target_connection_id" = ${connectionId}
-        FROM "integration_templates" it
-        WHERE ci."template_id" = it.id AND "target_system_id" = ${systemId}
-        `,
-      ),
-    ]);
-  }
-
-  /**
    * Create a CompanyExternalSystemConnection record and update all CompanyIntegrations which should rely on it
    * @param companyId
    * @param systemId
@@ -193,8 +148,62 @@ export class CateringCompanyDbHandlerService
     companyId: string,
     systemId: number,
   ): Promise<any> {
-    if (!uuidUtils.isUUID(companyId)) {
-      throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
+    try {
+      if (!uuidUtils.isUUID(companyId)) {
+        throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
+      }
+
+      const externalSystem =
+        await this.prismaClient.externalSystem.findUniqueOrThrow({
+          where: { id: systemId },
+        });
+
+      if (!validateExternalSystem(externalSystem)) {
+        console.error(validateExternalSystem.errors);
+        throw new InternalServerErrorException(
+          // log
+          "Unexpected validation error. We've been alerted to the issue.",
+        );
+      }
+
+      const assets: CompanyConnectionAsset = {};
+      for (const requirement in externalSystem.requirements) {
+        // Ensure key is from the RequirementType string literal
+        if (!validateRequirementType(requirement)) {
+          // Should log
+          // Maybe should throw too
+          continue;
+        }
+
+        const assetSeed = externalSystem.requirements[requirement];
+
+        if (!assetSeed) {
+          // should log
+          continue;
+        }
+
+        assets[requirement] = {
+          ...assetSeed,
+          status: 'UNCONFIGURED',
+        };
+      }
+
+      const record =
+        await this.prismaClient.companyExternalSystemConnection.create({
+          data: {
+            companyId,
+            systemId,
+            systemUIName: externalSystem.uiName,
+            isFullyConfigured: Object.keys(assets).length == 0,
+            assets,
+          },
+        });
+      return record;
+    } catch (err) {
+      // May throw on external system findUniqueOrThrow
+      // May throw validation error
+      // May throw unique constraint error (companyId, systemId)
+      throw err;
     }
   }
 

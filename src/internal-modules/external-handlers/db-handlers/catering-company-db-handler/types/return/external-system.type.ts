@@ -13,3 +13,8 @@ export type ExternalSystemWithTypedRequirementsAndIntegrations =
     srcFor: IntegrationTemplate[];
     targetFor: IntegrationTemplate[];
   };
+
+export type ExternalSystemWithTypeRequirementsAndIntegrationsAndCompanyReference =
+  ExternalSystemWithTypedRequirementsAndIntegrations & {
+    connectionId?: string;
+  };
