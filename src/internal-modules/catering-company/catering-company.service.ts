@@ -16,6 +16,7 @@ import { $Enums } from '@prisma/client';
 import { ERROR_CODE } from 'src/common/codes/error-codes';
 import { CompanyExternalSystemService } from './company-external-system/company-external-system.service';
 import { CompanyIntegrationAndConnectionService } from './company-integration-and-connection/company-integration-and-connection.service';
+import { RequirementType } from '../external-handlers/db-handlers/catering-company-db-handler/types/external_systems_requirements';
 
 @Injectable()
 export class CateringCompanyService implements ICateringCompanyService {
@@ -124,22 +125,22 @@ export class CateringCompanyService implements ICateringCompanyService {
    * Due to the refactor June 13, 2024, there's no service-level creation of connection assets
    * Connection assets are in a JSON attribute directly on the connection
    */
-  // async createExternalSystemConnectionAsset(
-  //   companyId: string,
-  //   connectionId: string,
-  //   requirementId: number,
-  //   value: any,
-  //   userId: string,
-  // ) {
-  //   await this.companyIntegrationAndConnectionService.createExternalSystemConnectionAsset(
-  //     companyId,
-  //     connectionId,
-  //     requirementId,
-  //     value,
-  //   );
+  async updateConnectionAsset(
+    companyId: string,
+    connectionId: string,
+    requirementType: RequirementType,
+    value: any,
+    userId: string,
+  ) {
+    await this.companyIntegrationAndConnectionService.updateConnectionAsset(
+      companyId,
+      connectionId,
+      requirementType,
+      value,
+    );
 
-  //   return;
-  // }
+    return;
+  }
 
   async importCaterersFromEzCater(companyId: string) {
     // Check cache first

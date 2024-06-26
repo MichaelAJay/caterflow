@@ -7,6 +7,9 @@ export const requirementTypes = [
   'WEBHOOK_SECRET',
 ] as const;
 export type RequirementType = (typeof requirementTypes)[number];
+export const isRequirementType = (input: any): input is RequirementType => {
+  return requirementTypes.includes(input);
+};
 
 export type Requirement = {
   direction: 'IN' | 'OUT';

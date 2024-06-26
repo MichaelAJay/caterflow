@@ -7,6 +7,7 @@ import {
   NotImplementedException,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Query,
   Req,
@@ -24,6 +25,7 @@ import { ERROR_CODE } from '../../common/codes/error-codes';
 import { SUCCESS_CODE } from '../../common/codes/success-codes';
 import { IBuildGetCompanyIntegrationListArgs } from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
 import { $Enums } from '@prisma/client';
+import { isRequirementType } from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/types/external_systems_requirements';
 
 @Controller('caterer')
 export class CateringCompanyController implements ICateringCompanyController {
@@ -142,14 +144,19 @@ export class CateringCompanyController implements ICateringCompanyController {
     );
   }
 
-  @Post('connection/:connectionId/asset/:requirementId')
+  @Patch('connection/:connectionId/asset/:requirementType')
   @SetMetadata('permissions', [$Enums.PermissionName.ManageIntegrationAssets])
   async addExternalSystemConnectionAsset(
     @Req() req: AuthenticatedRequestForCompanyUser,
     @Param('connectionId') connectionId: string,
-    @Param('requirementId', ParseIntPipe) requirementId: number,
+    @Param('requirementType') requirementType: any,
     @Body() payload: any,
   ) {
+    // Validate requirementType
+    if (!isRequirementType(requirementType)) {
+      throw new BadRequestException('Invalid requirement type');
+    }
+
     if (typeof payload === 'undefined') {
       throw new BadRequestException('Payload undefined.');
     }

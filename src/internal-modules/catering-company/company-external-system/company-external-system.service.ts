@@ -37,8 +37,6 @@ export class CompanyExternalSystemService {
 
   async testConnection(
     companyId: string,
-    externalSystemName: $Enums.ExternalSystemName,
-    systemRequirements: ExternalSystemRequirements, // ALL system's requirements must be included
     companyConnectionAssets: CompanyConnectionAsset,
   ): Promise<boolean> {
     return true;

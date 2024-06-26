@@ -19,7 +19,7 @@ export class CateringCompanyDbHandlerService
     connectionId: string,
     updates: Pick<
       Prisma.CompanyExternalSystemConnectionUncheckedUpdateInput,
-      'isFullyConfigured' | 'isTested'
+      'isFullyConfigured' | 'isTested' | 'assets'
     >,
     // include?: Prisma.CompanyExternalSystemConnectionInclude,
   ) {
@@ -102,10 +102,12 @@ export class CateringCompanyDbHandlerService
     }
 
     const record =
-      await this.prismaClient.companyExternalSystemConnection.findUnique({
-        where: { id: connectionId },
-        include,
-      });
+      await this.prismaClient.companyExternalSystemConnection.findUniqueOrThrow(
+        {
+          where: { id: connectionId },
+          include,
+        },
+      );
 
     return record;
   }
