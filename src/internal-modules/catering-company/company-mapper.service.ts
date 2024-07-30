@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { $Enums } from '@prisma/client';
+import { $Enums, CompanyIntegration } from '@prisma/client';
 import { ICompanyMapper } from './interfaces/company-mapper.service.interface';
 
 export type IntegrationEventOutput = 'ezCater Order Received';
@@ -26,5 +26,15 @@ export class CompanyMapperService implements ICompanyMapper {
     //     event: INTEGRATION_EVENT_MAPPER[event],
     //   }),
     // );
+  }
+
+  mapCompanyIntegrations(list: CompanyIntegration[]) {
+    return list.map(({ id, uiName: name, event, isConfigured, isActive }) => ({
+      id,
+      name,
+      event: INTEGRATION_EVENT_MAPPER[event],
+      isConfigured,
+      isActive,
+    }));
   }
 }

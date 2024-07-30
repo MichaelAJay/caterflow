@@ -21,6 +21,19 @@ export class SystemIntegrationDbHandlerService
     private readonly systemIntegrationDbQueryBuilder: SystemIntegrationDbQueryBuilderService,
   ) {}
 
+  async getIntegrationTemplate(templateId: number) {
+    const integrationTemplate =
+      await this.prismaClient.integrationTemplate.findUniqueOrThrow({
+        where: { id: templateId },
+        include: {
+          srcSystem: { select: { uiName: true, requirements: true } },
+          targetSystem: { select: { uiName: true, requirements: true } },
+          requirements: true,
+        },
+      });
+    return integrationTemplate;
+  }
+
   async getSystemIntegrations(queryInput?: IBuildGetManyQueryInputArgs) {
     const records = await this.prismaClient.integrationTemplate.findMany({
       ...this.systemIntegrationDbQueryBuilder.buildFindManyQuery(queryInput),

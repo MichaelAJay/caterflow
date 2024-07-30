@@ -102,13 +102,27 @@ export class CateringCompanyService implements ICateringCompanyService {
     templateId: number,
     creatorId: string,
   ): Promise<any> {
-    // const results = await this.cateringCompanyDbHandler.createIntegration(
-    //   companyId,
-    //   templateId,
-    //   creatorId,
-    // );
-    // return results;
-    // When an integration is created, it's quite similar to how an external system connection is created, but in reverse
+    const integrationTemplate =
+      await this.cateringCompanyDbHandler.getIntegrationTemplateWithCompanyIntegration(
+        templateId,
+        companyId,
+      );
+
+    // Check if company already has integration
+    const companyIntegration = integrationTemplate.integrations.find(
+      (integration) => integration.companyId === companyId,
+    );
+    if (companyIntegration) {
+      // Company integration already exists
+      // Rethink whether this should be a client error
+      throw new ConflictException('Company already has integration');
+    }
+
+    await this.companyIntegrationAndConnectionService.createIntegration(
+      companyId,
+      templateId,
+      creatorId,
+    );
   }
 
   async createExternalSystemConnection(companyId: string, systemId: number) {
@@ -119,6 +133,21 @@ export class CateringCompanyService implements ICateringCompanyService {
       );
 
     return record;
+  }
+
+  async addAssetToConnection(
+    companyId: string,
+    connectionId: string,
+    requirementType: RequirementType,
+    value: any,
+  ) {
+    const newlyActivatableIntegrations =
+      await this.companyIntegrationAndConnectionService.updateConnectionAsset(
+        companyId,
+        connectionId,
+        requirementType,
+        value,
+      );
   }
 
   /**

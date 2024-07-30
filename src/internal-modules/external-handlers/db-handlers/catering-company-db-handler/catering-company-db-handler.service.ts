@@ -9,7 +9,12 @@ import { InvalidUUIDError } from '../../../../common/errors/invalid_uuid.error';
 import { ERROR_CODE } from '../../../../common/codes/error-codes';
 import { validateExternalSystem } from './validators/external-systems.validator';
 import { CompanyConnectionAsset } from './types/company_connection_assets';
-import { validateRequirementType } from './types/external_systems_requirements';
+import {
+  RequirementType,
+  validateRequirementType,
+} from './types/external_systems_requirements';
+import { validateCompanyExternalSystemConnectionAssets } from './validators/company_external_connection_assets.validator';
+import companyIntegrationAndConnectionUtilities from 'src/internal-modules/catering-company/utility/company-integration-and-connection.utilities';
 
 @Injectable()
 export class CateringCompanyDbHandlerService
@@ -74,6 +79,23 @@ export class CateringCompanyDbHandlerService
   /**
    * Integrations and Connections
    */
+  async getIntegrationTemplateWithCompanyIntegration(
+    templateId: number,
+    companyId: string,
+  ) {
+    const integrationTemplate =
+      await this.prismaClient.integrationTemplate.findUniqueOrThrow({
+        where: { id: templateId },
+        include: {
+          integrations: {
+            where: { companyId },
+            select: { companyId: true },
+          },
+        },
+      });
+    return integrationTemplate;
+  }
+
   async getIntegrations() {}
 
   async getConnections(companyId: string, query?: any) {
@@ -86,6 +108,17 @@ export class CateringCompanyDbHandlerService
     const records =
       await this.prismaClient.companyExternalSystemConnection.findMany({
         where: { companyId },
+      });
+    return records;
+  }
+
+  async getConnectionsByExternalSystemId(
+    companyId: string,
+    externalSystemIds: number[],
+  ) {
+    const records =
+      await this.prismaClient.companyExternalSystemConnection.findMany({
+        where: { companyId, systemId: { in: externalSystemIds } },
       });
     return records;
   }
@@ -112,16 +145,83 @@ export class CateringCompanyDbHandlerService
     return record;
   }
 
+  async getConnectionWithValidatedAssets(connectionId: string) {
+    if (!uuidUtils.isUUID(connectionId)) {
+      throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
+    }
+
+    // may be able to whittle down on the select
+    const { assets, ...connection } =
+      await this.prismaClient.companyExternalSystemConnection.findUniqueOrThrow(
+        {
+          where: { id: connectionId },
+        },
+      );
+
+    if (!validateCompanyExternalSystemConnectionAssets(assets)) {
+      // log
+      throw new InternalServerErrorException('Bad data');
+    }
+    console.log(assets);
+
+    return { connection, assets };
+  }
+
+  async getAllConfiguredAndTestedIntegrationByConnectionId(
+    connectionId: string,
+  ) {
+    if (!uuidUtils.isUUID(connectionId)) {
+      throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
+    }
+
+    const records = await this.prismaClient.companyIntegration.findMany({
+      where: {
+        OR: [
+          {
+            srcConnectionId: connectionId,
+            srcConnection: { isFullyConfigured: true, isTested: true },
+          },
+          {
+            targetConnectionId: connectionId,
+            targetConnection: { isFullyConfigured: true, isTested: true },
+          },
+        ],
+      },
+    });
+    return records;
+  }
+
   async createIntegration(
     companyId: string,
     templateId: number,
+    uiName: string,
+    srcConnectionId: string,
+    targetConnectionId: string,
+    event: $Enums.IntegrationEvent,
     creatorId: string,
+    isConfigured = false,
   ) {
     if (!(uuidUtils.isUUID(companyId) && uuidUtils.isUUID(creatorId))) {
       throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
     }
 
-    // Huge refactor - rewrite
+    try {
+      await this.prismaClient.companyIntegration.create({
+        data: {
+          companyId,
+          templateId,
+          uiName,
+          srcConnectionId,
+          targetConnectionId,
+          event,
+          creatorId,
+          isConfigured,
+        },
+      });
+    } catch (err) {
+      // check for unique constraint violation
+      throw err;
+    }
   }
 
   async updateIntegrations(
@@ -149,45 +249,12 @@ export class CateringCompanyDbHandlerService
   async createExternalSystemConnection(
     companyId: string,
     systemId: number,
-  ): Promise<any> {
+    uiName: string,
+    assets: CompanyConnectionAsset,
+  ) {
     try {
       if (!uuidUtils.isUUID(companyId)) {
         throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
-      }
-
-      const externalSystem =
-        await this.prismaClient.externalSystem.findUniqueOrThrow({
-          where: { id: systemId },
-        });
-
-      if (!validateExternalSystem(externalSystem)) {
-        console.error(validateExternalSystem.errors);
-        throw new InternalServerErrorException(
-          // log
-          "Unexpected validation error. We've been alerted to the issue.",
-        );
-      }
-
-      const assets: CompanyConnectionAsset = {};
-      for (const requirement in externalSystem.requirements) {
-        // Ensure key is from the RequirementType string literal
-        if (!validateRequirementType(requirement)) {
-          // Should log
-          // Maybe should throw too
-          continue;
-        }
-
-        const assetSeed = externalSystem.requirements[requirement];
-
-        if (!assetSeed) {
-          // should log
-          continue;
-        }
-
-        assets[requirement] = {
-          ...assetSeed,
-          status: 'UNCONFIGURED',
-        };
       }
 
       const record =
@@ -195,15 +262,13 @@ export class CateringCompanyDbHandlerService
           data: {
             companyId,
             systemId,
-            systemUIName: externalSystem.uiName,
+            systemUIName: uiName,
             isFullyConfigured: Object.keys(assets).length == 0,
             assets,
           },
         });
       return record;
     } catch (err) {
-      // May throw on external system findUniqueOrThrow
-      // May throw validation error
       // May throw unique constraint error (companyId, systemId)
       throw err;
     }
@@ -216,14 +281,14 @@ export class CateringCompanyDbHandlerService
    * @returns
    */
   async getAssets(companyId: string, systemName: $Enums.ExternalSystemName) {
-    const asset =
-      await this.prismaClient.companyExternalSystemConnection.findFirst({
+    const { assets } =
+      await this.prismaClient.companyExternalSystemConnection.findFirstOrThrow({
         where: {
           companyId,
         },
         select: { assets: true },
       });
-    return asset;
+    return assets;
   }
 
   // Append companyId (ONE) to each caterer record and create many CompanyCaterer records
