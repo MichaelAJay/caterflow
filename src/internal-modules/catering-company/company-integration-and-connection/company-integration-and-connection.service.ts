@@ -11,7 +11,10 @@ import { SecretManagerService } from 'src/internal-modules/external-handlers/sec
 import { SystemIntegrationDbHandlerService } from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/system-integration-db-handler.service';
 import { CompanyIntegration, Prisma } from '@prisma/client';
 import { RequirementType } from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/types/external_systems_requirements';
-import { assetStatuses } from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/types/company_connection_assets';
+import {
+  assetStatuses,
+  CompanyConnectionWithTypedAssets,
+} from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/types/company_connection_assets';
 import companyIntegrationAndConnectionUtilities from '../utility/company-integration-and-connection.utilities';
 import { validateExternalSystem } from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/validators/external-systems.validator';
 
@@ -60,10 +63,10 @@ export class CompanyIntegrationAndConnectionService {
 
     // If connection found, prepare to connect it directly to the integration
     let srcConnectionId: string | undefined = undefined;
-    let isSourceConnectionTested = false;
+    let isSrcConnectionTested = false;
     if (srcConnection) {
       srcConnectionId = srcConnection.id;
-      isSourceConnectionTested = srcConnection.isTested;
+      isSrcConnectionTested = srcConnection.isTested;
     } else {
       // Validate requirements
       if (!validateExternalSystem(integrationTemplate.srcSystem)) {
@@ -76,7 +79,7 @@ export class CompanyIntegrationAndConnectionService {
         );
 
       try {
-        const createdSrcConnection =
+        let createdSrcConnection =
           await this.cateringCompanyDbHandler.createExternalSystemConnection(
             companyId,
             integrationTemplate.srcSystemId,
@@ -85,9 +88,18 @@ export class CompanyIntegrationAndConnectionService {
           );
 
         srcConnectionId = createdSrcConnection.id;
-        if (createdSrcConnection.isFullyConfigured) {
-          // Test it. If passes, update issourceConnectionTested
+        if (
+          createdSrcConnection.isFullyConfigured ||
+          companyIntegrationAndConnectionUtilities.isFullOutboundConfigured(
+            createdSrcConnection.assets,
+          )
+        ) {
+          createdSrcConnection = await this.testConnectionAndUpdateOnPass(
+            companyId,
+            createdSrcConnection,
+          );
         }
+        isSrcConnectionTested = createdSrcConnection.isTested;
       } catch (err) {
         // Should not have errored here - log at least
       }
@@ -110,7 +122,7 @@ export class CompanyIntegrationAndConnectionService {
         );
 
       try {
-        const createdTargetConnection =
+        let createdTargetConnection =
           await this.cateringCompanyDbHandler.createExternalSystemConnection(
             companyId,
             integrationTemplate.srcSystemId,
@@ -119,15 +131,24 @@ export class CompanyIntegrationAndConnectionService {
           );
         targetConnectionId = createdTargetConnection.id;
 
-        if (createdTargetConnection.isFullyConfigured) {
-          // Test it. If test passes, this will affect the integration (positively). Also update isTargetConnectionTested
+        if (
+          createdTargetConnection.isFullyConfigured ||
+          companyIntegrationAndConnectionUtilities.isFullOutboundConfigured(
+            createdTargetConnection.assets,
+          )
+        ) {
+          createdTargetConnection = await this.testConnectionAndUpdateOnPass(
+            companyId,
+            createdTargetConnection,
+          );
         }
+        isTargetConnectionTested = createdTargetConnection.isTested;
       } catch (err) {
         // Should not have errored here - log at least
       }
     }
 
-    // Should not happen - primarily here for type narrowing
+    // Type narrowing
     if (
       !(
         typeof srcConnectionId === 'string' &&
@@ -139,7 +160,7 @@ export class CompanyIntegrationAndConnectionService {
     }
 
     // Create integration
-    await this.cateringCompanyDbHandler.createIntegration(
+    const record = await this.cateringCompanyDbHandler.createIntegration(
       companyId,
       templateId,
       integrationTemplate.uiName,
@@ -147,8 +168,10 @@ export class CompanyIntegrationAndConnectionService {
       targetConnectionId,
       integrationTemplate.event,
       creatorId,
-      isSourceConnectionTested && isTargetConnectionTested,
+      isSrcConnectionTested && isTargetConnectionTested,
     );
+
+    return record;
   }
 
   async updateIntegration(
@@ -185,7 +208,7 @@ export class CompanyIntegrationAndConnectionService {
         externalSystem.requirements,
       );
 
-    const record =
+    let record =
       await this.cateringCompanyDbHandler.createExternalSystemConnection(
         companyId,
         systemId,
@@ -193,9 +216,17 @@ export class CompanyIntegrationAndConnectionService {
         assets,
       );
 
-    // If referenced system has 0 requirements, the connection will be fully configured
-    if (record.isFullyConfigured) {
+    /**
+     * This condition is true if the record contains 0 required outbound assets
+     */
+    if (
+      record.isFullyConfigured ||
+      companyIntegrationAndConnectionUtilities.isFullOutboundConfigured(
+        record.assets,
+      )
+    ) {
       // Test it
+      record = await this.testConnectionAndUpdateOnPass(companyId, record);
     }
 
     return record;
@@ -214,10 +245,6 @@ export class CompanyIntegrationAndConnectionService {
     );
   }
 
-  /**
-   * Due to the refactor June 13, 2024, there's no service-level creation of connection assets
-   * Connection assets are in a JSON attribute directly on the connection
-   */
   async updateConnectionAsset(
     companyId: string,
     connectionId: string,
@@ -225,7 +252,7 @@ export class CompanyIntegrationAndConnectionService {
     value: any,
   ) {
     // Determine secret status
-    const { connection, assets } =
+    const { assets, ...connection } =
       await this.cateringCompanyDbHandler.getConnectionWithValidatedAssets(
         connectionId,
       );
@@ -240,7 +267,6 @@ export class CompanyIntegrationAndConnectionService {
         'This connection does not have the specified requirement type',
       );
     }
-    console.log(targetAsset);
 
     // If secret, store secret
     let assetValue;
@@ -283,12 +309,9 @@ export class CompanyIntegrationAndConnectionService {
       throw new InternalServerErrorException(msg);
     }
 
-    const fullOutboundConfigured = !Object.values(assets).some(
-      (asset) => asset.direction == 'OUT' && asset.status == 'UNCONFIGURED',
-    );
-
-    // WARNING: Right now, this is mutating assets
-    if (fullOutboundConfigured) {
+    if (
+      companyIntegrationAndConnectionUtilities.isFullOutboundConfigured(assets)
+    ) {
       const testResult = await this.companyExternalSystemService.testConnection(
         companyId,
         assets,
@@ -329,5 +352,35 @@ export class CompanyIntegrationAndConnectionService {
 
       return newlyActivatableIntegrations;
     }
+  }
+
+  /**
+   *
+   * @param companyId
+   * @param record
+   * @returns
+   */
+  async testConnectionAndUpdateOnPass(
+    companyId: string,
+    record: CompanyConnectionWithTypedAssets,
+  ): Promise<CompanyConnectionWithTypedAssets> {
+    const isTested = await this.companyExternalSystemService.testConnection(
+      companyId,
+      record.assets,
+    );
+
+    const recordCopy = { ...record };
+
+    if (isTested) {
+      await this.cateringCompanyDbHandler.updateExternalySystemConnection(
+        record.id,
+        { isTested: true },
+      );
+      recordCopy.isTested = true;
+    } else {
+      // TODO LOG
+      // This represents a fundamental problem with the application
+    }
+    return recordCopy;
   }
 }

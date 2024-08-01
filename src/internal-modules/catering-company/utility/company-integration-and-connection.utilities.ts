@@ -31,6 +31,11 @@ const companyIntegrationAndConnectionUtilities = {
     }
     return assets;
   },
+  isFullOutboundConfigured: (assets: CompanyConnectionAsset): boolean => {
+    return !Object.values(assets).some(
+      (asset) => asset.direction == 'OUT' && asset.status == 'UNCONFIGURED',
+    );
+  },
 };
 
 export default companyIntegrationAndConnectionUtilities;

@@ -7,14 +7,8 @@ import { $Enums, CateringCompany, Prisma } from '@prisma/client';
 import uuidUtils from '../../../../utility/functions/uuid-utils';
 import { InvalidUUIDError } from '../../../../common/errors/invalid_uuid.error';
 import { ERROR_CODE } from '../../../../common/codes/error-codes';
-import { validateExternalSystem } from './validators/external-systems.validator';
 import { CompanyConnectionAsset } from './types/company_connection_assets';
-import {
-  RequirementType,
-  validateRequirementType,
-} from './types/external_systems_requirements';
 import { validateCompanyExternalSystemConnectionAssets } from './validators/company_external_connection_assets.validator';
-import companyIntegrationAndConnectionUtilities from 'src/internal-modules/catering-company/utility/company-integration-and-connection.utilities';
 
 @Injectable()
 export class CateringCompanyDbHandlerService
@@ -151,20 +145,19 @@ export class CateringCompanyDbHandlerService
     }
 
     // may be able to whittle down on the select
-    const { assets, ...connection } =
+    const record =
       await this.prismaClient.companyExternalSystemConnection.findUniqueOrThrow(
         {
           where: { id: connectionId },
         },
       );
 
-    if (!validateCompanyExternalSystemConnectionAssets(assets)) {
+    const recordAssets = record.assets;
+    if (!validateCompanyExternalSystemConnectionAssets(recordAssets)) {
       // log
       throw new InternalServerErrorException('Bad data');
     }
-    console.log(assets);
-
-    return { connection, assets };
+    return { ...record, assets: recordAssets };
   }
 
   async getAllConfiguredAndTestedIntegrationByConnectionId(
@@ -206,7 +199,7 @@ export class CateringCompanyDbHandlerService
     }
 
     try {
-      await this.prismaClient.companyIntegration.create({
+      const record = await this.prismaClient.companyIntegration.create({
         data: {
           companyId,
           templateId,
@@ -218,6 +211,7 @@ export class CateringCompanyDbHandlerService
           isConfigured,
         },
       });
+      return record;
     } catch (err) {
       // check for unique constraint violation
       throw err;
@@ -267,7 +261,14 @@ export class CateringCompanyDbHandlerService
             assets,
           },
         });
-      return record;
+
+      const createdAssets = record.assets;
+      if (!validateCompanyExternalSystemConnectionAssets(createdAssets)) {
+        throw new Error('Stuff is messed up');
+      }
+
+      // Need validator here
+      return { ...record, assets: createdAssets };
     } catch (err) {
       // May throw unique constraint error (companyId, systemId)
       throw err;

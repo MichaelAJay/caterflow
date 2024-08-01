@@ -1,3 +1,4 @@
+import { CompanyExternalSystemConnection } from '@prisma/client';
 import {
   ExternalSystemRequirements,
   Requirement,
@@ -17,6 +18,12 @@ type Asset = Requirement & {
 };
 
 export type CompanyConnectionAsset = Partial<Record<RequirementType, Asset>>;
+export type CompanyConnectionWithTypedAssets = Omit<
+  CompanyExternalSystemConnection,
+  'assets'
+> & {
+  assets: CompanyConnectionAsset;
+};
 
 // These are just examples
 export const ezCaterRequirements: ExternalSystemRequirements = {
