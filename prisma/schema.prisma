@@ -48,13 +48,12 @@ model CompanyCaterer {
 }
 
 model CompanyExternalSystemConnection {
-  id                String  @id @default(uuid())
-  companyId         String  @map("company_id")
-  systemId          Int     @map("system_id")
-  systemUIName      String  @map("system_ui_name")
-  isFullyConfigured Boolean @default(false) @map("is_fully_configured")
-  isTested          Boolean @default(false) @map("is_tested")
-  assets            Json?   @default("{}")
+  id             String                   @id @default(uuid())
+  companyId      String                   @map("company_id")
+  systemId       Int                      @map("system_id")
+  systemUIName   String                   @map("system_ui_name")
+  outboundStatus ConnectionOutboundStatus @default(UNCONFIGURED) @map("outbound_status")
+  assets         Json?                    @default("{}")
 
   company        CateringCompany      @relation(fields: [companyId], references: [id])
   externalSystem ExternalSystem       @relation(fields: [systemId], references: [id])
@@ -67,12 +66,13 @@ model CompanyExternalSystemConnection {
 }
 
 model CompanyIntegration {
-  id                 String @id @default(uuid())
-  companyId          String @map("company_id")
-  templateId         Int    @map("template_id")
-  uiName             String @map("ui_name")
-  srcConnectionId    String @map("src_connection_id")
-  targetConnectionId String @map("target_connection_id")
+  id                 String            @id @default(uuid())
+  companyId          String            @map("company_id")
+  templateId         Int               @map("template_id")
+  uiName             String            @map("ui_name")
+  status             IntegrationStatus @default(UNCONFIGURED)
+  srcConnectionId    String            @map("src_connection_id")
+  targetConnectionId String            @map("target_connection_id")
 
   event        IntegrationEvent
   isConfigured Boolean          @default(false) @map("is_configured")
@@ -288,6 +288,13 @@ model UserSystemAction {
 }
 
 // ENUMS (A-Z)
+enum ConnectionOutboundStatus {
+  UNCONFIGURED
+  CONFIGURED_UNTESTED
+  TEST_FAILED
+  READY
+}
+
 enum ExternalEntity {
   Order
   Lead
@@ -313,6 +320,13 @@ enum IntegrationRequirementName {
 
 enum IntegrationRequirementType {
   DATA_MAP
+}
+
+enum IntegrationStatus {
+  UNCONFIGURED
+  INACTIVE
+  ACTIVE
+  ERROR
 }
 
 enum PermissionName {
