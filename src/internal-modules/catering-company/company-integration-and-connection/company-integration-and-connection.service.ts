@@ -9,8 +9,16 @@ import { IBuildGetCompanyIntegrationListArgs } from 'src/internal-modules/extern
 import { CateringCompanyDbHandlerService } from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/catering-company-db-handler.service';
 import { SecretManagerService } from 'src/internal-modules/external-handlers/secret-manager/secret-manager.service';
 import { SystemIntegrationDbHandlerService } from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/system-integration-db-handler.service';
-import { CompanyIntegration, Prisma } from '@prisma/client';
-import { RequirementType } from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/types/external_systems_requirements';
+import {
+  $Enums,
+  CompanyIntegration,
+  ExternalSystem,
+  Prisma,
+} from '@prisma/client';
+import {
+  Requirement,
+  RequirementType,
+} from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/types/external_systems_requirements';
 import {
   assetStatuses,
   CompanyConnectionWithTypedAssets,
@@ -63,89 +71,47 @@ export class CompanyIntegrationAndConnectionService {
 
     // If connection found, prepare to connect it directly to the integration
     let srcConnectionId: string | undefined = undefined;
-    let isSrcConnectionTested = false;
+    let isSrcConnectionReady = false;
     if (srcConnection) {
       srcConnectionId = srcConnection.id;
-      isSrcConnectionTested = srcConnection.isTested;
+      isSrcConnectionReady =
+        srcConnection.outboundStatus === $Enums.ConnectionOutboundStatus.READY;
     } else {
-      // Validate requirements
-      if (!validateExternalSystem(integrationTemplate.srcSystem)) {
-        throw new InternalServerErrorException('Stuff is messed up');
-      }
+      // Requirements should be validated here
+      const { id, outboundStatus } = await this.createExternalSystemConnection(
+        companyId,
+        {
+          id: integrationTemplate.srcSystemId,
+          uiName: integrationTemplate.srcSystem.uiName,
+          requirements: integrationTemplate.srcSystem.requirements,
+        },
+      );
 
-      const assets =
-        companyIntegrationAndConnectionUtilities.mapExternalSystemRequirementsToCompanyAssets(
-          integrationTemplate.srcSystem.requirements,
-        );
-
-      try {
-        let createdSrcConnection =
-          await this.cateringCompanyDbHandler.createExternalSystemConnection(
-            companyId,
-            integrationTemplate.srcSystemId,
-            integrationTemplate.srcSystem.uiName,
-            assets,
-          );
-
-        srcConnectionId = createdSrcConnection.id;
-        if (
-          createdSrcConnection.isFullyConfigured ||
-          companyIntegrationAndConnectionUtilities.isFullOutboundConfigured(
-            createdSrcConnection.assets,
-          )
-        ) {
-          createdSrcConnection = await this.testConnectionAndUpdateOnPass(
-            companyId,
-            createdSrcConnection,
-          );
-        }
-        isSrcConnectionTested = createdSrcConnection.isTested;
-      } catch (err) {
-        // Should not have errored here - log at least
-      }
+      srcConnectionId = id;
+      isSrcConnectionReady =
+        outboundStatus === $Enums.ConnectionOutboundStatus.READY;
     }
 
     let targetConnectionId: string | undefined = undefined;
-    let isTargetConnectionTested = false;
+    let isTargetConnectionReady = false;
     if (targetConnection) {
       targetConnectionId = targetConnection.id;
-      isTargetConnectionTested = targetConnection.isTested;
+      isTargetConnectionReady =
+        targetConnection.outboundStatus ===
+        $Enums.ConnectionOutboundStatus.READY;
     } else {
-      // Validate requirements
-      if (!validateExternalSystem(integrationTemplate.targetSystem)) {
-        throw new InternalServerErrorException('Stuff is messed up');
-      }
-
-      const assets =
-        companyIntegrationAndConnectionUtilities.mapExternalSystemRequirementsToCompanyAssets(
-          integrationTemplate.targetSystem.requirements,
-        );
-
-      try {
-        let createdTargetConnection =
-          await this.cateringCompanyDbHandler.createExternalSystemConnection(
-            companyId,
-            integrationTemplate.srcSystemId,
-            integrationTemplate.srcSystem.uiName,
-            assets,
-          );
-        targetConnectionId = createdTargetConnection.id;
-
-        if (
-          createdTargetConnection.isFullyConfigured ||
-          companyIntegrationAndConnectionUtilities.isFullOutboundConfigured(
-            createdTargetConnection.assets,
-          )
-        ) {
-          createdTargetConnection = await this.testConnectionAndUpdateOnPass(
-            companyId,
-            createdTargetConnection,
-          );
-        }
-        isTargetConnectionTested = createdTargetConnection.isTested;
-      } catch (err) {
-        // Should not have errored here - log at least
-      }
+      // Requirements should be validated here
+      const { id, outboundStatus } = await this.createExternalSystemConnection(
+        companyId,
+        {
+          id: integrationTemplate.targetSystemId,
+          uiName: integrationTemplate.targetSystem.uiName,
+          requirements: integrationTemplate.targetSystem.requirements,
+        },
+      );
+      targetConnectionId = id;
+      isTargetConnectionReady =
+        outboundStatus === $Enums.ConnectionOutboundStatus.READY;
     }
 
     // Type narrowing
@@ -168,9 +134,8 @@ export class CompanyIntegrationAndConnectionService {
       targetConnectionId,
       integrationTemplate.event,
       creatorId,
-      isSrcConnectionTested && isTargetConnectionTested,
+      isSrcConnectionReady && isTargetConnectionReady,
     );
-
     return record;
   }
 
@@ -194,25 +159,37 @@ export class CompanyIntegrationAndConnectionService {
    * @param systemId
    * @returns
    */
-  async createExternalSystemConnection(companyId: string, systemId: number) {
-    // Retrieve validated external system
-    const externalSystem =
-      await this.systemIntegrationDbHandler.getExternalSystem(
-        systemId,
-        companyId,
-      );
+  async createExternalSystemConnection(
+    companyId: string,
+    systemData:
+      | number
+      | {
+          id: number;
+          uiName: string;
+          requirements: Partial<
+            Record<'API_KEY' | 'API_USERNAME' | 'WEBHOOK_SECRET', Requirement>
+          >;
+        },
+  ) {
+    const { id, uiName, requirements } =
+      typeof systemData === 'number'
+        ? await this.systemIntegrationDbHandler.getExternalSystem(
+            systemData,
+            companyId,
+          )
+        : systemData;
 
     // Map external system assets to company assets
     const assets =
       companyIntegrationAndConnectionUtilities.mapExternalSystemRequirementsToCompanyAssets(
-        externalSystem.requirements,
+        requirements,
       );
 
     let record =
       await this.cateringCompanyDbHandler.createExternalSystemConnection(
         companyId,
-        systemId,
-        externalSystem.uiName,
+        id,
+        uiName,
         assets,
       );
 
@@ -220,10 +197,8 @@ export class CompanyIntegrationAndConnectionService {
      * This condition is true if the record contains 0 required outbound assets
      */
     if (
-      record.isFullyConfigured ||
-      companyIntegrationAndConnectionUtilities.isFullOutboundConfigured(
-        record.assets,
-      )
+      record.outboundStatus ===
+      $Enums.ConnectionOutboundStatus.CONFIGURED_UNTESTED
     ) {
       // Test it
       record = await this.testConnectionAndUpdateOnPass(companyId, record);
@@ -236,7 +211,7 @@ export class CompanyIntegrationAndConnectionService {
     connectionId: string,
     updates: Pick<
       Prisma.CompanyExternalSystemConnectionUncheckedUpdateInput,
-      'isFullyConfigured' | 'isTested' | 'assets'
+      'outboundStatus' | 'assets'
     >,
   ) {
     await this.cateringCompanyDbHandler.updateExternalySystemConnection(
@@ -339,8 +314,7 @@ export class CompanyIntegrationAndConnectionService {
         }
 
         await this.updateExternalSystemConnection(connectionId, {
-          isFullyConfigured: true,
-          isTested: true,
+          outboundStatus: $Enums.ConnectionOutboundStatus.READY,
           assets,
         });
 
@@ -374,12 +348,12 @@ export class CompanyIntegrationAndConnectionService {
     if (isTested) {
       await this.cateringCompanyDbHandler.updateExternalySystemConnection(
         record.id,
-        { isTested: true },
+        { outboundStatus: $Enums.ConnectionOutboundStatus.READY },
       );
-      recordCopy.isTested = true;
+      recordCopy.outboundStatus = $Enums.ConnectionOutboundStatus.READY;
     } else {
       // TODO LOG
-      // This represents a fundamental problem with the application
+      // This means that the application thought that the connection was outbound-ready, but it wasn't
     }
     return recordCopy;
   }
