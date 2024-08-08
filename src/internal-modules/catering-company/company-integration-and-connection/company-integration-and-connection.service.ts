@@ -69,6 +69,25 @@ export class CompanyIntegrationAndConnectionService {
         connection.systemId === integrationTemplate.targetSystemId,
     );
 
+    const createConnectionHelper = async (
+      companyId: string,
+      systemId: number,
+      uiName: string,
+      requirements: Partial<
+        Record<'API_KEY' | 'API_USERNAME' | 'WEBHOOK_SECRET', Requirement>
+      >,
+    ): Promise<{ id: string; isReady: boolean }> => {
+      const result = { id: '', isReady: false };
+
+      const { id, outboundStatus } = await this.createExternalSystemConnection(
+        companyId,
+        { id: systemId, uiName, requirements },
+      );
+      result.id = id;
+      result.isReady = outboundStatus === $Enums.ConnectionOutboundStatus.READY;
+      return result;
+    };
+
     // If connection found, prepare to connect it directly to the integration
     let srcConnectionId: string | undefined = undefined;
     let isSrcConnectionReady = false;
@@ -77,19 +96,15 @@ export class CompanyIntegrationAndConnectionService {
       isSrcConnectionReady =
         srcConnection.outboundStatus === $Enums.ConnectionOutboundStatus.READY;
     } else {
-      // Requirements should be validated here
-      const { id, outboundStatus } = await this.createExternalSystemConnection(
+      const { id, isReady } = await createConnectionHelper(
         companyId,
-        {
-          id: integrationTemplate.srcSystemId,
-          uiName: integrationTemplate.srcSystem.uiName,
-          requirements: integrationTemplate.srcSystem.requirements,
-        },
+        integrationTemplate.srcSystemId,
+        integrationTemplate.srcSystem.uiName,
+        integrationTemplate.srcSystem.requirements,
       );
 
       srcConnectionId = id;
-      isSrcConnectionReady =
-        outboundStatus === $Enums.ConnectionOutboundStatus.READY;
+      isSrcConnectionReady = isReady;
     }
 
     let targetConnectionId: string | undefined = undefined;
@@ -100,18 +115,15 @@ export class CompanyIntegrationAndConnectionService {
         targetConnection.outboundStatus ===
         $Enums.ConnectionOutboundStatus.READY;
     } else {
-      // Requirements should be validated here
-      const { id, outboundStatus } = await this.createExternalSystemConnection(
+      const { id, isReady } = await createConnectionHelper(
         companyId,
-        {
-          id: integrationTemplate.targetSystemId,
-          uiName: integrationTemplate.targetSystem.uiName,
-          requirements: integrationTemplate.targetSystem.requirements,
-        },
+        integrationTemplate.targetSystemId,
+        integrationTemplate.targetSystem.uiName,
+        integrationTemplate.targetSystem.requirements,
       );
-      targetConnectionId = id;
-      isTargetConnectionReady =
-        outboundStatus === $Enums.ConnectionOutboundStatus.READY;
+
+      srcConnectionId = id;
+      isSrcConnectionReady = isReady;
     }
 
     // Type narrowing
