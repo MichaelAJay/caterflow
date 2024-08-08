@@ -5,7 +5,10 @@ import {
 } from '../types/return/external-system.type';
 import ajvSingleton from 'src/system/singletons/ajv.singleton';
 import { $Enums } from '@prisma/client';
-import { Requirement } from '../types/external_systems_requirements';
+import {
+  ExternalSystemRequirements,
+  Requirement,
+} from '../types/external_systems_requirements';
 
 const requirementSchema: JSONSchemaType<Requirement> = {
   type: 'object',
@@ -20,6 +23,17 @@ const requirementSchema: JSONSchemaType<Requirement> = {
   additionalProperties: false,
 };
 
+const externalSystemRequirementsSchema: JSONSchemaType<ExternalSystemRequirements> =
+  {
+    type: 'object',
+    properties: {
+      API_KEY: { ...requirementSchema, nullable: true },
+      API_USERNAME: { ...requirementSchema, nullable: true },
+      WEBHOOK_SECRET: { ...requirementSchema, nullable: true },
+    },
+    additionalProperties: false,
+  };
+
 const externalSystemSchema: JSONSchemaType<ExternalSystemWithTypedRequirements> =
   {
     type: 'object',
@@ -28,15 +42,7 @@ const externalSystemSchema: JSONSchemaType<ExternalSystemWithTypedRequirements> 
       name: { type: 'string' },
       uiName: { type: 'string' },
       uiDescription: { type: 'string' },
-      requirements: {
-        type: 'object',
-        properties: {
-          API_KEY: { ...requirementSchema, nullable: true },
-          API_USERNAME: { ...requirementSchema, nullable: true },
-          WEBHOOK_SECRET: { ...requirementSchema, nullable: true },
-        },
-        additionalProperties: false,
-      },
+      requirements: externalSystemRequirementsSchema,
     },
     required: ['id', 'name', 'uiName', 'uiDescription', 'requirements'],
     additionalProperties: false,
@@ -150,6 +156,10 @@ const externalSystemsSchema: JSONSchemaType<
   type: 'array',
   items: fullExternalSystemSchema,
 };
+
+export const validateExternalSystemRequirements = ajvSingleton.compile(
+  externalSystemRequirementsSchema,
+);
 
 export const validateExternalSystem =
   ajvSingleton.compile(externalSystemSchema);
