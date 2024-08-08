@@ -9,6 +9,7 @@ import { InvalidUUIDError } from '../../../../common/errors/invalid_uuid.error';
 import { ERROR_CODE } from '../../../../common/codes/error-codes';
 import { CompanyConnectionAsset } from './types/company_connection_assets';
 import { validateCompanyExternalSystemConnectionAssets } from './validators/company_external_connection_assets.validator';
+import companyIntegrationAndConnectionUtilities from 'src/internal-modules/catering-company/utility/company-integration-and-connection.utilities';
 
 @Injectable()
 export class CateringCompanyDbHandlerService
@@ -18,7 +19,7 @@ export class CateringCompanyDbHandlerService
     connectionId: string,
     updates: Pick<
       Prisma.CompanyExternalSystemConnectionUncheckedUpdateInput,
-      'isFullyConfigured' | 'isTested' | 'assets'
+      'outboundStatus' | 'assets'
     >,
     // include?: Prisma.CompanyExternalSystemConnectionInclude,
   ) {
@@ -172,11 +173,15 @@ export class CateringCompanyDbHandlerService
         OR: [
           {
             srcConnectionId: connectionId,
-            srcConnection: { isFullyConfigured: true, isTested: true },
+            srcConnection: {
+              outboundStatus: $Enums.ConnectionOutboundStatus.READY,
+            },
           },
           {
             targetConnectionId: connectionId,
-            targetConnection: { isFullyConfigured: true, isTested: true },
+            targetConnection: {
+              outboundStatus: $Enums.ConnectionOutboundStatus.READY,
+            },
           },
         ],
       },
@@ -257,7 +262,14 @@ export class CateringCompanyDbHandlerService
             companyId,
             systemId,
             systemUIName: uiName,
-            isFullyConfigured: Object.keys(assets).length == 0,
+            outboundStatus:
+              $Enums.ConnectionOutboundStatus[
+                companyIntegrationAndConnectionUtilities.isFullOutboundConfigured(
+                  assets,
+                )
+                  ? 'CONFIGURED_UNTESTED'
+                  : 'UNCONFIGURED'
+              ],
             assets,
           },
         });
