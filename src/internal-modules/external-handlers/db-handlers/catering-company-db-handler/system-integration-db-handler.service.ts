@@ -11,6 +11,7 @@ import {
   validateFullExternalSystem,
   validateExternalSystems,
 } from './validators/external-systems.validator';
+import { validateExternalSystemRequirements } from './validators/external_system_requirements.validator';
 
 @Injectable()
 export class SystemIntegrationDbHandlerService
@@ -22,7 +23,7 @@ export class SystemIntegrationDbHandlerService
   ) {}
 
   async getIntegrationTemplate(templateId: number) {
-    const integrationTemplate =
+    const { srcSystem, targetSystem, ...integrationTemplate } =
       await this.prismaClient.integrationTemplate.findUniqueOrThrow({
         where: { id: templateId },
         include: {
@@ -31,7 +32,36 @@ export class SystemIntegrationDbHandlerService
           requirements: true,
         },
       });
-    return integrationTemplate;
+
+    // Need to validate system requirements
+    const { requirements: srcSystemRequirements, ...srcSystemRemainder } =
+      srcSystem;
+
+    const { requirements: targetSystemRequirements, ...targetSystemRemainder } =
+      targetSystem;
+
+    if (
+      !(
+        validateExternalSystemRequirements(srcSystemRequirements) &&
+        validateExternalSystemRequirements(targetSystemRequirements)
+      )
+    ) {
+      // Log
+      throw new Error('Stuff messed up');
+    }
+
+    // Note: requirements are now validated
+    return {
+      ...integrationTemplate,
+      srcSystem: {
+        ...srcSystemRemainder,
+        requirements: srcSystemRequirements,
+      },
+      targetSystem: {
+        ...targetSystemRemainder,
+        requirements: targetSystemRequirements,
+      },
+    };
   }
 
   async getSystemIntegrations(queryInput?: IBuildGetManyQueryInputArgs) {
@@ -93,6 +123,7 @@ export class SystemIntegrationDbHandlerService
         'Unexpected record validation error. Our team is aware of the problem.',
       );
     }
+    console.log(baseRecord.requirements);
 
     return {
       ...baseRecord,
