@@ -1,15 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { EzCaterHandlerService } from './ezcater-handler.service';
+import { EzcaterHandlerService } from './ezcater-handler.service';
 
 describe('EzcaterHandlerService', () => {
-  let service: EzCaterHandlerService;
+  let service: EzcaterHandlerService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [EzCaterHandlerService],
+      providers: [EzcaterHandlerService],
     }).compile();
 
-    service = module.get<EzCaterHandlerService>(EzCaterHandlerService);
+    service = module.get<EzcaterHandlerService>(EzcaterHandlerService);
   });
 
   it('should be defined', () => {

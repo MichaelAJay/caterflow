@@ -11,12 +11,12 @@ import { CompanyMapperService } from './company-mapper.service';
 import { IBuildGetCompanyIntegrationListArgs } from '../external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
 import { SecretManagerService } from '../external-handlers/secret-manager/secret-manager.service';
 import { SystemIntegrationDbHandlerService } from '../external-handlers/db-handlers/catering-company-db-handler/system-integration-db-handler.service';
-import { EzCaterHandlerService } from '../external-handlers/ezcater-handler/ezcater-handler.service';
 import { $Enums } from '@prisma/client';
 import { ERROR_CODE } from 'src/common/codes/error-codes';
 import { CompanyExternalSystemService } from './company-external-system/company-external-system.service';
 import { CompanyIntegrationAndConnectionService } from './company-integration-and-connection/company-integration-and-connection.service';
 import { RequirementType } from '../external-handlers/db-handlers/catering-company-db-handler/types/external_systems_requirements';
+import { EzcaterHandlerService } from '../external-handlers/external-system-handler/ezcater-handler.service';
 
 @Injectable()
 export class CateringCompanyService implements ICateringCompanyService {
@@ -33,7 +33,7 @@ export class CateringCompanyService implements ICateringCompanyService {
     private readonly companyRoleDbHandler: CompanyRoleAndPermissionDbHandlerService,
     private readonly companyMapper: CompanyMapperService,
     private readonly secretManager: SecretManagerService,
-    private readonly ezCaterHandler: EzCaterHandlerService,
+    private readonly ezCaterHandler: EzcaterHandlerService,
     private readonly companyExternalSystemService: CompanyExternalSystemService,
     private readonly companyIntegrationAndConnectionService: CompanyIntegrationAndConnectionService,
   ) {}

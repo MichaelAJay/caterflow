@@ -5,15 +5,17 @@ import {
   RequirementType,
 } from './external_systems_requirements';
 
-export const assetStatuses = [
-  'UNCONFIGURED',
-  'UNTESTED',
-  'TEST_FAILED',
-  'TEST_SUCCEEDED',
-];
+export const assetStatus = {
+  Unconfigured: 'UNCONFIGURED',
+  Untested: 'UNTESTED',
+  Test_Failed: 'TEST_FAILED',
+  Test_Succeeded: 'TEST_SUCCEEDED',
+} as const;
 
-type Asset = Requirement & {
-  status: (typeof assetStatuses)[number];
+export type AssetStatusValues = (typeof assetStatus)[keyof typeof assetStatus];
+
+export type Asset = Requirement & {
+  status: AssetStatusValues;
   value?: any;
 };
 

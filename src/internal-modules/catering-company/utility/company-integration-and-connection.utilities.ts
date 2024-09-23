@@ -1,6 +1,12 @@
-import { CompanyConnectionAsset } from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/types/company_connection_assets';
 import {
+  Asset,
+  AssetStatusValues,
+  CompanyConnectionAsset,
+} from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/types/company_connection_assets';
+import {
+  ConnectionDirectionValues,
   ExternalSystemRequirements,
+  RequirementType,
   validateRequirementType,
 } from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/types/external_systems_requirements';
 
@@ -13,7 +19,7 @@ const companyIntegrationAndConnectionUtilities = {
       // Ensure key is from the RequirementType string literal
       if (!validateRequirementType(requirement)) {
         // Should log
-        // Maybe should throw too
+        // Should create company issue
         continue;
       }
 
@@ -35,6 +41,32 @@ const companyIntegrationAndConnectionUtilities = {
     return !Object.values(assets).some(
       (asset) => asset.direction == 'OUT' && asset.status == 'UNCONFIGURED',
     );
+  },
+  isOneWayConfigured: (
+    assets: CompanyConnectionAsset,
+    dir: ConnectionDirectionValues,
+  ) => {
+    return !Object.values(assets).some(
+      (asset) => asset.direction === dir && asset.status === 'UNCONFIGURED',
+    );
+  },
+  updateAssetStatus: (
+    assetsIn: CompanyConnectionAsset,
+    status: AssetStatusValues,
+    dir?: ConnectionDirectionValues, // If dir not included, ALL updated
+  ): CompanyConnectionAsset => {
+    const assetsOut: CompanyConnectionAsset = {};
+    for (const assetType in assetsIn) {
+      const assetName = assetType as RequirementType;
+      const asset = assetsIn[assetName] as Asset;
+
+      // Update status if dir isn't included, OR if dir is included & asset direction matches
+      if (!dir || asset.direction === dir) {
+        asset.status = status;
+      }
+      assetsOut[assetName] = asset;
+    }
+    return assetsOut;
   },
 };
 

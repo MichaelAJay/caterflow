@@ -10,23 +10,35 @@ import { ERROR_CODE } from '../../../../common/codes/error-codes';
 import { CompanyConnectionAsset } from './types/company_connection_assets';
 import { validateCompanyExternalSystemConnectionAssets } from './validators/company_external_connection_assets.validator';
 import companyIntegrationAndConnectionUtilities from 'src/internal-modules/catering-company/utility/company-integration-and-connection.utilities';
+import {
+  connectionDirection,
+  ConnectionDirectionValues,
+} from './types/external_systems_requirements';
 
 @Injectable()
 export class CateringCompanyDbHandlerService
   implements ICateringCompanyDbHandler
 {
-  async updateExternalySystemConnection(
+  async updateExternalSystemConnection(
     connectionId: string,
     updates: Pick<
       Prisma.CompanyExternalSystemConnectionUncheckedUpdateInput,
-      'outboundStatus' | 'assets'
+      'inboundStatus' | 'outboundStatus' | 'assets'
     >,
     // include?: Prisma.CompanyExternalSystemConnectionInclude,
   ) {
-    await this.prismaClient.companyExternalSystemConnection.update({
-      where: { id: connectionId },
-      data: updates,
-    });
+    const { assets, ...updatedRecord } =
+      await this.prismaClient.companyExternalSystemConnection.update({
+        where: { id: connectionId },
+        data: updates,
+      });
+
+    // Validate assets
+    if (!validateCompanyExternalSystemConnectionAssets(assets)) {
+      throw new Error('Invalid assets');
+    }
+
+    return { ...updatedRecord, assets };
   }
 
   async getAllCompanyIntegrationsByConnectionId(connectionId: string) {
@@ -93,6 +105,91 @@ export class CateringCompanyDbHandlerService
 
   async getIntegrations() {}
 
+  async getIntegrationsByConnectionIdAndDir(
+    connectionId: string,
+    dir: ConnectionDirectionValues,
+  ) {
+    let results;
+    switch (dir) {
+      case connectionDirection.In:
+        results = await this.prismaClient.companyIntegration.findMany({
+          where: {
+            srcConnectionId: connectionId,
+            targetConnection: {
+              outboundStatus: $Enums.ConnectionStatus.READY,
+            },
+          },
+        });
+        break;
+      case connectionDirection.Out:
+        results = await this.prismaClient.companyIntegration.findMany({
+          where: {
+            targetConnectionId: connectionId,
+            srcConnection: {
+              OR: [
+                { inboundStatus: $Enums.ConnectionStatus.READY },
+                { inboundStatus: $Enums.ConnectionStatus.CONFIGURED_UNTESTED },
+              ],
+            },
+          },
+          include: {
+            srcConnection: true,
+          },
+        });
+        break;
+      default:
+        // Log and throw
+        throw new Error('Bad data');
+    }
+    return results;
+  }
+
+  /**
+   * THIS IS USED TO UPDATE INTEGRATIONS AFTER A SUCCESSFUL CONNECTION CHANGE
+   * SHOULD ONLY be called if direction-related connection status is validated (see CompanyIntegrationAndConnectionService.processCompanyConnectionWithUpdatedAsset)
+   * @param dir
+   * @param connectionId
+   * @returns
+   */
+  async updateIntegrationsByComplementaryConnectionId(
+    connectionId: string,
+    dir: ConnectionDirectionValues,
+  ) {
+    let where: Prisma.CompanyIntegrationWhereInput;
+    switch (dir) {
+      case connectionDirection.In:
+        where = {
+          srcConnectionId: connectionId,
+          targetConnection: {
+            outboundStatus: $Enums.ConnectionStatus.READY,
+          },
+        };
+        break;
+      case connectionDirection.Out:
+        where = {
+          targetConnectionId: connectionId,
+          srcConnection: {
+            OR: [
+              { inboundStatus: $Enums.ConnectionStatus.READY },
+              { inboundStatus: $Enums.ConnectionStatus.CONFIGURED_UNTESTED },
+            ],
+          },
+        };
+        break;
+      default:
+        // Redundant failover protection preferred over if/else blocks
+
+        // Log and throw
+        throw new Error('Bad data');
+    }
+    return await this.prismaClient.companyIntegration.updateMany({
+      where,
+      data: {
+        status: $Enums.IntegrationStatus.ACTIVATABLE,
+      },
+    });
+  }
+
   async getConnections(companyId: string, query?: any) {
     if (!uuidUtils.isUUID(companyId)) {
       throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
@@ -150,6 +247,11 @@ export class CateringCompanyDbHandlerService
       await this.prismaClient.companyExternalSystemConnection.findUniqueOrThrow(
         {
           where: { id: connectionId },
+          include: {
+            externalSystem: {
+              select: { name: true },
+            },
+          },
         },
       );
 
@@ -174,13 +276,13 @@ export class CateringCompanyDbHandlerService
           {
             srcConnectionId: connectionId,
             srcConnection: {
-              outboundStatus: $Enums.ConnectionOutboundStatus.READY,
+              outboundStatus: $Enums.ConnectionStatus.READY,
             },
           },
           {
             targetConnectionId: connectionId,
             targetConnection: {
-              outboundStatus: $Enums.ConnectionOutboundStatus.READY,
+              outboundStatus: $Enums.ConnectionStatus.READY,
             },
           },
         ],
@@ -213,7 +315,7 @@ export class CateringCompanyDbHandlerService
           targetConnectionId,
           event,
           creatorId,
-          isConfigured,
+          status: isConfigured ? 'ACTIVATABLE' : 'NON_ACTIVATABLE',
         },
       });
       return record;
@@ -227,7 +329,7 @@ export class CateringCompanyDbHandlerService
     integrationIds: string[],
     updates: Pick<
       Prisma.CompanyIntegrationUncheckedUpdateManyInput,
-      'srcConnectionId' | 'targetConnectionId' | 'isConfigured' | 'isActive'
+      'srcConnectionId' | 'targetConnectionId' | 'status'
     >,
   ) {
     await this.prismaClient.companyIntegration.updateMany({
@@ -256,6 +358,19 @@ export class CateringCompanyDbHandlerService
         throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
       }
 
+      const [isOutboundConfigured, isInboundConfigured] = [
+        connectionDirection.Out,
+        connectionDirection.In,
+      ].reduce((acc, dir) => {
+        acc.push(
+          companyIntegrationAndConnectionUtilities.isOneWayConfigured(
+            assets,
+            dir,
+          ),
+        );
+        return acc;
+      }, [] as boolean[]);
+
       const record =
         await this.prismaClient.companyExternalSystemConnection.create({
           data: {
@@ -263,12 +378,12 @@ export class CateringCompanyDbHandlerService
             systemId,
             systemUIName: uiName,
             outboundStatus:
-              $Enums.ConnectionOutboundStatus[
-                companyIntegrationAndConnectionUtilities.isFullOutboundConfigured(
-                  assets,
-                )
-                  ? 'CONFIGURED_UNTESTED'
-                  : 'UNCONFIGURED'
+              $Enums.ConnectionStatus[
+                isOutboundConfigured ? 'CONFIGURED_UNTESTED' : 'UNCONFIGURED'
+              ],
+            inboundStatus:
+              $Enums.ConnectionStatus[
+                isInboundConfigured ? 'CONFIGURED_UNTESTED' : 'UNCONFIGURED'
               ],
             assets,
           },

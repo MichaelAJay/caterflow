@@ -5,9 +5,9 @@ import { UserDbHandlerModule } from '../external-handlers/db-handlers/user-db-ha
 import { CompanyRoleAndPermissionDbHandlerModule } from '../external-handlers/db-handlers/company-role-and-permission-db-handler/company-role-and-permission-db-handler.module';
 import { CompanyMapperService } from './company-mapper.service';
 import { SecretManagerModule } from '../external-handlers/secret-manager/secret-manager.module';
-import { EzcaterHandlerModule } from '../external-handlers/ezcater-handler/ezcater-handler.module';
 import { CompanyExternalSystemService } from './company-external-system/company-external-system.service';
 import { CompanyIntegrationAndConnectionService } from './company-integration-and-connection/company-integration-and-connection.service';
+import { ExternalSystemHandlerModule } from '../external-handlers/external-system-handler/external-system-handler.module';
 
 @Module({
   imports: [
@@ -15,9 +15,14 @@ import { CompanyIntegrationAndConnectionService } from './company-integration-an
     UserDbHandlerModule,
     CompanyRoleAndPermissionDbHandlerModule,
     SecretManagerModule,
-    EzcaterHandlerModule,
+    ExternalSystemHandlerModule,
   ],
-  providers: [CateringCompanyService, CompanyMapperService, CompanyExternalSystemService, CompanyIntegrationAndConnectionService],
+  providers: [
+    CateringCompanyService,
+    CompanyMapperService,
+    CompanyExternalSystemService,
+    CompanyIntegrationAndConnectionService,
+  ],
   exports: [CateringCompanyService],
 })
 export class CateringCompanyModule {}

@@ -11,8 +11,15 @@ export const isRequirementType = (input: any): input is RequirementType => {
   return requirementTypes.includes(input);
 };
 
+export const connectionDirection = {
+  In: 'IN',
+  Out: 'OUT',
+} as const;
+export type ConnectionDirectionValues =
+  (typeof connectionDirection)[keyof typeof connectionDirection];
+
 export type Requirement = {
-  direction: 'IN' | 'OUT';
+  direction: ConnectionDirectionValues;
   isSecret: boolean;
   uiName: string;
   uiDescription: string;

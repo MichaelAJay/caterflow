@@ -1,7 +1,7 @@
 import { JSONSchemaType } from 'ajv';
 import {
   CompanyConnectionAsset,
-  assetStatuses,
+  assetStatus,
 } from '../types/company_connection_assets';
 import ajvSingleton from 'src/system/singletons/ajv.singleton';
 
@@ -17,7 +17,7 @@ const companyExternalConnectionAssetsSchema: JSONSchemaType<CompanyConnectionAss
           isSecret: { type: 'boolean', const: true },
           uiName: { type: 'string' },
           uiDescription: { type: 'string' },
-          status: { type: 'string', enum: assetStatuses },
+          status: { type: 'string', enum: Object.values(assetStatus) },
           value: {
             oneOf: [
               { type: 'null' },
@@ -45,7 +45,7 @@ const companyExternalConnectionAssetsSchema: JSONSchemaType<CompanyConnectionAss
           isSecret: { type: 'boolean', const: true },
           uiName: { type: 'string' },
           uiDescription: { type: 'string' },
-          status: { type: 'string', enum: assetStatuses },
+          status: { type: 'string', enum: Object.values(assetStatus) },
           value: {
             oneOf: [
               { type: 'null' },
@@ -73,7 +73,7 @@ const companyExternalConnectionAssetsSchema: JSONSchemaType<CompanyConnectionAss
           isSecret: { type: 'boolean', const: true },
           uiName: { type: 'string' },
           uiDescription: { type: 'string' },
-          status: { type: 'string', enum: assetStatuses },
+          status: { type: 'string', enum: Object.values(assetStatus) },
           value: {
             oneOf: [
               { type: 'null' },

@@ -1,0 +1,33 @@
+[
+  {
+    "API_KEY": {
+      "uiName": "API Key",
+      "isSecret": true,
+      "direction": "OUT",
+      "uiDescription": "An api key"
+    },
+    "WEBHOOK_SECRET": {
+      "uiName": "Webhook Secret",
+      "isSecret": true,
+      "direction": "IN",
+      "uiDescription": "Use to validate incoming order"
+    }
+  },
+  {},
+  {
+    "API_KEY": {
+      "uiName": "API Key",
+      "isSecret": true,
+      "direction": "OUT",
+      "uiDescription": "An api key"
+    }
+  },
+  {
+    "WEBHOOK_SECRET": {
+      "uiName": "Webhook Secret",
+      "isSecret": true,
+      "direction": "IN",
+      "uiDescription": "Use to validate incoming order"
+    }
+  }
+]

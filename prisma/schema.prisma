@@ -48,12 +48,13 @@ model CompanyCaterer {
 }
 
 model CompanyExternalSystemConnection {
-  id             String                   @id @default(uuid())
-  companyId      String                   @map("company_id")
-  systemId       Int                      @map("system_id")
-  systemUIName   String                   @map("system_ui_name")
-  outboundStatus ConnectionOutboundStatus @default(UNCONFIGURED) @map("outbound_status")
-  assets         Json?                    @default("{}")
+  id             String           @id @default(uuid())
+  companyId      String           @map("company_id")
+  systemId       Int              @map("system_id")
+  systemUIName   String           @map("system_ui_name")
+  inboundStatus  ConnectionStatus @default(UNCONFIGURED) @map("inbound_status")
+  outboundStatus ConnectionStatus @default(UNCONFIGURED) @map("outbound_status")
+  assets         Json?            @default("{}")
 
   company        CateringCompany      @relation(fields: [companyId], references: [id])
   externalSystem ExternalSystem       @relation(fields: [systemId], references: [id])
@@ -70,15 +71,12 @@ model CompanyIntegration {
   companyId          String            @map("company_id")
   templateId         Int               @map("template_id")
   uiName             String            @map("ui_name")
-  status             IntegrationStatus @default(UNCONFIGURED)
+  status             IntegrationStatus @default(NON_ACTIVATABLE)
   srcConnectionId    String            @map("src_connection_id")
   targetConnectionId String            @map("target_connection_id")
-
-  event        IntegrationEvent
-  isConfigured Boolean          @default(false) @map("is_configured")
-  isActive     Boolean          @default(false) @map("is_active")
-  creatorId    String           @map("creator_id")
-  createdAt    DateTime         @default(now()) @map("created_at")
+  event              IntegrationEvent
+  creatorId          String            @map("creator_id")
+  createdAt          DateTime          @default(now()) @map("created_at")
 
   company          CateringCompany                      @relation(fields: [companyId], references: [id], onDelete: Cascade)
   template         IntegrationTemplate                  @relation(fields: [templateId], references: [id])
@@ -288,11 +286,12 @@ model UserSystemAction {
 }
 
 // ENUMS (A-Z)
-enum ConnectionOutboundStatus {
+enum ConnectionStatus {
   UNCONFIGURED
   CONFIGURED_UNTESTED
   TEST_FAILED
   READY
+  NOT_APPLICABLE
 }
 
 enum ExternalEntity {
@@ -303,6 +302,11 @@ enum ExternalEntity {
 enum ExternalSystemName {
   EZ_CATER
   NUTSHELL
+  TEST_NO_INBOUND_NO_OUTBOUND
+  TEST_NO_OUTBOUND
+  TEST_NO_INBOUND
+  TEST_NO_OUTBOUND_CONFIG
+  TEST_NO_INBOUND_CONFIG
 }
 
 enum IntegrationEvent {
@@ -323,8 +327,8 @@ enum IntegrationRequirementType {
 }
 
 enum IntegrationStatus {
-  UNCONFIGURED
-  INACTIVE
+  NON_ACTIVATABLE
+  ACTIVATABLE
   ACTIVE
   ERROR
 }

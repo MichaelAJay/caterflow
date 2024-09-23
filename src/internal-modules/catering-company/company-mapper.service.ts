@@ -29,12 +29,11 @@ export class CompanyMapperService implements ICompanyMapper {
   }
 
   mapCompanyIntegrations(list: CompanyIntegration[]) {
-    return list.map(({ id, uiName: name, event, isConfigured, isActive }) => ({
+    return list.map(({ id, uiName: name, event, status }) => ({
       id,
       name,
       event: INTEGRATION_EVENT_MAPPER[event],
-      isConfigured,
-      isActive,
+      status,
     }));
   }
 }

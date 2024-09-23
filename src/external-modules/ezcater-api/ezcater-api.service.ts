@@ -11,6 +11,7 @@ import { validateGetOrderByIdQuery } from './validators/get-order-by-id.ezcater-
 import { EzCaterCompleteOrder } from './types/ezcater-response/get-order-by-id.response.type';
 import { queries } from './gql/queries';
 import { mutations } from './gql/mutations';
+import { CompanyConnectionAsset } from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/types/company_connection_assets';
 
 @Injectable()
 export class EzCaterApiService {
@@ -39,19 +40,13 @@ export class EzCaterApiService {
   }
 
   private async getClientWithAuth(
-    companyId: string,
-    companyAssetId: string,
+    assets: CompanyConnectionAsset,
   ): Promise<GraphQLClient> {
-    const secretName = this.secretManager.getSecretName(
-      companyId,
-      companyAssetId,
-    );
-
-    // Throws CloudSecretManagerError if secret not found
-    // Should be handled in whatever calls getClientWithAuth
-    const authToken = await this.secretManager.getSecret(secretName, false);
+    if (!assets.API_KEY) {
+      throw new Error('oops i did it again');
+    }
     const client = new GraphQLClient(this.ezCaterApiUrl, {
-      headers: { Authorization: authToken },
+      headers: { Authorization: assets['API_KEY'].value },
     });
     return client;
   }
@@ -63,10 +58,10 @@ export class EzCaterApiService {
    */
   async getSubscribers(
     companyId: string,
-    companyAssetId: string,
+    assets: CompanyConnectionAsset,
   ): Promise<SubscriberResponse[]> {
     try {
-      const client = await this.getClientWithAuth(companyId, companyAssetId);
+      const client = await this.getClientWithAuth(assets);
 
       const response = client.request(this.getSubscribersQuery);
 
@@ -84,13 +79,10 @@ export class EzCaterApiService {
     }
   }
 
-  async createSubscriber(
-    companyId: string,
-    companyAssetId: string,
-    webhookUrl: string,
-  ) {
+  async createSubscriber(companyId: string, assets: CompanyConnectionAsset) {
+    const webhookUrl = `theurl/${companyId}`;
     try {
-      const client = await this.getClientWithAuth(companyId, companyAssetId);
+      const client = await this.getClientWithAuth(assets);
       const response = client.request(this.createSubscriberMutation, {
         webhookUrl,
       });
@@ -103,13 +95,13 @@ export class EzCaterApiService {
 
   async createSubscription(
     companyId: string,
-    companyAssetId: string,
+    assets: CompanyConnectionAsset,
     subscriberId: string,
     eventKey: 'accepted' | 'cancelled',
     catererId: string,
   ) {
     try {
-      const client = await this.getClientWithAuth(companyId, companyAssetId);
+      const client = await this.getClientWithAuth(assets);
       const response = client.request(this.createSubscriptionMutation, {
         subscriberId,
         eventKey,
@@ -124,10 +116,10 @@ export class EzCaterApiService {
 
   async getCaterers(
     companyId: string,
-    companyAssetId: string,
+    assets: CompanyConnectionAsset,
   ): Promise<CatererResponse[]> {
     try {
-      const client = await this.getClientWithAuth(companyId, companyAssetId);
+      const client = await this.getClientWithAuth(assets);
       const response = await client.request(this.getCaterersQuery);
 
       // Validate
@@ -141,9 +133,13 @@ export class EzCaterApiService {
     }
   }
 
-  async getMenus(companyId: string, companyAssetId: string, catererId: string) {
+  async getMenus(
+    companyId: string,
+    assets: CompanyConnectionAsset,
+    catererId: string,
+  ) {
     try {
-      const client = await this.getClientWithAuth(companyId, companyAssetId);
+      const client = await this.getClientWithAuth(assets);
       const response = client.request(this.getMenusQuery, { catererId });
 
       // Validate
@@ -154,11 +150,11 @@ export class EzCaterApiService {
 
   async getOrder(
     companyId: string,
-    companyAssetId: string,
+    assets: CompanyConnectionAsset,
     orderId: string,
   ): Promise<EzCaterCompleteOrder> {
     try {
-      const client = await this.getClientWithAuth(companyId, companyAssetId);
+      const client = await this.getClientWithAuth(assets);
       const response = client.request(this.getOrderQuery, { orderId });
 
       // Validate

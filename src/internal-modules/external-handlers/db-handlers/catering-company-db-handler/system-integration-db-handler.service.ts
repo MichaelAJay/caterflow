@@ -27,8 +27,12 @@ export class SystemIntegrationDbHandlerService
       await this.prismaClient.integrationTemplate.findUniqueOrThrow({
         where: { id: templateId },
         include: {
-          srcSystem: { select: { uiName: true, requirements: true } },
-          targetSystem: { select: { uiName: true, requirements: true } },
+          srcSystem: {
+            select: { name: true, uiName: true, requirements: true },
+          },
+          targetSystem: {
+            select: { name: true, uiName: true, requirements: true },
+          },
           requirements: true,
         },
       });
