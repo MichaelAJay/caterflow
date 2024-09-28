@@ -4,8 +4,8 @@ import { NutshellHandlerService } from './nutshell-handler.service';
 import { NoAssetsHandlerService } from './no-assets-handler.service';
 import { NoOutboundHandlerService } from './no-outbound-handler.service';
 import { NoInboundHandlerService } from './no-inbound-handler.service';
-import { EzCaterApiModule } from 'src/external-modules/ezcater-api/ezcater-api.module';
-import { NutshellApiModule } from 'src/external-modules/nutshell-api/nutshell-api.module';
+import { EzCaterApiModule } from '../../../external-modules/ezcater-api/ezcater-api.module';
+import { NutshellApiModule } from '../../../external-modules/nutshell-api/nutshell-api.module';
 
 @Module({
   imports: [EzCaterApiModule, NutshellApiModule],

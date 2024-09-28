@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ExternalSystemOutboundHandler } from './interfaces';
 import { CompanyConnectionAsset } from '../db-handlers/catering-company-db-handler/types/company_connection_assets';
-import { NutshellApiService } from 'src/external-modules/nutshell-api/nutshell-api.service';
+import { NutshellApiService } from '../../../external-modules/nutshell-api/nutshell-api.service';
 
 @Injectable()
 export class NutshellHandlerService implements ExternalSystemOutboundHandler {

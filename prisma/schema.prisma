@@ -48,20 +48,20 @@ model CompanyCaterer {
 }
 
 model CompanyExternalSystemConnection {
-  id             String           @id @default(uuid())
-  companyId      String           @map("company_id")
-  systemId       Int              @map("system_id")
-  systemUIName   String           @map("system_ui_name")
-  inboundStatus  ConnectionStatus @default(UNCONFIGURED) @map("inbound_status")
-  outboundStatus ConnectionStatus @default(UNCONFIGURED) @map("outbound_status")
-  assets         Json?            @default("{}")
+  id             String             @id @default(uuid())
+  companyId      String             @map("company_id")
+  systemName     ExternalSystemName @map("system_name")
+  systemUIName   String             @map("system_ui_name")
+  inboundStatus  ConnectionStatus   @default(UNCONFIGURED) @map("inbound_status")
+  outboundStatus ConnectionStatus   @default(UNCONFIGURED) @map("outbound_status")
+  assets         Json?              @default("{}")
 
   company        CateringCompany      @relation(fields: [companyId], references: [id])
-  externalSystem ExternalSystem       @relation(fields: [systemId], references: [id])
+  externalSystem ExternalSystem       @relation(fields: [systemName], references: [name])
   srcFor         CompanyIntegration[] @relation("SrcCompanyConnection")
   targetFor      CompanyIntegration[] @relation("TargetCompanyConnection")
 
-  @@unique([companyId, systemId])
+  @@unique([companyId, systemName])
   @@index([companyId])
   @@map("company_external_system_connections")
 }
@@ -153,8 +153,7 @@ model CompanyStore {
 }
 
 model ExternalSystem {
-  id            Int                @id @default(autoincrement())
-  name          ExternalSystemName
+  name          ExternalSystemName @id
   uiName        String             @map("ui_name")
   uiDescription String             @map("ui_description")
   requirements  Json               @default("{}")
@@ -184,21 +183,21 @@ model IntegrationRequirement {
 }
 
 model IntegrationTemplate {
-  id             Int              @id @default(autoincrement())
-  uiName         String
-  uiDescription  String
-  event          IntegrationEvent
-  srcSystemId    Int              @map("src_system_id")
-  srcEntity      ExternalEntity   @map("src_entity")
-  targetSystemId Int              @map("target_system_id")
-  targetEntity   ExternalEntity   @map("target_entity")
+  id               Int                @id @default(autoincrement())
+  uiName           String
+  uiDescription    String
+  event            IntegrationEvent
+  srcSystemName    ExternalSystemName @map("src_system_name")
+  srcEntity        ExternalEntity     @map("src_entity")
+  targetSystemName ExternalSystemName @map("target_system_name")
+  targetEntity     ExternalEntity     @map("target_entity")
 
-  srcSystem    ExternalSystem           @relation("SourceSystemRelation", fields: [srcSystemId], references: [id])
-  targetSystem ExternalSystem           @relation("TargetSystemRelation", fields: [targetSystemId], references: [id])
+  srcSystem    ExternalSystem           @relation("SourceSystemRelation", fields: [srcSystemName], references: [name])
+  targetSystem ExternalSystem           @relation("TargetSystemRelation", fields: [targetSystemName], references: [name])
   requirements IntegrationRequirement[]
   integrations CompanyIntegration[]
 
-  @@unique([event, targetSystemId, targetEntity])
+  @@unique([event, targetSystemName, targetEntity])
   @@map("integration_templates")
 }
 

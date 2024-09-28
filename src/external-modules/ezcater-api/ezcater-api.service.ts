@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { GraphQLClient } from 'graphql-request';
-import { CloudSecretManagerError } from 'src/common/errors/cloud_secret_manager.error';
-import { SecretManagerService } from 'src/internal-modules/external-handlers/secret-manager/secret-manager.service';
-import { CustomConfigService } from 'src/utility/services/custom-config/custom-config.service';
+import { CloudSecretManagerError } from '../../common/errors/cloud_secret_manager.error';
+import { SecretManagerService } from '../../internal-modules/external-handlers/secret-manager/secret-manager.service';
+import { CustomConfigService } from '../../utility/services/custom-config/custom-config.service';
 import { validateAllSubscribersQuery } from './validators/all-subscribers.ezcater-validator';
 import { SubscriberResponse } from './types/ezcater-response/all-subscribers.response.type';
 import { validateAllCaterersQuery } from './validators/all-caterers.ezcater-validator';
@@ -11,7 +11,7 @@ import { validateGetOrderByIdQuery } from './validators/get-order-by-id.ezcater-
 import { EzCaterCompleteOrder } from './types/ezcater-response/get-order-by-id.response.type';
 import { queries } from './gql/queries';
 import { mutations } from './gql/mutations';
-import { CompanyConnectionAsset } from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/types/company_connection_assets';
+import { CompanyConnectionAsset } from '../../internal-modules/external-handlers/db-handlers/catering-company-db-handler/types/company_connection_assets';
 
 @Injectable()
 export class EzCaterApiService {

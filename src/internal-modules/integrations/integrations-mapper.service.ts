@@ -18,14 +18,7 @@ export class IntegrationsMapperService implements IIntegrationsMapper {
     externalSystems: ExternalSystemWithTypedRequirementsAndIntegrations[],
   ): ExternalSystemResponse[] {
     return externalSystems.map(
-      ({
-        id,
-        uiName: name,
-        uiDescription: description,
-        srcFor,
-        targetFor,
-      }) => ({
-        id,
+      ({ uiName: name, uiDescription: description, srcFor, targetFor }) => ({
         name,
         description,
         srcFor: srcFor.map(({ uiName: name, uiDescription: description }) => ({

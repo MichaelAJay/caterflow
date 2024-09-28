@@ -125,11 +125,14 @@ export class CateringCompanyService implements ICateringCompanyService {
     );
   }
 
-  async createExternalSystemConnection(companyId: string, systemId: number) {
+  async createExternalSystemConnection(
+    companyId: string,
+    systemName: $Enums.ExternalSystemName,
+  ) {
     const record =
       await this.companyIntegrationAndConnectionService.createExternalSystemConnection(
         companyId,
-        systemId,
+        systemName,
       );
 
     return record;

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { IBuildGetManyQueryInputArgs } from '../external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
 import { SystemIntegrationDbHandlerService } from '../external-handlers/db-handlers/catering-company-db-handler/system-integration-db-handler.service';
 import { IntegrationsMapperService } from './integrations-mapper.service';
+import { $Enums } from '@prisma/client';
 
 @Injectable()
 export class IntegrationsService {
@@ -24,9 +25,12 @@ export class IntegrationsService {
     return this.integrationsMapper.mapExternalSystemsForResponse(records);
   }
 
-  async getExternalSystemById(externalSystemId: number, companyId?: string) {
+  async getExternalSystemById(
+    externalSystemName: $Enums.ExternalSystemName,
+    companyId?: string,
+  ) {
     return this.systemIntegrationDbHandler.getExternalSystem(
-      externalSystemId,
+      externalSystemName,
       companyId,
     );
   }

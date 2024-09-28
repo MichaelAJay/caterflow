@@ -1,6 +1,6 @@
 import { JSONSchemaType } from 'ajv';
 import { AllSubscribersResponse } from '../types/ezcater-response/all-subscribers.response.type';
-import ajvSingleton from 'src/system/singletons/ajv.singleton';
+import ajvSingleton from '../../../system/singletons/ajv.singleton';
 
 const allSubscribersResponseSchema: JSONSchemaType<AllSubscribersResponse> = {
   type: 'object',

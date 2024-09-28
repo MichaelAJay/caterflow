@@ -11,7 +11,7 @@ import {
   OrderItemCustomization,
 } from '../types/ezcater-response/get-order-by-id.response.type';
 import { EzCaterAddress } from '../types/ezcater-address.type';
-import ajvSingleton from 'src/system/singletons/ajv.singleton';
+import ajvSingleton from '../../../system/singletons/ajv.singleton';
 
 const EzCaterAddressSchema: JSONSchemaType<EzCaterAddress> = {
   type: 'object',

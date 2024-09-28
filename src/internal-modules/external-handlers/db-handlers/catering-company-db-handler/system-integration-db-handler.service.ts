@@ -12,6 +12,7 @@ import {
   validateExternalSystems,
 } from './validators/external-systems.validator';
 import { validateExternalSystemRequirements } from './validators/external_system_requirements.validator';
+import { $Enums } from '@prisma/client';
 
 @Injectable()
 export class SystemIntegrationDbHandlerService
@@ -103,12 +104,12 @@ export class SystemIntegrationDbHandlerService
   }
 
   async getExternalSystem(
-    externalSystemId: number,
+    externalSystemName: $Enums.ExternalSystemName,
     companyId?: string,
   ): Promise<ExternalSystemWithTypeRequirementsAndIntegrationsAndCompanyReference> {
     const record = await this.prismaClient.externalSystem.findUniqueOrThrow({
       where: {
-        id: externalSystemId,
+        name: externalSystemName,
       },
       include: {
         companyConnections: {

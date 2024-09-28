@@ -2,7 +2,6 @@ import {
   Controller,
   Get,
   Param,
-  ParseIntPipe,
   Query,
   Req,
   SetMetadata,
@@ -32,13 +31,13 @@ export class ExternalSystemController {
   @SetMetadata('permissions', [$Enums.PermissionName.ManageIntegrations])
   async getExternalSystemById(
     @Req() req: AuthenticatedRequest,
-    @Param('id', ParseIntPipe) externalSystemId: number,
+    @Param('id') externalSystemName: string,
   ) {
     const { user } = req;
     const companyId = user.companyId || undefined;
 
     return this.integrationsService.getExternalSystemById(
-      externalSystemId,
+      externalSystemName as $Enums.ExternalSystemName,
       companyId,
     );
   }

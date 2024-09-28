@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { $Enums } from '@prisma/client';
-import { CompanyConnectionAsset } from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/types/company_connection_assets';
-import { EzcaterHandlerService } from 'src/internal-modules/external-handlers/external-system-handler/ezcater-handler.service';
-import { NutshellHandlerService } from 'src/internal-modules/external-handlers/external-system-handler/nutshell-handler.service';
+import { CompanyConnectionAsset } from '../../external-handlers/db-handlers/catering-company-db-handler/types/company_connection_assets';
+import { EzcaterHandlerService } from '../../external-handlers/external-system-handler/ezcater-handler.service';
+import { NutshellHandlerService } from '../../external-handlers/external-system-handler/nutshell-handler.service';
 
 type Reasons = 'NOT_APPLICABLE';
 

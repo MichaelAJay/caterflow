@@ -1,9 +1,9 @@
 import { JSONSchemaType } from 'ajv';
 import {
   CompanyConnectionAsset,
-  assetStatus,
+  AssetStatus,
 } from '../types/company_connection_assets';
-import ajvSingleton from 'src/system/singletons/ajv.singleton';
+import ajvSingleton from '../../../../../system/singletons/ajv.singleton';
 
 const companyExternalConnectionAssetsSchema: JSONSchemaType<CompanyConnectionAsset> =
   {
@@ -17,7 +17,7 @@ const companyExternalConnectionAssetsSchema: JSONSchemaType<CompanyConnectionAss
           isSecret: { type: 'boolean', const: true },
           uiName: { type: 'string' },
           uiDescription: { type: 'string' },
-          status: { type: 'string', enum: Object.values(assetStatus) },
+          status: { type: 'string', enum: Object.values(AssetStatus) },
           value: {
             oneOf: [
               { type: 'null' },
@@ -45,7 +45,7 @@ const companyExternalConnectionAssetsSchema: JSONSchemaType<CompanyConnectionAss
           isSecret: { type: 'boolean', const: true },
           uiName: { type: 'string' },
           uiDescription: { type: 'string' },
-          status: { type: 'string', enum: Object.values(assetStatus) },
+          status: { type: 'string', enum: Object.values(AssetStatus) },
           value: {
             oneOf: [
               { type: 'null' },
@@ -73,7 +73,7 @@ const companyExternalConnectionAssetsSchema: JSONSchemaType<CompanyConnectionAss
           isSecret: { type: 'boolean', const: true },
           uiName: { type: 'string' },
           uiDescription: { type: 'string' },
-          status: { type: 'string', enum: Object.values(assetStatus) },
+          status: { type: 'string', enum: Object.values(AssetStatus) },
           value: {
             oneOf: [
               { type: 'null' },

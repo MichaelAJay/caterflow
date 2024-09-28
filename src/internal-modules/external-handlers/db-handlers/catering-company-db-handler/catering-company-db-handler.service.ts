@@ -7,9 +7,12 @@ import { $Enums, CateringCompany, Prisma } from '@prisma/client';
 import uuidUtils from '../../../../utility/functions/uuid-utils';
 import { InvalidUUIDError } from '../../../../common/errors/invalid_uuid.error';
 import { ERROR_CODE } from '../../../../common/codes/error-codes';
-import { CompanyConnectionAsset } from './types/company_connection_assets';
+import {
+  CompanyConnectionAsset,
+  CompanyConnectionWithTypedAssets,
+} from './types/company_connection_assets';
 import { validateCompanyExternalSystemConnectionAssets } from './validators/company_external_connection_assets.validator';
-import companyIntegrationAndConnectionUtilities from 'src/internal-modules/catering-company/utility/company-integration-and-connection.utilities';
+import companyIntegrationAndConnectionUtilities from '../../../../internal-modules/catering-company/utility/company-integration-and-connection.utilities';
 import {
   connectionDirection,
   ConnectionDirectionValues,
@@ -206,11 +209,11 @@ export class CateringCompanyDbHandlerService
 
   async getConnectionsByExternalSystemId(
     companyId: string,
-    externalSystemIds: number[],
+    externalSystemNames: $Enums.ExternalSystemName[],
   ) {
     const records =
       await this.prismaClient.companyExternalSystemConnection.findMany({
-        where: { companyId, systemId: { in: externalSystemIds } },
+        where: { companyId, systemName: { in: externalSystemNames } },
       });
     return records;
   }
@@ -247,11 +250,6 @@ export class CateringCompanyDbHandlerService
       await this.prismaClient.companyExternalSystemConnection.findUniqueOrThrow(
         {
           where: { id: connectionId },
-          include: {
-            externalSystem: {
-              select: { name: true },
-            },
-          },
         },
       );
 
@@ -349,10 +347,10 @@ export class CateringCompanyDbHandlerService
    */
   async createExternalSystemConnection(
     companyId: string,
-    systemId: number,
+    systemName: $Enums.ExternalSystemName,
     uiName: string,
     assets: CompanyConnectionAsset,
-  ) {
+  ): Promise<CompanyConnectionWithTypedAssets> {
     try {
       if (!uuidUtils.isUUID(companyId)) {
         throw new InvalidUUIDError(ERROR_CODE.InvalidUUID);
@@ -375,7 +373,7 @@ export class CateringCompanyDbHandlerService
         await this.prismaClient.companyExternalSystemConnection.create({
           data: {
             companyId,
-            systemId,
+            systemName,
             systemUIName: uiName,
             outboundStatus:
               $Enums.ConnectionStatus[

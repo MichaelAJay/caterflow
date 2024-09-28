@@ -135,12 +135,16 @@ export class CateringCompanyController implements ICateringCompanyController {
   @SetMetadata('permissions', [$Enums.PermissionName.ManageIntegrations])
   async createExternalSystemConnection(
     @Req() req: AuthenticatedRequestForCompanyUser,
-    @Param('systemId', ParseIntPipe) systemId: number,
+    @Param('systemName') systemName: string,
   ) {
+    /**
+     * @TODO validate systemname
+     */
+
     const { user } = req;
     return this.cateringCompanyService.createExternalSystemConnection(
       user.companyId,
-      systemId,
+      systemName as $Enums.ExternalSystemName,
     );
   }
 

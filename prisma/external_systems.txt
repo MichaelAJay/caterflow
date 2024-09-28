@@ -1,0 +1,42 @@
+-[ RECORD 1 ]--+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+id             | 1
+name           | EZ_CATER
+ui_name        | ezCater
+ui_description | Catering company
+requirements   | {"API_KEY": {"uiName": "API Key", "isSecret": true, "direction": "OUT", "uiDescription": "An api key"}, "WEBHOOK_SECRET": {"uiName": "Webhook Secret", "isSecret": true, "direction": "IN", "uiDescription": "Use to validate incoming order"}}
+-[ RECORD 2 ]--+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+id             | 2
+name           | NUTSHELL
+ui_name        | Nutshell
+ui_description | CRM
+requirements   | {"API_KEY": {"uiName": "API Key", "isSecret": true, "direction": "OUT", "uiDescription": "An api key"}, "API_USERNAME": {"uiName": "API Username", "isSecret": true, "direction": "OUT", "uiDescription": "Username (email) to use to make request"}}
+-[ RECORD 3 ]--+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+id             | 3
+name           | TEST_NO_INBOUND_NO_OUTBOUND
+ui_name        | no assets
+ui_description | 
+requirements   | {}
+-[ RECORD 4 ]--+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+id             | 5
+name           | TEST_NO_INBOUND
+ui_name        | no inbound
+ui_description | 
+requirements   | {"API_KEY": {"uiName": "API Key", "isSecret": true, "direction": "OUT", "uiDescription": "An api key"}}
+-[ RECORD 5 ]--+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+id             | 4
+name           | TEST_NO_OUTBOUND
+ui_name        | no outbound
+ui_description | 
+requirements   | {"WEBHOOK_SECRET": {"uiName": "Webhook Secret", "isSecret": true, "direction": "IN", "uiDescription": "Use to validate incoming order"}}
+-[ RECORD 6 ]--+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+id             | 6
+name           | TEST_NO_OUTBOUND_CONFIG
+ui_name        | no outbound config
+ui_description | 
+requirements   | {"API_KEY": {"uiName": "API Key", "isSecret": true, "direction": "OUT", "uiDescription": "An api key"}}
+-[ RECORD 7 ]--+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+id             | 7
+name           | TEST_NO_INBOUND_CONFIG
+ui_name        | no inbound config
+ui_description | 
+requirements   | {"API_KEY": {"uiName": "API Key", "isSecret": true, "direction": "OUT", "uiDescription": "An api key"}}

@@ -3,7 +3,7 @@ import {
   ExternalSystemWithTypedRequirements,
   ExternalSystemWithTypedRequirementsAndIntegrations,
 } from '../types/return/external-system.type';
-import ajvSingleton from 'src/system/singletons/ajv.singleton';
+import ajvSingleton from '../../../../../system/singletons/ajv.singleton';
 import { $Enums } from '@prisma/client';
 import {
   ExternalSystemRequirements,
@@ -38,13 +38,12 @@ const externalSystemSchema: JSONSchemaType<ExternalSystemWithTypedRequirements> 
   {
     type: 'object',
     properties: {
-      id: { type: 'number' },
       name: { type: 'string' },
       uiName: { type: 'string' },
       uiDescription: { type: 'string' },
       requirements: externalSystemRequirementsSchema,
     },
-    required: ['id', 'name', 'uiName', 'uiDescription', 'requirements'],
+    required: ['name', 'uiName', 'uiDescription', 'requirements'],
     additionalProperties: false,
   };
 
@@ -52,7 +51,6 @@ const fullExternalSystemSchema: JSONSchemaType<ExternalSystemWithTypedRequiremen
   {
     type: 'object',
     properties: {
-      id: { type: 'number' },
       name: { type: 'string' },
       uiName: { type: 'string' },
       uiDescription: { type: 'string' },
@@ -77,12 +75,18 @@ const fullExternalSystemSchema: JSONSchemaType<ExternalSystemWithTypedRequiremen
               type: 'string',
               enum: Object.values($Enums.IntegrationEvent),
             }, // $Enums.IntegrationEvent
-            srcSystemId: { type: 'number' },
+            srcSystemName: {
+              type: 'string',
+              enum: Object.values($Enums.ExternalSystemName),
+            },
             srcEntity: {
               type: 'string',
               enum: Object.values($Enums.ExternalEntity),
             }, // $Enums.ExternalEntity
-            targetSystemId: { type: 'number' },
+            targetSystemName: {
+              type: 'string',
+              enum: Object.values($Enums.ExternalSystemName),
+            },
             targetEntity: {
               type: 'string',
               enum: Object.values($Enums.ExternalEntity),
@@ -93,9 +97,9 @@ const fullExternalSystemSchema: JSONSchemaType<ExternalSystemWithTypedRequiremen
             'uiName',
             'uiDescription',
             'event',
-            'srcSystemId',
+            'srcSystemName',
             'srcEntity',
-            'targetSystemId',
+            'targetSystemName',
             'targetEntity',
           ],
           additionalProperties: false,
@@ -113,12 +117,18 @@ const fullExternalSystemSchema: JSONSchemaType<ExternalSystemWithTypedRequiremen
               type: 'string',
               enum: Object.values($Enums.IntegrationEvent),
             }, // $Enums.IntegrationEvent
-            srcSystemId: { type: 'number' },
+            srcSystemName: {
+              type: 'string',
+              enum: Object.values($Enums.ExternalSystemName),
+            },
             srcEntity: {
               type: 'string',
               enum: Object.values($Enums.ExternalEntity),
             }, // $Enums.ExternalEntity
-            targetSystemId: { type: 'number' },
+            targetSystemName: {
+              type: 'string',
+              enum: Object.values($Enums.ExternalSystemName),
+            },
             targetEntity: {
               type: 'string',
               enum: Object.values($Enums.ExternalEntity),
@@ -129,9 +139,9 @@ const fullExternalSystemSchema: JSONSchemaType<ExternalSystemWithTypedRequiremen
             'uiName',
             'uiDescription',
             'event',
-            'srcSystemId',
+            'srcSystemName',
             'srcEntity',
-            'targetSystemId',
+            'targetSystemName',
             'targetEntity',
           ],
           additionalProperties: false,
@@ -139,7 +149,6 @@ const fullExternalSystemSchema: JSONSchemaType<ExternalSystemWithTypedRequiremen
       },
     },
     required: [
-      'id',
       'name',
       'uiName',
       'uiDescription',

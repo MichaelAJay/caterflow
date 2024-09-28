@@ -2,13 +2,13 @@ import {
   Asset,
   AssetStatusValues,
   CompanyConnectionAsset,
-} from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/types/company_connection_assets';
+} from '../../external-handlers/db-handlers/catering-company-db-handler/types/company_connection_assets';
 import {
   ConnectionDirectionValues,
   ExternalSystemRequirements,
   RequirementType,
   validateRequirementType,
-} from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/types/external_systems_requirements';
+} from '../../external-handlers/db-handlers/catering-company-db-handler/types/external_systems_requirements';
 
 const companyIntegrationAndConnectionUtilities = {
   mapExternalSystemRequirementsToCompanyAssets: (

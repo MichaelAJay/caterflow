@@ -1,6 +1,6 @@
 import { JSONSchemaType } from 'ajv';
 import { ExternalSystemRequirements } from '../types/external_systems_requirements';
-import ajvSingleton from 'src/system/singletons/ajv.singleton';
+import ajvSingleton from '../../../../../system/singletons/ajv.singleton';
 
 /**
  * All properties are optional, but if included, must match the specified schema

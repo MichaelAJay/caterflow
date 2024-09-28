@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { SecretManagerService } from './secret-manager.service';
-import { GcpSecretManagerModule } from 'src/external-modules/gcp-secret-manager/gcp-secret-manager.module';
-import { CustomConfigModule } from 'src/utility/services/custom-config/custom-config.module';
+import { GcpSecretManagerModule } from '../../../external-modules/gcp-secret-manager/gcp-secret-manager.module';
+import { CustomConfigModule } from '../../../utility/services/custom-config/custom-config.module';
 
 @Module({
   imports: [CustomConfigModule, GcpSecretManagerModule],

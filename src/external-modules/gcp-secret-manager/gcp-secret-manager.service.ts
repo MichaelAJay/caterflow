@@ -1,9 +1,9 @@
 import { SecretManagerServiceClient } from '@google-cloud/secret-manager';
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CustomConfigService } from '../../utility/services/custom-config/custom-config.service';
 import { IExternalSecretManager } from './interfaces/external-secret-manager.service.interface';
 import * as Sentry from '@sentry/node';
-import { CloudSecretManagerError } from 'src/common/errors/cloud_secret_manager.error';
+import { CloudSecretManagerError } from '../../common/errors/cloud_secret_manager.error';
 
 @Injectable()
 export class GcpSecretManagerService implements IExternalSecretManager {

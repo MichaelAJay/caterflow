@@ -2,26 +2,27 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
-  InternalServerErrorException,
 } from '@nestjs/common';
 import { CompanyExternalSystemService } from '../company-external-system/company-external-system.service';
-import { IBuildGetCompanyIntegrationListArgs } from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
-import { CateringCompanyDbHandlerService } from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/catering-company-db-handler.service';
-import { SecretManagerService } from 'src/internal-modules/external-handlers/secret-manager/secret-manager.service';
-import { SystemIntegrationDbHandlerService } from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/system-integration-db-handler.service';
-import { $Enums, CompanyIntegration, Prisma } from '@prisma/client';
+import { IBuildGetCompanyIntegrationListArgs } from '../../external-handlers/db-handlers/catering-company-db-handler/interfaces/query-builder-args.interfaces';
+import { CateringCompanyDbHandlerService } from '../../external-handlers/db-handlers/catering-company-db-handler/catering-company-db-handler.service';
+import { SystemIntegrationDbHandlerService } from '../../external-handlers/db-handlers/catering-company-db-handler/system-integration-db-handler.service';
+import { $Enums, Prisma } from '@prisma/client';
 import {
   connectionDirection,
   ConnectionDirectionValues,
   Requirement,
   RequirementType,
-} from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/types/external_systems_requirements';
+} from '../../external-handlers/db-handlers/catering-company-db-handler/types/external_systems_requirements';
 import {
-  assetStatus,
+  Asset,
+  AssetStatus,
+  AssetStatusValues,
   CompanyConnectionAsset,
   CompanyConnectionWithTypedAssets,
-} from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/types/company_connection_assets';
+} from '../../external-handlers/db-handlers/catering-company-db-handler/types/company_connection_assets';
 import companyIntegrationAndConnectionUtilities from '../utility/company-integration-and-connection.utilities';
+import { CryptoService } from '../../../system/modules/crypto/crypto.service';
 
 @Injectable()
 export class CompanyIntegrationAndConnectionService {
@@ -29,7 +30,7 @@ export class CompanyIntegrationAndConnectionService {
     private readonly companyExternalSystemService: CompanyExternalSystemService,
     private readonly cateringCompanyDbHandler: CateringCompanyDbHandlerService,
     private readonly systemIntegrationDbHandler: SystemIntegrationDbHandlerService,
-    private readonly secretManager: SecretManagerService,
+    private readonly cryptoService: CryptoService,
   ) {}
 
   // methods
@@ -55,20 +56,23 @@ export class CompanyIntegrationAndConnectionService {
     const existingConnections =
       await this.cateringCompanyDbHandler.getConnectionsByExternalSystemId(
         companyId,
-        [integrationTemplate.srcSystemId, integrationTemplate.targetSystemId],
+        [
+          integrationTemplate.srcSystemName,
+          integrationTemplate.targetSystemName,
+        ],
       );
 
     const srcConnection = existingConnections.find(
-      (connection) => connection.systemId === integrationTemplate.srcSystemId,
+      (connection) =>
+        connection.systemName === integrationTemplate.srcSystemName,
     );
     const targetConnection = existingConnections.find(
       (connection) =>
-        connection.systemId === integrationTemplate.targetSystemId,
+        connection.systemName === integrationTemplate.targetSystemName,
     );
 
     const createConnectionHelper = async (
       companyId: string,
-      systemId: number,
       externalSystemName: $Enums.ExternalSystemName,
       uiName: string,
       requirements: Partial<
@@ -79,7 +83,7 @@ export class CompanyIntegrationAndConnectionService {
 
       const { id, outboundStatus } = await this.createExternalSystemConnection(
         companyId,
-        { id: systemId, name: externalSystemName, uiName, requirements },
+        { name: externalSystemName, uiName, requirements },
       );
       result.id = id;
       result.isReady = outboundStatus === $Enums.ConnectionStatus.READY;
@@ -99,7 +103,6 @@ export class CompanyIntegrationAndConnectionService {
     } else {
       const { id, isReady } = await createConnectionHelper(
         companyId,
-        integrationTemplate.srcSystemId,
         integrationTemplate.srcSystem.name,
         integrationTemplate.srcSystem.uiName,
         integrationTemplate.srcSystem.requirements,
@@ -118,7 +121,6 @@ export class CompanyIntegrationAndConnectionService {
     } else {
       const { id, isReady } = await createConnectionHelper(
         companyId,
-        integrationTemplate.targetSystemId,
         integrationTemplate.targetSystem.name,
         integrationTemplate.targetSystem.uiName,
         integrationTemplate.targetSystem.requirements,
@@ -176,9 +178,8 @@ export class CompanyIntegrationAndConnectionService {
   async createExternalSystemConnection(
     companyId: string,
     systemData:
-      | number
+      | $Enums.ExternalSystemName
       | {
-          id: number;
           name: $Enums.ExternalSystemName;
           uiName: string;
           requirements: Partial<
@@ -186,8 +187,8 @@ export class CompanyIntegrationAndConnectionService {
           >;
         },
   ) {
-    const { id, name, uiName, requirements } =
-      typeof systemData === 'number'
+    const { name, uiName, requirements } =
+      typeof systemData === 'string'
         ? await this.systemIntegrationDbHandler.getExternalSystem(
             systemData,
             companyId,
@@ -200,10 +201,10 @@ export class CompanyIntegrationAndConnectionService {
         requirements,
       );
 
-    const record =
+    let record =
       await this.cateringCompanyDbHandler.createExternalSystemConnection(
         companyId,
-        id,
+        name,
         uiName,
         assets,
       );
@@ -211,7 +212,7 @@ export class CompanyIntegrationAndConnectionService {
     /** May be 'UNCONFIGURED' (DEFAULT) or 'CONFIGURED_UNTESTED' */
     const { outboundStatus } = record;
     if (outboundStatus === $Enums.ConnectionStatus.CONFIGURED_UNTESTED) {
-      await this.testConnectionAndUpdateOnPass(companyId, record, name);
+      record = await this.testConnectionOutAndUpdate(companyId, record);
     }
 
     return record;
@@ -237,7 +238,7 @@ export class CompanyIntegrationAndConnectionService {
     value: any,
   ) {
     // Determine secret status
-    const { assets, externalSystem, ...connection } =
+    const { assets, ...connection } =
       await this.cateringCompanyDbHandler.getConnectionWithValidatedAssets(
         connectionId,
       );
@@ -253,101 +254,140 @@ export class CompanyIntegrationAndConnectionService {
       );
     }
 
-    // If secret, store secret
-    let assetValue;
-    if (targetAsset.isSecret) {
-      // const secretName = this.secretManager.getSecretName(companyId, asset.id);
-      assetValue = `${companyId}_${connectionId}_${requirementType}`;
-      console.log('*** SECRET NAME *** ', assetValue);
+    const assetValue = targetAsset.isSecret
+      ? await this.cryptoService.encrypt(value)
+      : value;
 
-      try {
-        const secretBuffer = Buffer.from(value);
-        await this.secretManager.upsertSecret(assetValue, secretBuffer);
+    /**
+     * Start new section
+     */
+    // Update assets
+    assets[requirementType] = {
+      ...targetAsset,
+      status: AssetStatus.Untested, // See `assetStatuses`
+      value: assetValue,
+    };
 
-        // Do something special if this fails. Maybe it should be handled in upsertSecret.
-      } catch (err) {
-        // Should log
-        throw new InternalServerErrorException(
-          'The secret could not be stored. The asset has been deleted. Please try again, and if it does not work, contact support.',
-        );
-      }
-    } else {
-      assetValue = value;
-    }
-
-    // Update
-    try {
-      // Update assets
-      assets[requirementType] = {
-        ...targetAsset,
-        status: 'UNTESTED', // See `assetStatuses`
-        value: assetValue,
-      };
-      await this.cateringCompanyDbHandler.updateExternalSystemConnection(
-        connectionId,
-        { assets },
-      );
-    } catch (err) {
-      const msg = targetAsset.isSecret
-        ? 'Secret created, but name not stored.'
-        : 'Asset value not stored';
-      throw new InternalServerErrorException(msg);
-    }
-
+    let updatedConnection: CompanyConnectionWithTypedAssets;
     if (
-      companyIntegrationAndConnectionUtilities.isFullOutboundConfigured(assets)
+      companyIntegrationAndConnectionUtilities.isOneWayConfigured(
+        assets,
+        targetAsset.direction,
+      )
     ) {
-      const testResult =
-        await this.companyExternalSystemService.testOutboundConnection(
-          externalSystem.name,
-          companyId,
+      // Is either one way configured out or in
+      if (targetAsset.direction === connectionDirection.Out) {
+        updatedConnection = await this.testConnectionOutAndUpdate(companyId, {
+          ...connection,
           assets,
-        );
-
-      let newlyActivatableIntegrations: CompanyIntegration[] = [];
-      if (testResult) {
-        // Carry out connection initializations
+        });
+      } else {
+        // con dir in
         const updatedAssets =
           companyIntegrationAndConnectionUtilities.updateAssetStatus(
             assets,
-            assetStatus.Test_Succeeded,
-            connectionDirection.Out,
+            AssetStatus.Untested,
+            connectionDirection.In,
           );
 
-        await this.updateExternalSystemConnection(connectionId, {
-          outboundStatus: $Enums.ConnectionStatus.READY,
-          assets: updatedAssets,
-        });
-
-        newlyActivatableIntegrations =
-          await this.cateringCompanyDbHandler.getAllConfiguredAndTestedIntegrationByConnectionId(
+        updatedConnection =
+          await this.cateringCompanyDbHandler.updateExternalSystemConnection(
             connectionId,
+            {
+              inboundStatus: $Enums.ConnectionStatus.CONFIGURED_UNTESTED,
+              assets: updatedAssets,
+            },
           );
       }
-      return newlyActivatableIntegrations;
+
+      // whichever one it was is finished
+      const processCompanyIntegrationsWithUpdatedAsset = async (
+        companyConnection: CompanyConnectionWithTypedAssets,
+        dir: ConnectionDirectionValues,
+      ): Promise<any> => {
+        // Direction validation & handler of incomplete connections
+        switch (dir) {
+          case connectionDirection.In:
+            if (
+              !(
+                companyConnection.inboundStatus ===
+                  $Enums.ConnectionStatus.READY ||
+                // Special case, since triggering a webhook test is not currently possible
+                companyConnection.inboundStatus ===
+                  $Enums.ConnectionStatus.CONFIGURED_UNTESTED
+              )
+            ) {
+              return [];
+            }
+            break;
+          case connectionDirection.Out:
+            if (
+              companyConnection.outboundStatus !== $Enums.ConnectionStatus.READY
+            ) {
+              return [];
+            }
+            break;
+          default:
+            // This represents an error - there should only be the other two values
+            // Log and throw
+            throw new Error('A bad error has occurred');
+        }
+
+        await this.cateringCompanyDbHandler.updateIntegrationsByComplementaryConnectionId(
+          companyConnection.id,
+          dir,
+        );
+      };
+
+      await processCompanyIntegrationsWithUpdatedAsset(
+        updatedConnection,
+        targetAsset.direction,
+      );
+    } else {
+      updatedConnection =
+        await this.cateringCompanyDbHandler.updateExternalSystemConnection(
+          connectionId,
+          { assets },
+        );
     }
+
+    /**
+     * End new section
+     */
+    return updatedConnection;
   }
 
   /**
    * This happens when a previously-existing company connection's asset is updated
-   * @returns - A CompanyConnection with updated in or outbound status (depending on updated asset dir) &  updated asset status (for the given dir)
+   * @returns - A CompanyConnection with updated in or outbound status (depending on updated asset dir) & updated asset status (for the given dir)
    */
   async processCompanyConnectionWithUpdatedAsset(
     connection: CompanyConnectionWithTypedAssets,
     assetName: RequirementType,
     externalSystemName: $Enums.ExternalSystemName,
+    assetValue: string,
   ): Promise<CompanyConnectionWithTypedAssets> {
     const { id, companyId, assets } = connection;
 
-    const dir = assets[assetName]?.direction;
+    const targetAsset = assets[assetName];
+    if (!targetAsset) {
+      throw new Error('Oops I did it again');
+    }
+
+    const dir = targetAsset.direction;
     if (!dir) {
       // log
       throw new Error('Bad process');
     }
 
-    let updatedAssets: CompanyConnectionAsset = {
+    const asset: Asset = {
+      ...targetAsset,
+      status: AssetStatus.Untested,
+      value: assetValue,
+    };
+    const updatedAssets: CompanyConnectionAsset = {
       ...assets,
-      [assetName]: assetStatus.Untested,
+      [assetName]: asset,
     };
 
     // Check configured
@@ -381,25 +421,11 @@ export class CompanyIntegrationAndConnectionService {
     // !!! IS OUT ASSET !!!
 
     // Test
-    const isReady =
-      await this.companyExternalSystemService.testOutboundConnection(
-        externalSystemName,
-        companyId,
-        updatedAssets,
-      );
 
-    updatedAssets = companyIntegrationAndConnectionUtilities.updateAssetStatus(
-      updatedAssets,
-      isReady ? assetStatus.Test_Succeeded : assetStatus.Test_Failed,
-      dir,
+    const updatedConnection = await this.testConnectionOutAndUpdate(
+      companyId,
+      connection,
     );
-
-    const updatedConnection =
-      await this.cateringCompanyDbHandler.updateExternalSystemConnection(id, {
-        outboundStatus:
-          $Enums.ConnectionStatus[isReady ? 'READY' : 'TEST_FAILED'],
-        assets: updatedAssets,
-      });
 
     /**
      * MUST BE CALLED with the result of processCompanyConnectionWithUpdatedAsset
@@ -448,35 +474,54 @@ export class CompanyIntegrationAndConnectionService {
   }
 
   /**
-   *
-   * @param companyId
-   * @param record
-   * @returns
+   * Runs testOutbound
+   * Then if tested, updateAssetStatus w/ "out"
+   * Then update external system connection (will update outboundStatus and assets if tested)
    */
-  async testConnectionAndUpdateOnPass(
+  async testConnectionOutAndUpdate(
     companyId: string,
     record: CompanyConnectionWithTypedAssets,
-    externalSystemName: $Enums.ExternalSystemName,
   ): Promise<CompanyConnectionWithTypedAssets> {
-    const isTested =
+    const testResult =
       await this.companyExternalSystemService.testOutboundConnection(
-        externalSystemName,
+        record.systemName,
         companyId,
         record.assets,
       );
 
-    let recordCopy = { ...record };
-
-    if (isTested) {
-      recordCopy =
-        await this.cateringCompanyDbHandler.updateExternalSystemConnection(
-          record.id,
-          { outboundStatus: $Enums.ConnectionStatus.READY },
-        );
+    let outboundStatus: $Enums.ConnectionStatus;
+    let updates: Pick<
+      Prisma.CompanyExternalSystemConnectionUncheckedUpdateInput,
+      'outboundStatus' | 'assets'
+    >;
+    if (testResult.tested) {
+      let assetStatus: AssetStatusValues;
+      if (testResult.passed) {
+        outboundStatus = $Enums.ConnectionStatus.READY;
+        assetStatus = AssetStatus.Test_Succeeded;
+      } else {
+        // Log for company and return useful information
+        outboundStatus = $Enums.ConnectionStatus.TEST_FAILED;
+        assetStatus = AssetStatus.Test_Failed;
+      }
+      const asset = companyIntegrationAndConnectionUtilities.updateAssetStatus(
+        record.assets,
+        assetStatus,
+        connectionDirection.Out,
+      );
+      updates = { outboundStatus, assets: asset };
+    } else if (testResult.reason === 'NOT_APPLICABLE') {
+      // Not Tested - connection does not make external requests
+      outboundStatus = $Enums.ConnectionStatus.NOT_APPLICABLE;
+      updates = { outboundStatus };
     } else {
-      // TODO LOG
-      // This means that the application thought that the connection was outbound-ready, but it wasn't
+      // Error - log
+      throw new Error('oops i did it again');
     }
-    return recordCopy;
+
+    return await this.cateringCompanyDbHandler.updateExternalSystemConnection(
+      record.id,
+      updates,
+    );
   }
 }

@@ -1,6 +1,6 @@
 import { JSONSchemaType } from 'ajv';
 import { AllCaterersResponseData } from '../types/ezcater-response/all-caterers.response.type';
-import ajvSingleton from 'src/system/singletons/ajv.singleton';
+import ajvSingleton from '../../../system/singletons/ajv.singleton';
 
 const schema: JSONSchemaType<AllCaterersResponseData> = {
   type: 'object',

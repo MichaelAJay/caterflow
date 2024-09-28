@@ -3,7 +3,7 @@ import {
   ExternalSystemOutboundHandler,
   ExternalSystemInboundHandler,
 } from './interfaces';
-import { EzCaterApiService } from 'src/external-modules/ezcater-api/ezcater-api.service';
+import { EzCaterApiService } from '../../../external-modules/ezcater-api/ezcater-api.service';
 import { CompanyConnectionAsset } from '../db-handlers/catering-company-db-handler/types/company_connection_assets';
 
 @Injectable()

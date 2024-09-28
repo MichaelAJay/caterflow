@@ -8,6 +8,7 @@ import { SecretManagerModule } from '../external-handlers/secret-manager/secret-
 import { CompanyExternalSystemService } from './company-external-system/company-external-system.service';
 import { CompanyIntegrationAndConnectionService } from './company-integration-and-connection/company-integration-and-connection.service';
 import { ExternalSystemHandlerModule } from '../external-handlers/external-system-handler/external-system-handler.module';
+import { CryptoModule } from '../../system/modules/crypto/crypto.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { ExternalSystemHandlerModule } from '../external-handlers/external-syste
     CompanyRoleAndPermissionDbHandlerModule,
     SecretManagerModule,
     ExternalSystemHandlerModule,
+    CryptoModule,
   ],
   providers: [
     CateringCompanyService,
