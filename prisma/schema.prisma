@@ -306,6 +306,7 @@ enum ExternalSystemName {
   TEST_NO_INBOUND
   TEST_NO_OUTBOUND_CONFIG
   TEST_NO_INBOUND_CONFIG
+  TEST_USE_DO_NOT_USE
 }
 
 enum IntegrationEvent {

@@ -7,21 +7,30 @@ export class IntegrationPrismaClientService extends PrismaClientService {
 
   constructor() {
     super();
+    console.log('IntegrationPrismaClientService constructor called');
     this.overrideMethods();
   }
 
   private overrideMethods() {
+    console.log('Overriding methods');
     const models = Object.getOwnPropertyNames(this).filter(
       (key) =>
         typeof this[key as keyof this] === 'object' &&
         this[key as keyof this] !== null &&
-        !key.startsWith('$'),
+        !key.startsWith('$') &&
+        !key.startsWith('_') &&
+        true,
+      // key !== 'prismaClient',
     );
+
+    console.log('Models to override:', models);
 
     for (const model of models) {
       const modelClient = <unknown>(<any>this[model]);
       if (modelClient && typeof modelClient === 'object') {
+        // console.log(`Overriding methods for model: ${model}`);
         if ('create' in modelClient) {
+          // console.log(`Overriding create for ${model}`);
           modelClient.create = this.mockCreate.bind(this, model) as any;
         }
         if ('createMany' in modelClient) {
@@ -36,32 +45,48 @@ export class IntegrationPrismaClientService extends PrismaClientService {
         if ('upsert' in modelClient) {
           modelClient.upsert = this.mockUpsert.bind(this, model) as any;
         }
+        if ('delete' in modelClient) {
+          modelClient.delete = this.mockDelete.bind(this, model) as any;
+        }
+        if ('deleteMany' in modelClient) {
+          modelClient.deleteMany = this.mockDeleteMany.bind(this, model) as any;
+        }
       }
     }
   }
 
-  private mockCreate(model: string, args: any) {
+  private async mockCreate(model: string, args: any) {
     console.log(`Mocked create operation for ${model}`, args);
-    return Promise.resolve({ id: 'mocked-id', ...args.data });
+    return { id: 'mocked-id', ...args.data };
   }
 
-  private mockCreateMany(model: string, args: any) {
+  private async mockCreateMany(model: string, args: any) {
     console.log(`Mocked createMany operation for ${model}`, args);
-    return Promise.resolve({ count: args.data.length });
+    return { count: args.data.length };
   }
 
-  private mockUpdate(model: string, args: any) {
+  private async mockUpdate(model: string, args: any) {
     console.log(`Mocked update operation for ${model}`, args);
-    return Promise.resolve({ id: 'mocked-id', ...args.data });
+    return { id: 'mocked-id', ...args.data };
   }
 
-  private mockUpdateMany(model: string, args: any) {
+  private async mockUpdateMany(model: string, args: any) {
     console.log(`Mocked updateMany operation for ${model}`, args);
-    return Promise.resolve({ count: 1 });
+    return { count: 1 };
   }
 
-  private mockUpsert(model: string, args: any) {
+  private async mockUpsert(model: string, args: any) {
     console.log(`Mocked upsert operation for ${model}`, args);
-    return Promise.resolve({ id: 'mocked-id', ...args.create });
+    return { id: 'mocked-id', ...args.create };
+  }
+
+  private async mockDelete(model: string, args: any) {
+    console.log(`Mocked delete operation for ${model}`, args);
+    return { id: 'mock-deleted-id', name: args.where.name };
+  }
+
+  private async mockDeleteMany(model: string, args: any) {
+    console.log(`Mocked deleteMany operation for ${model}`, args);
+    return { count: 1 };
   }
 }

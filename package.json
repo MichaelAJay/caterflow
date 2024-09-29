@@ -18,7 +18,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "test:target": "npx jest --testPathPattern=/internal-modules/catering-company/.*.integration.spec.ts",
+    "test:target": "npx jest --testPathPattern=.*.mock-provider.spec.ts",
     "create-gql-dir": "mkdir -p dist/external-modules/ezcater-api/gql",
     "copy-gql": "cp src/**/*.gql dist/external-modules/ezcater-api/gql",
     "build-gql": "npm run create-gql-dir && npm run copy-gql"
