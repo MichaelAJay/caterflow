@@ -7,7 +7,6 @@ export class IntegrationPrismaClientService extends PrismaClientService {
 
   constructor() {
     super();
-    console.log('IntegrationPrismaClientService constructor called');
     this.overrideMethods();
   }
 
@@ -50,36 +49,36 @@ export class IntegrationPrismaClientService extends PrismaClientService {
 
   private async mockCreate(model: string, args: any) {
     console.log(`Mocked create operation for ${model}`, args);
-    return { id: 'mocked-id', ...args.data };
+    return { id: 'mocked-id', mockCalled: true, ...args.data };
   }
 
   private async mockCreateMany(model: string, args: any) {
     console.log(`Mocked createMany operation for ${model}`, args);
-    return { count: args.data.length };
+    return { count: args.data.length, mockCalled: true };
   }
 
   private async mockUpdate(model: string, args: any) {
     console.log(`Mocked update operation for ${model}`, args);
-    return { id: 'mocked-id', ...args.data };
+    return { id: 'mocked-id', mockCalled: true, ...args.data };
   }
 
   private async mockUpdateMany(model: string, args: any) {
     console.log(`Mocked updateMany operation for ${model}`, args);
-    return { count: 1 };
+    return { count: 1, mockCalled: true };
   }
 
   private async mockUpsert(model: string, args: any) {
     console.log(`Mocked upsert operation for ${model}`, args);
-    return { id: 'mocked-id', ...args.create };
+    return { id: 'mocked-id', mockCalled: true, ...args.create };
   }
 
   private async mockDelete(model: string, args: any) {
     console.log(`Mocked delete operation for ${model}`, args);
-    return { id: 'mock-deleted-id', name: args.where.name };
+    return { id: 'mock-deleted-id', name: args.where.name, mockCalled: true };
   }
 
   private async mockDeleteMany(model: string, args: any) {
     console.log(`Mocked deleteMany operation for ${model}`, args);
-    return { count: 1 };
+    return { count: 1, mockCalled: true };
   }
 }
