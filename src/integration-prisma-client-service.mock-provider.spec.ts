@@ -7,7 +7,7 @@ describe('IntegrationPrismaClientService', () => {
   let service: IntegrationPrismaClientService;
   let prismaClientService: PrismaClientService;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [IntegrationPrismaClientService, PrismaClientService],
     }).compile();
@@ -22,8 +22,79 @@ describe('IntegrationPrismaClientService', () => {
     expect(service).toBeDefined();
   });
 
-  describe('finds', () => {
-    it('should call the prismaClientService for findUnique', async () => {
+  describe('finds (should not be mocked)', () => {
+    it('should return a record directly from the db indicating live findFirst', async () => {
+      const result = await service.externalSystem.findFirst({
+        where: { name: $Enums.ExternalSystemName.EZ_CATER },
+      });
+      expect(result).toBeDefined();
+      expect(result?.name).toBe('EZ_CATER');
+      expect(result?.uiName).toBe('ezCater');
+      expect(result?.uiDescription).toBe('Catering company');
+      expect(result?.requirements).toHaveProperty('API_KEY');
+      expect(result?.requirements).toHaveProperty('WEBHOOK_SECRET');
+    });
+    it('should return null if record not found in db indicating live findFirst', async () => {
+      const result = await service.externalSystem.findFirst({
+        where: { name: $Enums.ExternalSystemName.TEST_USE_DO_NOT_USE },
+      });
+      expect(result).toBeNull();
+    });
+    it('should return a record directly from the db indicating live findFirstOrThrow', async () => {
+      const result = await service.externalSystem.findFirst({
+        where: { name: $Enums.ExternalSystemName.EZ_CATER },
+      });
+      expect(result).toBeDefined();
+      expect(result?.name).toBe('EZ_CATER');
+      expect(result?.uiName).toBe('ezCater');
+      expect(result?.uiDescription).toBe('Catering company');
+      expect(result?.requirements).toHaveProperty('API_KEY');
+      expect(result?.requirements).toHaveProperty('WEBHOOK_SECRET');
+    });
+    it('should throw if record not found in db indicating live findFirstOrThrow', async () => {
+      await expect(
+        service.externalSystem.findFirstOrThrow({
+          where: { name: $Enums.ExternalSystemName.TEST_USE_DO_NOT_USE },
+        }),
+      ).rejects.toThrow(
+        expect.objectContaining({
+          name: 'NotFoundError',
+          code: 'P2025',
+        }),
+      );
+    });
+    it('should return a record directly from the db indicating live findMany', async () => {
+      const result = await service.externalSystem.findMany({
+        where: {
+          name: {
+            in: [
+              $Enums.ExternalSystemName.EZ_CATER, // in db
+              $Enums.ExternalSystemName.TEST_USE_DO_NOT_USE, // not in db
+            ],
+          },
+        },
+      });
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+      expect(result.length).toBe(1);
+
+      const ezCaterRecord = result.find(
+        (record) => record.name === $Enums.ExternalSystemName.EZ_CATER,
+      );
+      expect(ezCaterRecord).toBeDefined();
+      expect(ezCaterRecord?.name).toBe($Enums.ExternalSystemName.EZ_CATER);
+      expect(ezCaterRecord?.uiName).toBe('ezCater');
+      expect(ezCaterRecord?.uiDescription).toBe('Catering company');
+      expect(ezCaterRecord?.requirements).toHaveProperty('API_KEY');
+      expect(ezCaterRecord?.requirements).toHaveProperty('WEBHOOK_SECRET');
+
+      const testUseRecord = result.find(
+        (record) =>
+          record.name === $Enums.ExternalSystemName.TEST_USE_DO_NOT_USE,
+      );
+      expect(testUseRecord).toBeUndefined();
+    });
+    it('should return a record directly from the db indicating live findUnique', async () => {
       const result = await service.externalSystem.findUnique({
         where: { name: $Enums.ExternalSystemName.EZ_CATER },
       });
@@ -33,6 +104,35 @@ describe('IntegrationPrismaClientService', () => {
       expect(result?.uiDescription).toBe('Catering company');
       expect(result?.requirements).toHaveProperty('API_KEY');
       expect(result?.requirements).toHaveProperty('WEBHOOK_SECRET');
+    });
+    it('should return null if record not found in db indicating live findUnique', async () => {
+      const result = await service.externalSystem.findUnique({
+        where: { name: $Enums.ExternalSystemName.TEST_USE_DO_NOT_USE },
+      });
+      expect(result).toBeNull();
+    });
+    it('should return a record directly from the db indicating live findUniqueOrThrow', async () => {
+      const result = await service.externalSystem.findUniqueOrThrow({
+        where: { name: $Enums.ExternalSystemName.EZ_CATER },
+      });
+      expect(result).toBeDefined();
+      expect(result?.name).toBe('EZ_CATER');
+      expect(result?.uiName).toBe('ezCater');
+      expect(result?.uiDescription).toBe('Catering company');
+      expect(result?.requirements).toHaveProperty('API_KEY');
+      expect(result?.requirements).toHaveProperty('WEBHOOK_SECRET');
+    });
+    it('should throw if record not found in db indicating live findUniqueOrThrow', async () => {
+      await expect(
+        service.externalSystem.findUniqueOrThrow({
+          where: { name: $Enums.ExternalSystemName.TEST_USE_DO_NOT_USE },
+        }),
+      ).rejects.toThrow(
+        expect.objectContaining({
+          name: 'NotFoundError',
+          code: 'P2025',
+        }),
+      );
     });
   });
   describe('creates', () => {
