@@ -12,25 +12,18 @@ export class IntegrationPrismaClientService extends PrismaClientService {
   }
 
   private overrideMethods() {
-    console.log('Overriding methods');
     const models = Object.getOwnPropertyNames(this).filter(
       (key) =>
         typeof this[key as keyof this] === 'object' &&
         this[key as keyof this] !== null &&
         !key.startsWith('$') &&
-        !key.startsWith('_') &&
-        true,
-      // key !== 'prismaClient',
+        !key.startsWith('_'),
     );
-
-    console.log('Models to override:', models);
 
     for (const model of models) {
       const modelClient = <unknown>(<any>this[model]);
       if (modelClient && typeof modelClient === 'object') {
-        // console.log(`Overriding methods for model: ${model}`);
         if ('create' in modelClient) {
-          // console.log(`Overriding create for ${model}`);
           modelClient.create = this.mockCreate.bind(this, model) as any;
         }
         if ('createMany' in modelClient) {

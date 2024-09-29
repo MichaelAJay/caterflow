@@ -6,44 +6,22 @@ import { Prisma } from '@sentry/node/types/tracing/integrations';
 
 describe('IntegrationPrismaClientService', () => {
   let service: IntegrationPrismaClientService;
-  // let prismaClientService: PrismaClientService;
-  let prismaClientService: jest.Mocked<PrismaClientService>;
+  let prismaClientService: PrismaClientService;
+  // let prismaClientService: jest.Mocked<PrismaClientService>;
 
   beforeEach(async () => {
-    const mockPrismaClientService = {
-      externalSystem: {
-        findUnique: jest.fn(),
-        create: jest.fn(),
-        update: jest.fn(),
-        delete: jest.fn(),
-        // Add other methods as needed
-      },
-      // Add other models as needed
-    };
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         IntegrationPrismaClientService,
         // {
         //   provide: PrismaClientService,
-        //   useValue: mockPrismaClientService,
-        // },
-        {
-          provide: PrismaClientService,
-          useValue: {
-            externalSystem: {
-              // findUnique: jest.fn(),
-            },
-          },
-        },
-        // PrismaClientService,
-        // {
-        //   provide: IntegrationPrismaClientService,
-        //   useFactory: (prismaClient: PrismaClientService) => {
-        //     return new IntegrationPrismaClientService(prismaClient);
+        //   useValue: {
+        //     externalSystem: {
+        //       // findUnique: jest.fn(),
+        //     },
         //   },
-        //   inject: [PrismaClientService],
         // },
+        PrismaClientService,
       ],
     }).compile();
 
@@ -59,14 +37,6 @@ describe('IntegrationPrismaClientService', () => {
 
   describe('finds', () => {
     it('should call the prismaClientService for findUnique', async () => {
-      // const findUniqueSpy = jest.spyOn(
-      //   prismaClientService.externalSystem,
-      //   'findUnique',
-      // );
-      // const findUniqueSpy = jest.spyOn(
-      //   prismaClientService.externalSystem,
-      //   'findUnique',
-      // );
       console.log('Starting findUnique test');
       console.log('Service methods:', Object.keys(service));
       console.log(
@@ -74,12 +44,15 @@ describe('IntegrationPrismaClientService', () => {
         Object.keys(service.externalSystem),
       );
       const result = await service.externalSystem.findUnique({
-        where: { name: $Enums.ExternalSystemName.TEST_USE_DO_NOT_USE },
+        where: { name: $Enums.ExternalSystemName.EZ_CATER },
       });
       console.log('FindUnique result:', result);
-      expect(
-        prismaClientService.externalSystem.findUnique,
-      ).toHaveBeenCalledTimes(1);
+      expect(result).toBeDefined();
+      expect(result?.name).toBe('EZ_CATER');
+      expect(result?.uiName).toBe('ezCater');
+      expect(result?.uiDescription).toBe('Catering company');
+      expect(result?.requirements).toHaveProperty('API_KEY');
+      expect(result?.requirements).toHaveProperty('WEBHOOK_SECRET');
     });
   });
   // describe('creates', () => {
