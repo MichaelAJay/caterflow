@@ -2,27 +2,14 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { IntegrationPrismaClientService } from '../test/classes/integration-prisma-client-service.mock-provider';
 import { PrismaClientService } from './external-modules/prisma-client/prisma-client.service';
 import { $Enums } from '@prisma/client';
-import { Prisma } from '@sentry/node/types/tracing/integrations';
 
 describe('IntegrationPrismaClientService', () => {
   let service: IntegrationPrismaClientService;
   let prismaClientService: PrismaClientService;
-  // let prismaClientService: jest.Mocked<PrismaClientService>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        IntegrationPrismaClientService,
-        // {
-        //   provide: PrismaClientService,
-        //   useValue: {
-        //     externalSystem: {
-        //       // findUnique: jest.fn(),
-        //     },
-        //   },
-        // },
-        PrismaClientService,
-      ],
+      providers: [IntegrationPrismaClientService, PrismaClientService],
     }).compile();
 
     service = module.get<IntegrationPrismaClientService>(
