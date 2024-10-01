@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaClientService } from '../../src/external-modules/prisma-client/prisma-client.service';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class IntegrationPrismaClientService extends PrismaClientService {
@@ -47,9 +48,71 @@ export class IntegrationPrismaClientService extends PrismaClientService {
     }
   }
 
-  private async mockCreate(model: string, args: any) {
+  /**
+   * REFERENCE
+   */
+  // /**
+  //  * Create a CompanyExternalSystemConnection.
+  //  * @param {CompanyExternalSystemConnectionCreateArgs} args - Arguments to create a CompanyExternalSystemConnection.
+  //  * @example
+  //  * // Create one CompanyExternalSystemConnection
+  //  * const CompanyExternalSystemConnection = await prisma.companyExternalSystemConnection.create({
+  //  *   data: {
+  //  *     // ... data to create a CompanyExternalSystemConnection
+  //  *   }
+  //  * })
+  //  *
+  //  **/
+  // create<T extends CompanyExternalSystemConnectionCreateArgs<ExtArgs>>(
+  //   args: SelectSubset<T, CompanyExternalSystemConnectionCreateArgs<ExtArgs>>,
+  // ): Prisma__CompanyExternalSystemConnectionClient<
+  //   $Result.GetResult<
+  //     Prisma.$CompanyExternalSystemConnectionPayload<ExtArgs>,
+  //     T,
+  //     'create'
+  //   >,
+  //   never,
+  //   ExtArgs
+  // >;
+  /**
+   * CompanyExternalSystemConnection create
+   */
+  // export type CompanyExternalSystemConnectionCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  //   /**
+  //    * Select specific fields to fetch from the CompanyExternalSystemConnection
+  //    */
+  //   select?: CompanyExternalSystemConnectionSelect<ExtArgs> | null
+  //   /**
+  //    * Choose, which related nodes to fetch as well.
+  //    */
+  //   include?: CompanyExternalSystemConnectionInclude<ExtArgs> | null
+  //   /**
+  //    * The data needed to create a CompanyExternalSystemConnection.
+  //    */
+  //   data: XOR<CompanyExternalSystemConnectionCreateInput, CompanyExternalSystemConnectionUncheckedCreateInput>
+  // }
+
+  private async mockCreate<
+    TCreateArgsSubType extends { data: any; select: any },
+    TCreateArgs,
+    TReturn,
+  >(
+    model: string,
+    args: Omit<Prisma.SelectSubset<TCreateArgsSubType, TCreateArgs>, 'include'>,
+  ): Promise<TReturn> {
     console.log(`Mocked create operation for ${model}`, args);
-    return { id: 'mocked-id', mockCalled: true, ...args.data };
+    let result = { id: 'mocked-id', ...args.data };
+
+    if (args.select) {
+      result = Object.keys(args.select).reduce((selectedResult, key) => {
+        if (args.select[key]) {
+          selectedResult[key] = result[key];
+        }
+        return selectedResult;
+      }, {} as any);
+    }
+
+    return result;
   }
 
   private async mockCreateMany(model: string, args: any) {

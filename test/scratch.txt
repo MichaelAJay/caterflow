@@ -1,3 +1,3 @@
 /internal-modules/catering-company/.*.integration.spec.ts
 
-../test/classes/.*.integrations.ecp.ts
+.*.mock-provider.spec.ts

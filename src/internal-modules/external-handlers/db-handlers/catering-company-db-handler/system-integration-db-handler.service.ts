@@ -128,7 +128,6 @@ export class SystemIntegrationDbHandlerService
         'Unexpected record validation error. Our team is aware of the problem.',
       );
     }
-    console.log(baseRecord.requirements);
 
     return {
       ...baseRecord,

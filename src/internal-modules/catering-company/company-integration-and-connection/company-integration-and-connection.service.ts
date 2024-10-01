@@ -23,6 +23,7 @@ import {
 } from '../../external-handlers/db-handlers/catering-company-db-handler/types/company_connection_assets';
 import companyIntegrationAndConnectionUtilities from '../utility/company-integration-and-connection.utilities';
 import { CryptoService } from '../../../system/modules/crypto/crypto.service';
+import { ExternalSystemWithTypeRequirementsAndIntegrationsAndCompanyReference } from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/types/return/external-system.type';
 
 @Injectable()
 export class CompanyIntegrationAndConnectionService {
@@ -187,13 +188,35 @@ export class CompanyIntegrationAndConnectionService {
           >;
         },
   ) {
-    const { name, uiName, requirements } =
-      typeof systemData === 'string'
-        ? await this.systemIntegrationDbHandler.getExternalSystem(
-            systemData,
-            companyId,
-          )
-        : systemData;
+    let externalSystem: {
+      name: $Enums.ExternalSystemName;
+      uiName: string;
+      requirements: Partial<
+        Record<'API_KEY' | 'API_USERNAME' | 'WEBHOOK_SECRET', Requirement>
+      >;
+    };
+    if (typeof systemData === 'string') {
+      const { connectionId, ...retrievedExternalSystem } =
+        await this.systemIntegrationDbHandler.getExternalSystem(
+          systemData,
+          companyId,
+        );
+      if (connectionId) {
+        // Could be our fault too... but creating a company error message should suffice
+        throw new Error(
+          'Client error - external system already exists for client',
+        );
+      }
+      externalSystem = {
+        name: retrievedExternalSystem.name,
+        uiName: retrievedExternalSystem.uiName,
+        requirements: retrievedExternalSystem.requirements,
+      };
+    } else {
+      externalSystem = { ...systemData };
+    }
+
+    const { name, uiName, requirements } = externalSystem;
 
     // Map external system assets to company assets
     const assets =

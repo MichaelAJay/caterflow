@@ -391,8 +391,6 @@ export class CateringCompanyDbHandlerService
       if (!validateCompanyExternalSystemConnectionAssets(createdAssets)) {
         throw new Error('Stuff is messed up');
       }
-
-      // Need validator here
       return { ...record, assets: createdAssets };
     } catch (err) {
       // May throw unique constraint error (companyId, systemId)

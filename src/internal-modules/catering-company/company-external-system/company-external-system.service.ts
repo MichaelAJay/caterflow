@@ -47,10 +47,10 @@ export class CompanyExternalSystemService {
             ),
           };
         // This section (could have multiple cases) is for external systems that don't require config
-        case $Enums.ExternalSystemName.TEST_NO_OUTBOUND_CONFIG:
+        case $Enums.ExternalSystemName.TEST_NO_OUTBOUND_CONFIG_REQUIRED:
           return { tested: true, passed: true };
         // This section (could have multiple cases) is for external systems which should never make outbound requests
-        case $Enums.ExternalSystemName.TEST_NO_OUTBOUND:
+        case $Enums.ExternalSystemName.TEST_NO_OUTBOUND_ALLOWED:
           return { tested: false, reason: 'NOT_APPLICABLE' };
         // This section is for unhandled cases - we should never reach it
         default:
