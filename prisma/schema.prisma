@@ -184,8 +184,8 @@ model IntegrationRequirement {
 
 model IntegrationTemplate {
   id               Int                @id @default(autoincrement())
-  uiName           String
-  uiDescription    String
+  uiName           String             @map("ui_name")
+  uiDescription    String             @map("ui_description")
   event            IntegrationEvent
   srcSystemName    ExternalSystemName @map("src_system_name")
   srcEntity        ExternalEntity     @map("src_entity")
@@ -301,15 +301,6 @@ enum ExternalEntity {
 enum ExternalSystemName {
   EZ_CATER
   NUTSHELL
-  TEST_NO_INBOUND_NO_OUTBOUND
-  TEST_NO_OUTBOUND
-  TEST_NO_OUTBOUND_ALLOWED
-  TEST_NO_INBOUND
-  TEST_NO_INBOUND_ALLOWED
-  TEST_NO_OUTBOUND_CONFIG
-  TEST_NO_OUTBOUND_CONFIG_REQUIRED
-  TEST_NO_INBOUND_CONFIG
-  TEST_NO_INBOUND_CONFIG_REQUIRED
   TEST_USE_DO_NOT_USE
 }
 
