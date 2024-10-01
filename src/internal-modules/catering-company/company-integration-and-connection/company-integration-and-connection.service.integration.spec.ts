@@ -20,6 +20,7 @@ describe('CompanyIntegrationAndConnectionService', () => {
   let systemIntegrationDbHandler: SystemIntegrationDbHandlerService;
 
   beforeEach(async () => {
+    const mockPrismaClientService = new IntegrationPrismaClientService();
     const module: TestingModule = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot({
@@ -27,16 +28,19 @@ describe('CompanyIntegrationAndConnectionService', () => {
           isGlobal: true,
         }),
         ExternalSystemHandlerModule,
-        CateringCompanyDbHandlerModule,
+        // CateringCompanyDbHandlerModule,
+        CateringCompanyDbHandlerModule.forTesting({
+          prismaClientService: mockPrismaClientService,
+        }),
         CryptoModule,
       ],
       providers: [
         CompanyIntegrationAndConnectionService,
         CompanyExternalSystemService,
-        {
-          provide: PrismaClientService,
-          useClass: IntegrationPrismaClientService,
-        },
+        // {
+        //   provide: PrismaClientService,
+        //   useValue: mockPrismaClientService,
+        // },
       ],
     }).compile();
 
@@ -75,7 +79,7 @@ describe('CompanyIntegrationAndConnectionService', () => {
         jest.spyOn(systemIntegrationDbHandler, 'getExternalSystem');
         jest.spyOn(cateringCompanyDbHandler, 'createExternalSystemConnection');
         jest.spyOn(service, 'testConnectionOutAndUpdate');
-        jest.spyOn(
+        const mySpy = jest.spyOn(
           integrationPrismaClient.companyExternalSystemConnection,
           'create',
         );
@@ -121,10 +125,9 @@ describe('CompanyIntegrationAndConnectionService', () => {
           mappedAssets,
         );
 
+        console.log('Spy calls', mySpy.mock.calls);
         // Assert that both outboundStatus & inboundStatus are 'UNCONFIGURED' for the create call.
-        expect(
-          integrationPrismaClient.companyExternalSystemConnection.create,
-        ).toHaveBeenCalledWith({
+        expect(mySpy).toHaveBeenCalledWith({
           data: {
             companyId: mockCompanyId,
             systemName,

@@ -23,7 +23,6 @@ import {
 } from '../../external-handlers/db-handlers/catering-company-db-handler/types/company_connection_assets';
 import companyIntegrationAndConnectionUtilities from '../utility/company-integration-and-connection.utilities';
 import { CryptoService } from '../../../system/modules/crypto/crypto.service';
-import { ExternalSystemWithTypeRequirementsAndIntegrationsAndCompanyReference } from 'src/internal-modules/external-handlers/db-handlers/catering-company-db-handler/types/return/external-system.type';
 
 @Injectable()
 export class CompanyIntegrationAndConnectionService {

@@ -11,6 +11,50 @@ export class IntegrationPrismaClientService extends PrismaClientService {
     this.overrideMethods();
   }
 
+  // private overrideMethods() {
+  //   const models = [
+  //     'companyExternalSystemConnection',
+  //     // Add other model names here
+  //   ];
+
+  //   for (const model of models) {
+  //     this[model] = this.createProxyHandler(model);
+  //   }
+  // }
+
+  // private createProxyHandler(model: string) {
+  //   return new Proxy(
+  //     {},
+  //     {
+  //       get: (target, prop) => {
+  //         if (prop === 'create') {
+  //           // return jest.fn(this.mockCreate.bind(this, model));
+  //           return this.mockCreate.bind(this, model);
+  //         }
+  //         if (prop === 'createMany') {
+  //           return this.mockCreateMany.bind(this, model);
+  //         }
+  //         if (prop === 'update') {
+  //           return this.mockUpdate.bind(this, model);
+  //         }
+  //         if (prop === 'updateMany') {
+  //           return this.mockUpdateMany.bind(this, model);
+  //         }
+  //         if (prop === 'upsert') {
+  //           return this.mockUpsert.bind(this, model);
+  //         }
+  //         if (prop === 'delete') {
+  //           return this.mockDelete.bind(this, model);
+  //         }
+  //         if (prop === 'deleteMany') {
+  //           return this.mockDeleteMany.bind(this, model);
+  //         }
+  //         return this[model][prop];
+  //       },
+  //     },
+  //   );
+  // }
+
   private overrideMethods() {
     const models = Object.getOwnPropertyNames(this).filter(
       (key) =>
@@ -24,7 +68,9 @@ export class IntegrationPrismaClientService extends PrismaClientService {
       const modelClient = <unknown>(<any>this[model]);
       if (modelClient && typeof modelClient === 'object') {
         if ('create' in modelClient) {
-          modelClient.create = this.mockCreate.bind(this, model) as any;
+          modelClient.create = jest.fn(
+            this.mockCreate.bind(this, model) as any,
+          );
         }
         if ('createMany' in modelClient) {
           modelClient.createMany = this.mockCreateMany.bind(this, model) as any;
@@ -47,50 +93,6 @@ export class IntegrationPrismaClientService extends PrismaClientService {
       }
     }
   }
-
-  /**
-   * REFERENCE
-   */
-  // /**
-  //  * Create a CompanyExternalSystemConnection.
-  //  * @param {CompanyExternalSystemConnectionCreateArgs} args - Arguments to create a CompanyExternalSystemConnection.
-  //  * @example
-  //  * // Create one CompanyExternalSystemConnection
-  //  * const CompanyExternalSystemConnection = await prisma.companyExternalSystemConnection.create({
-  //  *   data: {
-  //  *     // ... data to create a CompanyExternalSystemConnection
-  //  *   }
-  //  * })
-  //  *
-  //  **/
-  // create<T extends CompanyExternalSystemConnectionCreateArgs<ExtArgs>>(
-  //   args: SelectSubset<T, CompanyExternalSystemConnectionCreateArgs<ExtArgs>>,
-  // ): Prisma__CompanyExternalSystemConnectionClient<
-  //   $Result.GetResult<
-  //     Prisma.$CompanyExternalSystemConnectionPayload<ExtArgs>,
-  //     T,
-  //     'create'
-  //   >,
-  //   never,
-  //   ExtArgs
-  // >;
-  /**
-   * CompanyExternalSystemConnection create
-   */
-  // export type CompanyExternalSystemConnectionCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-  //   /**
-  //    * Select specific fields to fetch from the CompanyExternalSystemConnection
-  //    */
-  //   select?: CompanyExternalSystemConnectionSelect<ExtArgs> | null
-  //   /**
-  //    * Choose, which related nodes to fetch as well.
-  //    */
-  //   include?: CompanyExternalSystemConnectionInclude<ExtArgs> | null
-  //   /**
-  //    * The data needed to create a CompanyExternalSystemConnection.
-  //    */
-  //   data: XOR<CompanyExternalSystemConnectionCreateInput, CompanyExternalSystemConnectionUncheckedCreateInput>
-  // }
 
   private async mockCreate<
     TCreateArgsSubType extends { data: any; select: any },
