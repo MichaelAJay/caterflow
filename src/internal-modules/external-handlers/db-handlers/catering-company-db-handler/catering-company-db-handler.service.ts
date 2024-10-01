@@ -22,6 +22,12 @@ import {
 export class CateringCompanyDbHandlerService
   implements ICateringCompanyDbHandler
 {
+  constructor(
+    private readonly cateringCompanyDbQueryBuilder: CateringCompanyDbQueryBuilderService,
+    private readonly systemIntegrationDbQueryBuilder: SystemIntegrationDbQueryBuilderService,
+    private readonly prismaClient: PrismaClientService,
+  ) {}
+
   async updateExternalSystemConnection(
     connectionId: string,
     updates: Pick<
@@ -59,12 +65,6 @@ export class CateringCompanyDbHandlerService
     // If ci.source is fully configured AND ci.target is fully configured, update company integration
     // Or provide a general status update
   }
-
-  constructor(
-    private readonly cateringCompanyDbQueryBuilder: CateringCompanyDbQueryBuilderService,
-    private readonly systemIntegrationDbQueryBuilder: SystemIntegrationDbQueryBuilderService,
-    private readonly prismaClient: PrismaClientService,
-  ) {}
 
   /**
    * Called once per company on creation
