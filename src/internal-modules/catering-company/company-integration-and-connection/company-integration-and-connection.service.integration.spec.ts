@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { CompanyIntegrationAndConnectionService } from './company-integration-and-connection.service';
 import { CompanyExternalSystemService } from '../company-external-system/company-external-system.service';
 import { PrismaClientService } from '../../../external-modules/prisma-client/prisma-client.service';
-import { IntegrationPrismaClientService } from '../../../../test/classes/integration-prisma-client-service.mock-provider';
 import { ExternalSystemHandlerModule } from '../../external-handlers/external-system-handler/external-system-handler.module';
 import { CateringCompanyDbHandlerModule } from '../../external-handlers/db-handlers/catering-company-db-handler/catering-company-db-handler.module';
 import { CryptoModule } from '../../../system/modules/crypto/crypto.module';
@@ -15,12 +14,12 @@ import { Asset } from '../../external-handlers/db-handlers/catering-company-db-h
 
 describe('CompanyIntegrationAndConnectionService', () => {
   let service: CompanyIntegrationAndConnectionService;
-  let integrationPrismaClient: IntegrationPrismaClientService;
   let cateringCompanyDbHandler: CateringCompanyDbHandlerService;
   let systemIntegrationDbHandler: SystemIntegrationDbHandlerService;
   const recordsToDelete = {
     userIds: [] as string[],
     companyIds: [] as string[],
+    companyConnectionIds: [] as string[],
   };
   let user: User;
   let company: CateringCompany;
@@ -62,20 +61,24 @@ describe('CompanyIntegrationAndConnectionService', () => {
     }
   });
   afterAll(async () => {
-    console.log(recordsToDelete);
-    // try {
-    //   await prismaClient.$transaction([
-    //     prismaClient.cateringCompany.deleteMany({
-    //       where: { id: { in: recordsToDelete.companyIds } },
-    //     }),
-    //     prismaClient.user.deleteMany({
-    //       where: { id: { in: recordsToDelete.userIds } },
-    //     }),
-    //   ]);
-    // } catch (err) {
-    //   console.error(err);
-    //   throw err;
-    // }
+    try {
+      const { userIds, companyIds, companyConnectionIds } = recordsToDelete;
+      await prismaClient.$transaction([
+        prismaClient.companyExternalSystemConnection.deleteMany({
+          where: { id: { in: companyConnectionIds } },
+        }),
+        prismaClient.cateringCompany.deleteMany({
+          where: { id: { in: companyIds } },
+        }),
+        prismaClient.user.deleteMany({
+          where: { id: { in: userIds } },
+        }),
+      ]);
+      console.log('Records successfully deleted');
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
   });
 
   beforeEach(async () => {
@@ -106,8 +109,6 @@ describe('CompanyIntegrationAndConnectionService', () => {
     service = module.get<CompanyIntegrationAndConnectionService>(
       CompanyIntegrationAndConnectionService,
     );
-    integrationPrismaClient =
-      module.get<IntegrationPrismaClientService>(PrismaClientService);
     cateringCompanyDbHandler = module.get<CateringCompanyDbHandlerService>(
       CateringCompanyDbHandlerService,
     );
@@ -121,98 +122,113 @@ describe('CompanyIntegrationAndConnectionService', () => {
   });
 
   describe('createExternalSystemConnection', () => {
-    describe('ezcater', () => {
-      let ezCaterSystem: ExternalSystem | undefined;
-      beforeEach(async () => {
-        ezCaterSystem =
-          await integrationPrismaClient.externalSystem.findUniqueOrThrow({
-            where: { name: $Enums.ExternalSystemName.EZ_CATER },
+    const createExternalSystemConnectionTester = (
+      systemName: $Enums.ExternalSystemName,
+    ) => {
+      describe(`${systemName}`, () => {
+        let targetSystem: ExternalSystem | undefined;
+        beforeEach(async () => {
+          targetSystem = await prismaClient.externalSystem.findUniqueOrThrow({
+            where: { name: systemName },
           });
+        });
+
+        it('should pass this test', async () => {
+          if (!targetSystem) {
+            throw new Error('Target system not found');
+          }
+
+          // relevant spies
+          jest.spyOn(systemIntegrationDbHandler, 'getExternalSystem');
+          jest.spyOn(
+            cateringCompanyDbHandler,
+            'createExternalSystemConnection',
+          );
+          jest.spyOn(service, 'testConnectionOutAndUpdate');
+
+          const result = await service.createExternalSystemConnection(
+            targetCompanyId,
+            systemName,
+          );
+          recordsToDelete.companyConnectionIds.push(result.id);
+
+          // Assert that getExternalSystem is called with correct args
+          expect(
+            systemIntegrationDbHandler.getExternalSystem,
+          ).toHaveBeenCalledWith(systemName, targetCompanyId);
+        });
       });
-      // it('full test expectation with pass', async () => {
-      //   if (!ezCaterSystem) {
-      //     throw new Error('Target system not found');
-      //   }
+    };
 
-      //   // relevant spies
-      //   jest.spyOn(systemIntegrationDbHandler, 'getExternalSystem');
-      //   jest.spyOn(cateringCompanyDbHandler, 'createExternalSystemConnection');
-      //   jest.spyOn(service, 'testConnectionOutAndUpdate');
-      //   // const mySpy = jest.spyOn(
-      //   //   integrationPrismaClient.companyExternalSystemConnection,
-      //   //   'create',
-      //   // );
-      //   const mySpy = jest.spyOn(
-      //     prismaClient.companyExternalSystemConnection,
-      //     'create',
-      //   );
+    describe('ezcater', () => {
+      let targetSystem: ExternalSystem | undefined;
+      beforeEach(async () => {
+        targetSystem = await prismaClient.externalSystem.findUniqueOrThrow({
+          where: { name: $Enums.ExternalSystemName.EZ_CATER },
+        });
+      });
+      it('full test expectation with pass', async () => {
+        if (!targetSystem) {
+          throw new Error('Target system not found');
+        }
 
-      //   const systemName = $Enums.ExternalSystemName.EZ_CATER;
-      //   const result = await service.createExternalSystemConnection(
-      //     targetCompanyId,
-      //     systemName,
-      //   );
+        // relevant spies
+        jest.spyOn(systemIntegrationDbHandler, 'getExternalSystem');
+        jest.spyOn(cateringCompanyDbHandler, 'createExternalSystemConnection');
+        jest.spyOn(service, 'testConnectionOutAndUpdate');
 
-      //   // Assert that getExternalSystem is called with correct args
-      //   expect(
-      //     systemIntegrationDbHandler.getExternalSystem,
-      //   ).toHaveBeenCalledWith(systemName, targetCompanyId);
+        const systemName = $Enums.ExternalSystemName.EZ_CATER;
+        const result = await service.createExternalSystemConnection(
+          targetCompanyId,
+          systemName,
+        );
+        recordsToDelete.companyConnectionIds.push(result.id);
 
-      //   // Add assertions for the inner workings of getExternalSystem
+        // Assert that getExternalSystem is called with correct args
+        expect(
+          systemIntegrationDbHandler.getExternalSystem,
+        ).toHaveBeenCalledWith(systemName, targetCompanyId);
 
-      //   const mappedAssets: Partial<
-      //     Record<'API_KEY' | 'API_USERNAME' | 'WEBHOOK_SECRET', Asset>
-      //   > = {
-      //     API_KEY: {
-      //       uiName: 'API Key',
-      //       isSecret: true,
-      //       direction: 'OUT',
-      //       uiDescription: 'An api key',
-      //       status: 'UNCONFIGURED',
-      //     },
-      //     WEBHOOK_SECRET: {
-      //       uiName: 'Webhook Secret',
-      //       isSecret: true,
-      //       direction: 'IN',
-      //       uiDescription: 'Use to validate incoming order',
-      //       status: 'UNCONFIGURED',
-      //     },
-      //   };
-      //   expect(
-      //     cateringCompanyDbHandler.createExternalSystemConnection,
-      //   ).toHaveBeenCalledWith(
-      //     targetCompanyId,
-      //     systemName,
-      //     ezCaterSystem.uiName,
-      //     mappedAssets,
-      //   );
+        // Add assertions for the inner workings of getExternalSystem
 
-      //   console.log('Spy calls', mySpy.mock.calls);
-      //   // Assert that both outboundStatus & inboundStatus are 'UNCONFIGURED' for the create call.
-      //   expect(mySpy).toHaveBeenCalledWith({
-      //     data: {
-      //       companyId: targetCompanyId,
-      //       systemName,
-      //       systemUIName: ezCaterSystem.uiName,
-      //       outboundStatus: $Enums.ConnectionStatus.UNCONFIGURED,
-      //       inboundStatus: $Enums.ConnectionStatus.UNCONFIGURED,
-      //       assets: mappedAssets,
-      //     },
-      //   });
+        const mappedAssets: Partial<
+          Record<'API_KEY' | 'API_USERNAME' | 'WEBHOOK_SECRET', Asset>
+        > = {
+          API_KEY: {
+            uiName: 'API Key',
+            isSecret: true,
+            direction: 'OUT',
+            uiDescription: 'An api key',
+            status: 'UNCONFIGURED',
+          },
+          WEBHOOK_SECRET: {
+            uiName: 'Webhook Secret',
+            isSecret: true,
+            direction: 'IN',
+            uiDescription: 'Use to validate incoming order',
+            status: 'UNCONFIGURED',
+          },
+        };
+        expect(
+          cateringCompanyDbHandler.createExternalSystemConnection,
+        ).toHaveBeenCalledWith(
+          targetCompanyId,
+          systemName,
+          targetSystem.uiName,
+          mappedAssets,
+        );
 
-      //   // Assert that the response from that has outboundStatus 'unconfigured', which indicates that there were outbound assets
-      //   // As a corollary to the above, assert that testConnectionOutAndUpdate is NOT called
-      //   expect(service.testConnectionOutAndUpdate).not.toHaveBeenCalled();
-      //   expect(result).toEqual({
-      //     id: 'mock-id', // from the overridden implementation in integrationPrismaClient
-      //     companyId: targetCompanyId,
-      //     systemName,
-      //     systemUIName: ezCaterSystem.uiName,
-      //     inboundStatus: $Enums.ConnectionStatus.UNCONFIGURED,
-      //     outboundStatus: $Enums.ConnectionStatus.UNCONFIGURED,
-      //     assets: mappedAssets,
-      //   });
-      // });
+        expect(service.testConnectionOutAndUpdate).not.toHaveBeenCalled();
+        expect(result).toEqual({
+          id: expect.any(String),
+          companyId: targetCompanyId,
+          systemName,
+          systemUIName: targetSystem.uiName,
+          inboundStatus: $Enums.ConnectionStatus.UNCONFIGURED,
+          outboundStatus: $Enums.ConnectionStatus.UNCONFIGURED,
+          assets: mappedAssets,
+        });
+      });
     });
     // describe('nutshell', () => {
     //   let nutshellSystem: ExternalSystem | undefined;
